@@ -29,8 +29,25 @@ controller laser and pull the trigger.
 2. **Mission 1: Explore** — five habitats around the child (forest, pond, desert, farm, home);
    touching an animal/plant shows where it lives and what the habitat provides. Goal: 12 discoveries.
 3. **Mission 2: Sort** — a "lost" animal or plant appears; the child points at the correct habitat
-   sign. Stars for first-try answers, hint after two misses.
+   (its sign, or any creature in it). Stars for first-try answers, hint after two misses.
 4. **What did I learn?** — summary matching the lesson's learning outcomes, replay or free explore.
 
-Arabic text is drawn to canvas textures (A-Frame's built-in text can't shape Arabic); animals and
-plants are emoji sprites. Arabic speech uses the browser's speech synthesis when an Arabic voice exists.
+What's in the scene:
+
+- **3D models** — every animal and plant is built in code from simple shapes and merged into one
+  mesh per model (one draw call each, light enough for a standalone headset). `?gallery` lines them
+  all up for review.
+- **Omani identity** — Salem (سالم), a guide in a dishdasha with its tassel and an embroidered
+  kumma; the Omani flag; a Nizwa-style fort; Hajar mountains; date palms; a falaj in the farm;
+  a traditional house; the Arabian oryx; Jebel Akhdar roses; an eight-point star floor.
+- **Cards** — laid out on canvas at high resolution and sized to their content, so text never
+  overflows; the habitat signs stand at the back of each habitat, above the animals.
+- **Turning** — flick the right (or left) thumbstick to turn 30°; arrow keys on desktop.
+
+## Voice
+
+Every spoken line has a key. `content.js` holds the text; `audio/SCRIPT.md` lists all lines for
+recording (regenerate with `node scripts/vr-audio-script.mjs lesson-01-local-habitats`). Put each
+recording in `audio/<key>.mp3` and add the key to `audio/manifest.json`; anything not recorded is
+read by the browser's Arabic speech synthesis (if the device has an Arabic voice) and is always
+shown in Salem's speech bubble.
