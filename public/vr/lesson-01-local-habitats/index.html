@@ -842,8 +842,14 @@
   // Sound: effects, recorded voice (audio/*.mp3) or speech-synthesis fallback
   // =====================================================================
   let soundOn = true, actx = null, ttsVoice = null, voiceSeq = 0, currentAudio = null;
-  let recorded = new Set();
-  fetch('audio/manifest.json').then(r => r.ok ? r.json() : []).then(a => { recorded = new Set(a); }).catch(() => {});
+  const isDialect = k => !/^(f|a|z)_/.test(k);
+  // audio/manifest.json: either ["key", ...] for local audio/<key>.mp3 files, or { "key": "https://…mp3" }.
+  let recorded = new Map();
+  fetch('audio/manifest.json').then(r => r.ok ? r.json() : []).then(m => {
+    recorded = new Map(Array.isArray(m) ? m.map(k => [k, `audio/${k}.mp3`]) : Object.entries(m));
+    // warm the cache for Salem's short lines so they start instantly
+    for (const [k, src] of recorded) if (isDialect(k)) { const a = new Audio(); a.preload = 'auto'; a.src = src; }
+  }).catch(() => {});
   const soundBtn = document.getElementById('sound');
   soundBtn.addEventListener('click', () => {
     soundOn = !soundOn;
@@ -874,7 +880,6 @@
     ttsVoice = vs.find(v => /OM/i.test(v.lang)) || vs.find(v => /(SA|AE|KW|QA|BH)/i.test(v.lang)) || vs[0] || null;
   }
   if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
-  const isDialect = k => !/^(f|a|z)_/.test(k);
   function stopVoice() {
     voiceSeq++;
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
@@ -888,7 +893,7 @@
       let done = false; const finish = () => { if (!done) { done = true; res(); } };
       if (!soundOn) return setTimeout(finish, Math.min(est, 2500));
       if (recorded.has(key)) {
-        const a = new Audio(`audio/${key}.mp3`); currentAudio = a;
+        const a = new Audio(recorded.get(key)); currentAudio = a;
         a.onended = a.onerror = finish; a.play().catch(finish);
         setTimeout(finish, 20000);
         return;

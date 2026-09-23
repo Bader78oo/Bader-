@@ -48,6 +48,8 @@ What's in the scene:
 
 Every spoken line has a key. `content.js` holds the text; `audio/SCRIPT.md` lists all lines for
 recording (regenerate with `node scripts/vr-audio-script.mjs lesson-01-local-habitats`). Put each
-recording in `audio/<key>.mp3` and add the key to `audio/manifest.json`; anything not recorded is
+recording in `audio/<key>.mp3` and add the key to `audio/manifest.json` (a list of keys), or map
+keys to hosted audio URLs (`{ "key": "https://…mp3" }`) — lesson 1 currently uses Higgsfield-hosted
+ElevenLabs "Benji" recordings this way; anything not recorded is
 read by the browser's Arabic speech synthesis (if the device has an Arabic voice) and is always
 shown in Salem's speech bubble.
