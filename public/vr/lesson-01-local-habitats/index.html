@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>رحلة البيئات المحلية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap">
+<script src="../lib/aframe-1.7.1.min.js"></script>
+<style>
+  :root {
+    --sky: #9fdcff;
+    --ink: #173b57;
+    --sun: #ffc93c;
+    --leaf: #3f9b48;
+    --paper: #fffaf0;
+    --font: "Baloo Bhaijaan 2", "Noto Naskh Arabic", "Noto Sans Arabic", Tahoma, sans-serif;
+  }
+  html, body { height: 100%; margin: 0; background: var(--sky); font-family: var(--font); color: var(--ink); }
+  #loader {
+    position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; gap: 12px;
+    background: linear-gradient(#bfe9ff, #e9f8d8); text-align: center; padding-inline: 16px;
+  }
+  #loader b { font-size: clamp(24px, 6vw, 40px); font-weight: 800; }
+  #loader span { font-size: 18px; opacity: .8; }
+  #topbar {
+    position: fixed; top: env(safe-area-inset-top, 0px); inset-inline: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 8px 16px; pointer-events: none;
+  }
+  #topbar .hint {
+    background: rgba(255, 250, 240, .92); border-radius: 999px; padding: 6px 14px;
+    font-size: 15px; font-weight: 700; box-shadow: 0 2px 8px rgba(23, 59, 87, .15);
+  }
+  #sound {
+    pointer-events: auto; border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 15px;
+    background: var(--sun); color: var(--ink); border-radius: 999px; padding: 8px 14px;
+    box-shadow: 0 2px 8px rgba(23, 59, 87, .2);
+  }
+  #sound:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .a-enter-vr { z-index: 11; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="loader"><div><b>رِحْلَةٌ إِلَى الْبِيئَاتِ الْمَحَلِّيَّةِ</b><br><span>جَارٍ تَجْهِيزُ الرِّحْلَةِ…</span></div></div>
+<div id="topbar">
+  <span class="hint">اسحب لتنظر حولك • المس الكائنات • زر VR للنظارة</span>
+  <button id="sound" type="button" aria-pressed="true">🔊 الصوت</button>
+</div>
+
+<a-scene id="scene" loading-screen="enabled: false" renderer="antialias: true; foveationLevel: 1"
+         cursor="rayOrigin: mouse" raycaster="objects: .clickable; far: 60"
+>
+  <a-sky color="#aee3ff"></a-sky>
+  <a-entity light="type: ambient; color: #ffffff; intensity: 0.75"></a-entity>
+  <a-entity light="type: directional; color: #fff4d6; intensity: 0.9" position="4 10 6"></a-entity>
+
+  <a-entity id="rig">
+    <a-entity id="cam" camera look-controls="magicWindowTrackingEnabled: true" position="0 1.6 0">
+      <a-entity id="hud" position="0 -0.43 -1" visible="false"></a-entity>
+    </a-entity>
+    <a-entity laser-controls="hand: right" raycaster="objects: .clickable; far: 60; lineColor: #ffd23f"></a-entity>
+    <a-entity laser-controls="hand: left" raycaster="objects: .clickable; far: 60; lineColor: #ffd23f"></a-entity>
+  </a-entity>
+
+  <a-entity id="world"></a-entity>
+  <a-entity id="ui"></a-entity>
+</a-scene>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------- Lesson content (Science, Grade 1: Local habitats) ----------
+  const ZONES = [
+    { id: 'forest', name: 'الْغَابَةُ', emoji: '🌳', angle: 0, ground: '#5cae4f',
+      about: 'فِي الْغَابَةِ أَشْجَارٌ كَثِيرَةٌ. تَجِدُ فِيهَا الْحَيَوَانَاتُ الْمَسْكَنَ وَالطَّعَامَ وَالْمَاءَ.' },
+    { id: 'pond', name: 'الْبِرْكَةُ', emoji: '💧', angle: 72, ground: '#8fd16a',
+      about: 'الْبِرْكَةُ مَكَانٌ فِيهِ مَاءٌ. تَعِيشُ فِيهَا السَّمَكَةُ وَالضِّفْدَعُ وَالْبَطَّةُ.' },
+    { id: 'desert', name: 'الصَّحْرَاءُ', emoji: '🏜️', angle: 144, ground: '#f0cf83',
+      about: 'الصَّحْرَاءُ حَارَّةٌ وَفِيهَا رِمَالٌ كَثِيرَةٌ وَمَاءٌ قَلِيلٌ. يَعِيشُ فِيهَا الْجَمَلُ.' },
+    { id: 'farm', name: 'الْمَزْرَعَةُ', emoji: '🚜', angle: 216, ground: '#a9d86e',
+      about: 'الْمَزْرَعَةُ مَكَانٌ يُرَبِّي فِيهِ الْإِنْسَانُ الْحَيَوَانَاتِ وَيَزْرَعُ النَّبَاتَاتِ.' },
+    { id: 'home', name: 'الْبَيْتُ', emoji: '🏠', angle: 288, ground: '#c7e89a',
+      about: 'فِي الْبَيْتِ نُرَبِّي الْحَيَوَانَاتِ الْأَلِيفَةَ، وَنَزْرَعُ الْوَرْدَ فِي الْأَصِيصِ.' },
+  ];
+
+  // f: feminine noun (verb agreement), plant: plant vs animal. pos: local zone coords [x, y, z], s: size (m)
+  const CREATURES = [
+    { id: 'owl', zone: 'forest', e: '🦉', name: 'الْبُومَةُ', f: 1, fact: 'تَسْكُنُ فِي جَوْفِ الشَّجَرَةِ.', pos: [-3.2, 2.1, -1.2], s: 1.0 },
+    { id: 'fox', zone: 'forest', e: '🦊', name: 'الثَّعْلَبُ', fact: 'يَسْكُنُ فِي جُحْرٍ بَيْنَ الْأَشْجَارِ.', pos: [1.4, 0, 0.2], s: 1.3 },
+    { id: 'rabbit', zone: 'forest', e: '🐇', name: 'الْأَرْنَبُ', fact: 'يَأْكُلُ الْأَعْشَابَ وَيَخْتَبِئُ فِي جُحْرِهِ.', pos: [-1.2, 0, 1.4], s: 1.0 },
+    { id: 'squirrel', zone: 'forest', e: '🐿️', name: 'السِّنْجَابُ', fact: 'يَعِيشُ فَوْقَ الْأَشْجَارِ وَيَأْكُلُ الْبُذُورَ.', pos: [3.4, 1.6, -1.4], s: 0.9 },
+    { id: 'tree', zone: 'forest', e: '🌳', name: 'الشَّجَرَةُ', f: 1, plant: 1, fact: 'تَنْمُو فِي الْغَابَةِ وَتُعْطِي الْحَيَوَانَاتِ الظِّلَّ وَالْمَسْكَنَ.', pos: [-0.2, 0, -2.2], s: 2.4 },
+
+    { id: 'fish', zone: 'pond', e: '🐟', name: 'السَّمَكَةُ', f: 1, fact: 'تَعِيشُ فِي الْمَاءِ وَلَا تَسْتَطِيعُ الْعَيْشَ خَارِجَهُ.', pos: [-1.0, 0.1, 0.4], s: 1.0 },
+    { id: 'frog', zone: 'pond', e: '🐸', name: 'الضِّفْدَعُ', fact: 'يَعِيشُ قُرْبَ الْمَاءِ وَيَأْكُلُ الْحَشَرَاتِ.', pos: [1.3, 0.08, 1.2], s: 0.9 },
+    { id: 'duck', zone: 'pond', e: '🦆', name: 'الْبَطَّةُ', f: 1, fact: 'تَسْبَحُ فِي الْمَاءِ وَتَأْكُلُ النَّبَاتَاتِ الصَّغِيرَةَ.', pos: [0.2, 0.05, -1.6], s: 1.1 },
+    { id: 'turtle', zone: 'pond', e: '🐢', name: 'السُّلَحْفَاةُ', f: 1, fact: 'تَعِيشُ فِي الْمَاءِ وَتَخْرُجُ إِلَى الصُّخُورِ لِتَسْتَدْفِئَ.', pos: [3.0, 0.3, 1.6], s: 1.0 },
+
+    { id: 'camel', zone: 'desert', e: '🐪', name: 'الْجَمَلُ', fact: 'يَصْبِرُ عَلَى الْعَطَشِ وَيَأْكُلُ نَبَاتَاتِ الصَّحْرَاءِ.', pos: [-1.4, 0, -0.4], s: 2.0 },
+    { id: 'lizard', zone: 'desert', e: '🦎', name: 'الضَّبُّ', fact: 'يَسْكُنُ فِي جُحْرٍ تَحْتَ الرِّمَالِ.', pos: [1.5, 0, 1.6], s: 0.9 },
+    { id: 'palm', zone: 'desert', e: '🌴', name: 'النَّخْلَةُ', f: 1, plant: 1, fact: 'تَنْمُو فِي الْوَاحَاتِ وَتُعْطِينَا التَّمْرَ.', pos: [2.9, 0, -1.8], s: 2.6 },
+    { id: 'cactus', zone: 'desert', e: '🌵', name: 'الصَّبَّارُ', plant: 1, fact: 'يَخْزُنُ الْمَاءَ فِي سَاقِهِ.', pos: [-3.1, 0, 1.6], s: 1.5 },
+
+    { id: 'cow', zone: 'farm', e: '🐄', name: 'الْبَقَرَةُ', f: 1, fact: 'يُرَبِّيهَا الْمُزَارِعُ، وَتُعْطِينَا الْحَلِيبَ.', pos: [-0.4, 0, 0.2], s: 1.7 },
+    { id: 'sheep', zone: 'farm', e: '🐑', name: 'الْخَرُوفُ', fact: 'يَأْكُلُ الْعُشْبَ وَيُعْطِينَا الصُّوفَ.', pos: [1.9, 0, 1.2], s: 1.2 },
+    { id: 'hen', zone: 'farm', e: '🐔', name: 'الدَّجَاجَةُ', f: 1, fact: 'تَسْكُنُ فِي الْقُنِّ وَتُعْطِينَا الْبَيْضَ.', pos: [-2.2, 0, 1.8], s: 0.9 },
+    { id: 'wheat', zone: 'farm', e: '🌾', name: 'الْقَمْحُ', plant: 1, fact: 'يَزْرَعُهُ الْمُزَارِعُ، وَنَصْنَعُ مِنْهُ الْخُبْزَ.', pos: [3.0, 0, -1.4], s: 1.3 },
+
+    { id: 'cat', zone: 'home', e: '🐈', name: 'الْقِطَّةُ', f: 1, fact: 'حَيَوَانٌ أَلِيفٌ يَعِيشُ مَعَنَا فِي الْبَيْتِ.', pos: [-1.0, 0, 1.4], s: 1.0 },
+    { id: 'dog', zone: 'home', e: '🐕', name: 'الْكَلْبُ', fact: 'حَيَوَانٌ أَلِيفٌ يَحْرُسُ الْبَيْتَ.', pos: [0.9, 0, 0.7], s: 1.2 },
+    { id: 'rose', zone: 'home', e: '🌹', name: 'الْوَرْدَةُ', f: 1, plant: 1, fact: 'تَنْمُو فِي الْأَصِيصِ، وَنَسْقِيهَا بِالْمَاءِ.', pos: [-2.6, 0.55, -0.2], s: 0.9 },
+  ];
+
+  const EXPLORE_GOAL = 12;
+  const GAME_ROUNDS = 8;
+
+  // ---------- Helpers ----------
+  const PPM = 320; // canvas pixels per metre
+  const FONT = '"Baloo Bhaijaan 2","Noto Naskh Arabic","Noto Sans Arabic",Tahoma,sans-serif';
+  const EMOJI_FONT = '"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif';
+  const C = { ink: '#173b57', paper: '#fffaf0', sun: '#ffc93c', orange: '#ff8a3d', leaf: '#3f9b48', sky: '#2b8fd6', red: '#e2574c' };
+  const toAr = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+  const rad = d => d * Math.PI / 180;
+  const zoneById = id => ZONES.find(z => z.id === id);
+  const verbLive = c => c.plant ? (c.f ? 'تَنْمُو' : 'يَنْمُو') : (c.f ? 'تَعِيشُ' : 'يَعِيشُ');
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  const scene = document.getElementById('scene');
+  const world = document.getElementById('world');
+  const ui = document.getElementById('ui');
+  const hud = document.getElementById('hud');
+  const camEl = document.getElementById('cam');
+  const V = () => new THREE.Vector3();
+
+  function ent(attrs = {}, parent) {
+    const el = document.createElement('a-entity');
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    if (parent) parent.appendChild(el);
+    return el;
+  }
+
+  function canvasFor(wm, hm) {
+    const c = document.createElement('canvas');
+    c.width = Math.round(wm * PPM); c.height = Math.round(hm * PPM);
+    return c;
+  }
+
+  // Run once the entity's geometry + material components have built the final mesh.
+  function whenMesh(el, fn) {
+    const tryIt = () => {
+      const m = el.getObject3D('mesh'), mat = el.components.material;
+      if (m && mat && mat.material && m.material === mat.material) fn(m);
+      else if (el.isConnected || !el.hasLoaded) setTimeout(tryIt, 16);
+    };
+    tryIt();
+  }
+
+  function applyCanvas(el, canvas, { overlay = false } = {}) {
+    whenMesh(el, m => {
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = 4;
+      m.material.map = tex;
+      m.material.transparent = true;
+      m.material.alphaTest = 0.02;
+      if (overlay) { m.material.depthTest = false; m.renderOrder = 999; }
+      m.material.needsUpdate = true;
+      el._tex = tex;
+    });
+  }
+
+  function refresh(el) { if (el._tex) el._tex.needsUpdate = true; }
+
+  function planeEnt(wm, hm, canvas, parent, opts = {}) {
+    const el = ent({ geometry: { primitive: 'plane', width: wm, height: hm }, material: { shader: 'flat', side: 'double', transparent: true } }, parent);
+    applyCanvas(el, canvas, opts);
+    el._canvas = canvas;
+    return el;
+  }
+
+  function wrap(ctx, text, maxW) {
+    const out = [];
+    for (const para of String(text).split('\n')) {
+      let line = '';
+      for (const w of para.split(' ')) {
+        const t = line ? line + ' ' + w : w;
+        if (ctx.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t;
+      }
+      out.push(line);
+    }
+    return out;
+  }
+
+  const emojiCache = new Map();
+  function emojiCanvas(e) {
+    if (emojiCache.has(e)) return emojiCache.get(e);
+    const c = document.createElement('canvas'); c.width = c.height = 256;
+    const x = c.getContext('2d');
+    x.font = `200px ${EMOJI_FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText(e, 128, 140);
+    emojiCache.set(e, c);
+    return c;
+  }
+
+  // Card: rounded panel with a coloured header strip, a title and wrapped Arabic lines.
+  function drawCard(canvas, { title, lines = [], accent = C.orange, titleSize = 0.2, textSize = 0.125, align = 'right', footer }) {
+    const x = canvas.getContext('2d'); const W = canvas.width, H = canvas.height; const p = W * 0.06;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = 'rgba(23,59,87,.18)'; x.beginPath(); x.roundRect(8, 14, W - 16, H - 16, 36); x.fill();
+    x.fillStyle = C.paper; x.beginPath(); x.roundRect(4, 4, W - 12, H - 18, 36); x.fill();
+    x.lineWidth = 10; x.strokeStyle = accent; x.stroke();
+    x.direction = 'rtl'; x.fillStyle = C.ink; x.textBaseline = 'top';
+    let y = p * 0.8;
+    if (title) {
+      x.font = `800 ${titleSize * PPM}px ${FONT}`; x.textAlign = 'center';
+      for (const l of wrap(x, title, W - p * 2)) { x.fillText(l, W / 2, y); y += titleSize * PPM * 1.45; }
+      x.fillStyle = accent; x.fillRect(W * 0.3, y, W * 0.4, 6); y += p * 0.5;
+    }
+    x.fillStyle = C.ink; x.font = `600 ${textSize * PPM}px ${FONT}`; x.textAlign = align;
+    const ax = align === 'center' ? W / 2 : W - p;
+    for (const item of lines) {
+      const color = typeof item === 'object' ? item.color : null;
+      const txt = typeof item === 'object' ? item.t : item;
+      const size = typeof item === 'object' && item.size ? item.size : textSize;
+      x.font = `${typeof item === 'object' && item.bold ? 800 : 600} ${size * PPM}px ${FONT}`;
+      x.fillStyle = color || C.ink;
+      for (const l of wrap(x, txt, W - p * 2)) { x.fillText(l, ax, y); y += size * PPM * 1.55; }
+      y += size * PPM * 0.25;
+    }
+    if (footer) {
+      x.font = `700 ${0.1 * PPM}px ${FONT}`; x.fillStyle = 'rgba(23,59,87,.6)'; x.textAlign = 'center';
+      x.fillText(footer, W / 2, H - p * 0.9 - 0.1 * PPM);
+    }
+  }
+
+  function makeButton(label, parent, { w = 1.1, h = 0.32, color = C.sun, text = C.ink, onClick }) {
+    const c = canvasFor(w, h); const x = c.getContext('2d'); const W = c.width, H = c.height;
+    x.fillStyle = 'rgba(23,59,87,.25)'; x.beginPath(); x.roundRect(4, 12, W - 8, H - 14, H / 2); x.fill();
+    x.fillStyle = color; x.beginPath(); x.roundRect(4, 2, W - 8, H - 14, H / 2); x.fill();
+    x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = text;
+    x.font = `800 ${H * 0.42}px ${FONT}`; x.fillText(label, W / 2, H / 2 - 4);
+    const el = planeEnt(w, h, c, parent);
+    makeClickable(el, onClick);
+    return el;
+  }
+
+  // ---------- Input: suppress click after drag-to-look ----------
+  let downAt = null, dragged = false;
+  window.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; dragged = false; });
+  window.addEventListener('pointermove', e => { if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 12) dragged = true; });
+  window.addEventListener('pointerup', () => { downAt = null; setTimeout(() => { dragged = false; }, 60); });
+
+  function makeClickable(el, onClick) {
+    el.classList.add('clickable');
+    el.addEventListener('mouseenter', () => { if (!el._pulse) el.object3D.scale.setScalar((el._base || 1) * 1.08); });
+    el.addEventListener('mouseleave', () => { if (!el._pulse) el.object3D.scale.setScalar(el._base || 1); });
+    el.addEventListener('click', e => { if (dragged) return; unlockAudio(); onClick && onClick(e); });
+  }
+
+  // ---------- Audio ----------
+  let soundOn = true, actx = null;
+  const soundBtn = document.getElementById('sound');
+  soundBtn.addEventListener('click', () => {
+    soundOn = !soundOn;
+    soundBtn.textContent = soundOn ? '🔊 الصوت' : '🔇 الصوت';
+    soundBtn.setAttribute('aria-pressed', String(soundOn));
+    if (!soundOn && 'speechSynthesis' in window) speechSynthesis.cancel();
+  });
+  function unlockAudio() {
+    try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) { /* no audio */ }
+  }
+  function tones(freqs, { dur = 0.13, type = 'sine', vol = 0.18 } = {}) {
+    if (!soundOn || !actx) return;
+    freqs.forEach((f, i) => {
+      const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime + i * dur;
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur * 1.6);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur * 1.8);
+    });
+  }
+  const sfx = {
+    pop: () => tones([660, 880], { dur: 0.07 }),
+    good: () => tones([523, 659, 784, 1047], { dur: 0.11 }),
+    bad: () => tones([300, 220], { dur: 0.16, type: 'triangle', vol: 0.12 }),
+  };
+  function speak(text) {
+    if (!soundOn || !('speechSynthesis' in window)) return;
+    const voice = speechSynthesis.getVoices().find(v => /^ar/i.test(v.lang));
+    if (!voice) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/\p{Extended_Pictographic}|️/gu, ''));
+    u.voice = voice; u.lang = voice.lang; u.rate = 0.85;
+    speechSynthesis.speak(u);
+  }
+  if ('speechSynthesis' in window) speechSynthesis.getVoices();
+
+  // ---------- Per-frame systems: tweens, billboards, particles ----------
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const camPos = new THREE.Vector3();
+  const tweens = [];
+  function tween(dur, step, done) { tweens.push({ t: 0, dur, step, done }); }
+
+  AFRAME.registerSystem('lesson', {
+    tick(time, dt) {
+      const d = Math.min(dt, 50) / 1000;
+      if (this.el.camera) this.el.camera.getWorldPosition(camPos);
+      for (let i = tweens.length - 1; i >= 0; i--) {
+        const tw = tweens[i]; tw.t += d;
+        const k = Math.min(1, tw.t / tw.dur);
+        tw.step(k, d);
+        if (k >= 1) { tweens.splice(i, 1); tw.done && tw.done(); }
+      }
+    }
+  });
+
+  AFRAME.registerComponent('billboard', {
+    schema: { bob: { default: 0.05 } },
+    init() { this.phase = Math.random() * 6; this.baseY = this.el.object3D.position.y; this.tmp = new THREE.Vector3(); },
+    tick(t) {
+      const o = this.el.object3D;
+      if (!reduceMotion && this.data.bob) o.position.y = this.baseY + Math.sin(t / 600 + this.phase) * this.data.bob;
+      o.getWorldPosition(this.tmp);
+      o.lookAt(camPos.x, this.tmp.y, camPos.z);
+    }
+  });
+
+  function burst(pos) {
+    const icons = ['⭐', '✨', '🌟', '🎉'];
+    for (let i = 0; i < 16; i++) {
+      const p = planeEnt(0.35, 0.35, emojiCanvas(icons[i % icons.length]), ui);
+      p.setAttribute('billboard', { bob: 0 });
+      p.object3D.position.copy(pos);
+      const v = [(Math.random() - 0.5) * 3, 2 + Math.random() * 2.5, (Math.random() - 0.5) * 3];
+      tween(1.3, (k, d) => {
+        v[1] -= 5 * d;
+        p.object3D.position.x += v[0] * d; p.object3D.position.y += v[1] * d; p.object3D.position.z += v[2] * d;
+        const m = p.getObject3D('mesh'); if (m) m.material.opacity = 1 - k;
+      }, () => p.remove());
+    }
+  }
+
+  function pulse(el, on) {
+    el._pulse = on;
+    if (!on) { el.object3D.scale.setScalar(el._base || 1); return; }
+    const loop = () => tween(0.9, k => { if (el._pulse) el.object3D.scale.setScalar((el._base || 1) * (1 + 0.12 * Math.sin(k * Math.PI))); }, () => { if (el._pulse) loop(); });
+    loop();
+  }
+
+  function shake(el) {
+    const r0 = el.object3D.rotation.z;
+    tween(0.5, k => { el.object3D.rotation.z = r0 + Math.sin(k * Math.PI * 6) * 0.08 * (1 - k); }, () => { el.object3D.rotation.z = r0; });
+  }
+
+  // ---------- World ----------
+  const ZONE_R = 9.5, SIGN_R = 5.2;
+  const polar = (deg, r) => [r * Math.sin(rad(deg)), -r * Math.cos(rad(deg))];
+
+  function prim(tag, attrs, parent) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    parent.appendChild(el); return el;
+  }
+  function tree(g, x, z, s = 1, kind = 'round') {
+    prim('a-cylinder', { position: `${x} ${1 * s} ${z}`, radius: 0.18 * s, height: 2 * s, color: '#7a4b2a' }, g);
+    if (kind === 'round') prim('a-sphere', { position: `${x} ${2.5 * s} ${z}`, radius: 1.1 * s, color: '#2f8f3a', 'segments-width': 12, 'segments-height': 8 }, g);
+    else prim('a-cone', { position: `${x} ${2.7 * s} ${z}`, 'radius-bottom': 1 * s, height: 2.4 * s, color: '#23793a', 'segments-radial': 10 }, g);
+  }
+  function cloud(x, y, z, s) {
+    const g = ent({ position: `${x} ${y} ${z}` }, world);
+    [[0, 0, 0, 1.4], [1.3, -0.2, 0.2, 1.0], [-1.3, -0.25, 0, 1.0], [0.5, 0.5, -0.2, 0.9]].forEach(([a, b, c, r]) =>
+      prim('a-sphere', { position: `${a * s} ${b * s} ${c * s}`, radius: r * s, color: '#ffffff', 'segments-width': 10, 'segments-height': 8, material: 'shader: flat' }, g));
+  }
+
+  const decor = {
+    forest(g) {
+      [[-3.2, -2.6, 1.1], [3.4, -2.4, 1], [-1.4, -4.2, 1.2], [1.6, -4.4, 1.1], [-4.4, 0.2, 0.9], [4.4, 0.6, 0.9]].forEach(([x, z, s], i) => tree(g, x, z, s, i % 2 ? 'cone' : 'round'));
+      [[0.4, 1.9], [-2.4, 2.2], [2.6, 1.8]].forEach(([x, z]) => {
+        prim('a-cylinder', { position: `${x} 0.12 ${z}`, radius: 0.06, height: 0.24, color: '#f3e6cf' }, g);
+        prim('a-sphere', { position: `${x} 0.26 ${z}`, radius: 0.16, 'theta-length': 90, color: '#d2553f' }, g);
+      });
+    },
+    pond(g) {
+      prim('a-cylinder', { position: '0 0.02 0', radius: 4, height: 0.04, color: '#d9c38f', 'segments-radial': 40 }, g);
+      prim('a-cylinder', { position: '0 0.05 0', radius: 3.5, height: 0.04, color: '#3fa7e0', 'segments-radial': 40, material: 'metalness: 0.1; roughness: 0.2' }, g);
+      [[1.3, 1.2], [-2, -0.8], [-0.6, 2.2], [2.2, -1]].forEach(([x, z]) => prim('a-cylinder', { position: `${x} 0.08 ${z}`, radius: 0.35, height: 0.02, color: '#4caf50' }, g));
+      [[3.0, 1.6, 0.5], [-3.4, 1.2, 0.35], [3.3, -1.6, 0.4]].forEach(([x, z, r]) => prim('a-dodecahedron', { position: `${x} ${r * 0.5} ${z}`, radius: r, color: '#8d99a6' }, g));
+      for (let i = 0; i < 10; i++) { const a = -1.1 + i * 0.22; prim('a-cylinder', { position: `${-3.6 * Math.cos(a)} 0.5 ${-3.6 * Math.sin(a) - 0.2}`, radius: 0.03, height: 1, color: '#5f8f2f' }, g); }
+    },
+    desert(g) {
+      [[-2.5, -3, 3, 0.9, 2], [2.8, -3.4, 3.4, 1.1, 2.2], [0, -4.6, 4, 1.4, 2.4]].forEach(([x, z, sx, sy, sz]) =>
+        prim('a-sphere', { position: `${x} 0 ${z}`, radius: 1, scale: `${sx} ${sy} ${sz}`, color: '#e8c170', 'segments-width': 16, 'segments-height': 10 }, g));
+      [[0.2, 2.4, 0.25], [-2.2, -0.2, 0.3]].forEach(([x, z, r]) => prim('a-dodecahedron', { position: `${x} ${r * 0.4} ${z}`, radius: r, color: '#c79a5b' }, g));
+    },
+    farm(g) {
+      prim('a-box', { position: '-2.8 1.1 -3', width: 3, height: 2.2, depth: 2.2, color: '#c9433a' }, g);
+      prim('a-cone', { position: '-2.8 2.8 -3', 'radius-bottom': 2.2, 'radius-top': 0, height: 1.2, 'segments-radial': 4, rotation: '0 45 0', color: '#7b2d26' }, g);
+      prim('a-plane', { position: '-2.8 0.7 -1.89', width: 1, height: 1.4, color: '#fff4e0' }, g);
+      for (let i = -4; i <= 4; i++) prim('a-box', { position: `${i * 0.9} 0.45 3.4`, width: 0.1, height: 0.9, depth: 0.1, color: '#b98552' }, g);
+      prim('a-box', { position: '0 0.65 3.4', width: 7.3, height: 0.08, depth: 0.06, color: '#b98552' }, g);
+      prim('a-box', { position: '0 0.3 3.4', width: 7.3, height: 0.08, depth: 0.06, color: '#b98552' }, g);
+      [[1.2, -2.8], [2.1, -3.2]].forEach(([x, z]) => prim('a-cylinder', { position: `${x} 0.45 ${z}`, radius: 0.45, height: 0.9, rotation: '90 0 0', color: '#e6c35c' }, g));
+    },
+    home(g) {
+      prim('a-box', { position: '2.4 1.2 -3', width: 3.2, height: 2.4, depth: 2.6, color: '#f7e3c3' }, g);
+      prim('a-cone', { position: '2.4 3.05 -3', 'radius-bottom': 2.4, 'radius-top': 0, height: 1.3, 'segments-radial': 4, rotation: '0 45 0', color: '#d0643b' }, g);
+      prim('a-plane', { position: '2.4 0.65 -1.69', width: 0.8, height: 1.3, color: '#8a5a3b' }, g);
+      [1.4, 3.4].forEach(x => prim('a-plane', { position: `${x} 1.55 -1.69`, width: 0.6, height: 0.6, color: '#8fd3ff' }, g));
+      prim('a-cylinder', { position: '-2.6 0.25 -0.2', radius: 0.25, 'radius-top': 0.3, height: 0.5, color: '#d9774a' }, g);
+      ['#ff6f91', '#ffd23f', '#ff9671', '#c34a8a'].forEach((col, i) => prim('a-sphere', { position: `${-0.6 + i * 0.5} 0.18 ${-1.2}`, radius: 0.16, color: col }, g));
+      prim('a-box', { position: '-0.2 0.3 -1.9', width: 2.6, height: 0.08, depth: 0.08, color: '#ffffff' }, g);
+    },
+  };
+
+  const creatureEls = new Map();
+  const signEls = new Map();
+  const discovered = new Set();
+
+  function buildWorld() {
+    // Tessellated ground: one huge fan of triangles under the camera causes depth artefacts on some GPUs.
+    prim('a-plane', { width: 120, height: 120, 'segments-width': 40, 'segments-height': 40, rotation: '-90 0 0', color: '#8fd16a' }, world);
+    prim('a-cylinder', { position: '0 0.06 0', radius: 1.4, height: 0.12, color: '#f3dcb0', 'segments-radial': 32 }, world);
+    prim('a-ring', { position: '0 0.125 0', rotation: '-90 0 0', 'radius-inner': 1.25, 'radius-outer': 1.4, color: '#ffc93c', 'segments-theta': 48 }, world);
+    prim('a-sphere', { position: '-18 26 -30', radius: 3, color: '#ffe066', material: 'shader: flat' }, world);
+    [[-10, 12, -24, 1.4], [14, 14, -20, 1.2], [22, 11, 8, 1.5], [-20, 13, 12, 1.3], [4, 15, 26, 1.4]].forEach(a => cloud(...a));
+    // distant hills
+    for (let i = 0; i < 14; i++) {
+      const a = i * (360 / 14) + 8, [x, z] = polar(a, 34 + (i % 3) * 3);
+      prim('a-sphere', { position: `${x} -2 ${z}`, radius: 7 + (i % 4), color: i % 2 ? '#7cc45c' : '#6bb552', 'segments-width': 12, 'segments-height': 8 }, world);
+    }
+
+    for (const z of ZONES) {
+      const [x, zz] = polar(z.angle, ZONE_R);
+      const g = ent({ position: `${x} 0 ${zz}`, rotation: `0 ${-z.angle} 0` }, world);
+      prim('a-circle', { position: '0 0.01 0', rotation: '-90 0 0', radius: 4.6, color: z.ground, segments: 40 }, g);
+      decor[z.id](g);
+      for (const c of CREATURES.filter(c => c.zone === z.id)) {
+        const el = planeEnt(c.s, c.s, emojiCanvas(c.e), g);
+        el.setAttribute('position', `${c.pos[0]} ${c.pos[1] + c.s / 2} ${c.pos[2]}`);
+        el.setAttribute('billboard', { bob: c.plant ? 0.02 : 0.06 });
+        makeClickable(el, () => onCreature(c));
+        creatureEls.set(c.id, el);
+      }
+      buildSign(z);
+    }
+  }
+
+  function buildSign(z) {
+    const [x, zz] = polar(z.angle, SIGN_R);
+    const g = ent({ position: `${x} 0 ${zz}`, rotation: `0 ${-z.angle} 0` }, world);
+    [-0.95, 0.95].forEach(px => prim('a-cylinder', { position: `${px} 1.4 -0.05`, radius: 0.06, height: 2.8, color: '#8a5a3b' }, g));
+    const c = canvasFor(2.3, 0.95);
+    drawSign(c, z, C.orange);
+    const board = planeEnt(2.3, 0.95, c, g);
+    board.setAttribute('position', '0 2.75 0');
+    makeClickable(board, () => onSign(z, board));
+    board._zone = z; board._canvas = c;
+    signEls.set(z.id, board);
+  }
+
+  function drawSign(c, z, rim) {
+    const x = c.getContext('2d'), W = c.width, H = c.height;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = '#b77a45'; x.beginPath(); x.roundRect(4, 4, W - 8, H - 8, 40); x.fill();
+    x.lineWidth = 12; x.strokeStyle = rim; x.stroke();
+    x.fillStyle = '#fdf0d5'; x.beginPath(); x.roundRect(28, 28, W - 56, H - 56, 26); x.fill();
+    x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = C.ink;
+    // emoji on the left, name centred in the remaining space
+    const left = H * 0.95, right = W - 40;
+    let fs = H * 0.42;
+    x.font = `800 ${fs}px ${FONT}`;
+    while (x.measureText(z.name).width > right - left - 20 && fs > 20) { fs -= 4; x.font = `800 ${fs}px ${FONT}`; }
+    x.fillText(z.name, (left + right) / 2, H * 0.53);
+    x.drawImage(emojiCanvas(z.emoji), H * 0.18, H * 0.14, H * 0.72, H * 0.72);
+  }
+
+  function redrawSign(z, rim) {
+    const b = signEls.get(z.id); drawSign(b._canvas, z, rim); refresh(b);
+  }
+
+  function markDiscovered(c) {
+    const el = creatureEls.get(c.id);
+    if (el._badge) return;
+    const b = planeEnt(0.34, 0.34, emojiCanvas('✅'), el);
+    b.setAttribute('position', `${c.s * 0.38} ${c.s * 0.42} 0.02`);
+    el._badge = b;
+  }
+
+  // ---------- Panels near the user ----------
+  let panel = null, infoCard = null;
+
+  function inView() { return scene.is('vr-mode') || scene.is('ar-mode'); }
+
+  function frontOf(dist, y, dirOverride) {
+    const dir = dirOverride || new THREE.Vector3();
+    if (!dirOverride) scene.camera.getWorldDirection(dir);
+    dir.y = 0; if (dir.lengthSq() < 1e-4) dir.set(0, 0, -1); dir.normalize();
+    const portrait = !inView() && innerWidth < innerHeight;
+    const d = dist * (portrait ? 1.7 : 1);
+    return { pos: new THREE.Vector3(camPos.x + dir.x * d, y, camPos.z + dir.z * d), rotY: Math.atan2(-dir.x, -dir.z) };
+  }
+
+  function place(el, dist, y, dir) {
+    const { pos, rotY } = frontOf(dist, y, dir);
+    el.object3D.position.copy(pos); el.object3D.rotation.set(0, rotY, 0);
+    el.object3D.scale.setScalar(0.6);
+    tween(0.25, k => el.object3D.scale.setScalar(0.6 + 0.4 * (1 - Math.pow(1 - k, 3))));
+  }
+
+  function closePanel() { if (panel) { panel.remove(); panel = null; } }
+  function closeInfo() { if (infoCard) { infoCard.remove(); infoCard = null; } }
+
+  function showPanel({ w = 2.4, h = 1.6, title, lines, accent, buttons = [], say }) {
+    closePanel(); closeInfo();
+    const g = ent({}, ui);
+    const c = canvasFor(w, h);
+    drawCard(c, { title, lines, accent });
+    planeEnt(w, h, c, g);
+    const bw = Math.min(1.1, (w - 0.3) / Math.max(1, buttons.length) - 0.1);
+    buttons.forEach((b, i) => {
+      const btn = makeButton(b.label, g, { w: bw, color: b.color || C.sun, text: b.text || C.ink, onClick: () => { sfx.pop(); b.onClick(); } });
+      const n = buttons.length, x = (n - 1 - i - (n - 1) / 2) * (bw + 0.12);
+      btn.setAttribute('position', `${x} ${-h / 2 - 0.1} 0.02`);
+    });
+    panel = g;
+    place(g, 2.7, 1.7);
+    if (say) speak(say);
+    return g;
+  }
+
+  // ---------- HUD ----------
+  const hudCanvas = canvasFor(0.78, 0.15);
+  let hudPlane = null;
+  function setHud(text, sub) {
+    const x = hudCanvas.getContext('2d'), W = hudCanvas.width, H = hudCanvas.height;
+    x.clearRect(0, 0, W, H);
+    x.fillStyle = 'rgba(23,59,87,.82)'; x.beginPath(); x.roundRect(2, 2, W - 4, H - 4, H / 2); x.fill();
+    x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#fff';
+    x.font = `800 ${H * (sub ? 0.36 : 0.44)}px ${FONT}`;
+    x.fillText(text, W / 2, sub ? H * 0.36 : H / 2);
+    if (sub) { x.font = `600 ${H * 0.26}px ${FONT}`; x.fillStyle = '#ffe28a'; x.fillText(sub, W / 2, H * 0.74); }
+    if (!hudPlane) { hudPlane = planeEnt(0.78, 0.15, hudCanvas, hud, { overlay: true }); }
+    refresh(hudPlane);
+    hud.setAttribute('visible', true);
+  }
+  function hideHud() { hud.setAttribute('visible', false); }
+
+  // ---------- Lesson flow ----------
+  let mode = 'welcome';
+  let game = null;
+
+  function welcome() {
+    mode = 'welcome'; hideHud();
+    showPanel({
+      w: 2.6, h: 2.1,
+      title: 'رِحْلَةٌ إِلَى الْبِيئَاتِ الْمَحَلِّيَّةِ',
+      lines: [
+        { t: 'الْبِيئَةُ الْمَحَلِّيَّةُ: الْمَكَانُ الَّذِي يَعِيشُ فِيهِ الْكَائِنُ الْحَيُّ.', bold: true, color: C.sky },
+        'فِي هَذِهِ الرِّحْلَةِ أَسْتَطِيعُ أَنْ:',
+        '• أَذْكُرَ اسْمَ مَكَانٍ تَعِيشُ فِيهِ الْحَيَوَانَاتُ.',
+        '• أَذْكُرَ اسْمَ مَكَانٍ تَنْمُو فِيهِ النَّبَاتَاتُ.',
+        '• أُطَابِقَ الْحَيَوَانَ وَالنَّبَاتَ مَعَ بِيئَتِهِ.',
+        { t: 'مُفْرَدَاتٌ: بِيئَةٌ • مَزْرَعَةٌ • حَيَوَانَاتٌ أَلِيفَةٌ', color: C.leaf, bold: true },
+      ],
+      buttons: [{ label: 'ابْدَأِ الرِّحْلَةَ', onClick: exploreIntro }],
+      say: 'مرحبًا! هيا نقوم برحلة إلى البيئات المحلية.',
+    });
+  }
+
+  function exploreIntro() {
+    showPanel({
+      w: 2.4, h: 1.45, accent: C.leaf,
+      title: 'الْمَهَمَّةُ ١: اكْتَشِفْ!',
+      lines: [
+        `انْظُرْ حَوْلَكَ، هُنَاكَ ${toAr(ZONES.length)} بِيئَاتٍ.`,
+        'الْمِسْ كُلَّ حَيَوَانٍ وَنَبَاتٍ لِتَعْرِفَ أَيْنَ يَعِيشُ.',
+        'الْمِسْ لَوْحَةَ الْبِيئَةِ لِتَعْرِفَ عَنْهَا أَكْثَرَ.',
+      ],
+      buttons: [{ label: 'هَيَّا!', color: C.leaf, text: '#fff', onClick: startExplore }],
+      say: 'المهمة الأولى: اكتشف! انظر حولك والمس كل حيوان ونبات.',
+    });
+  }
+
+  function exploreHud() {
+    const goal = discovered.size < EXPLORE_GOAL ? EXPLORE_GOAL : CREATURES.length;
+    setHud(`اكْتَشَفْتَ ${toAr(discovered.size)} مِنْ ${toAr(goal)}`, 'الْمِسِ الْحَيَوَانَاتِ وَالنَّبَاتَاتِ');
+  }
+
+  function startExplore() { closePanel(); mode = 'explore'; exploreHud(); }
+
+  function onCreature(c) {
+    if (mode !== 'explore' && mode !== 'free') return;
+    sfx.pop();
+    const el = creatureEls.get(c.id);
+    const y0 = el.object3D.position.y;
+    tween(0.45, k => { el.object3D.position.y = y0 + Math.sin(k * Math.PI) * 0.4; });
+    const z = zoneById(c.zone);
+    const where = `${verbLive(c)} فِي ${z.name}`;
+    const needs = c.plant ? 'تَحْتَاجُ إِلَى: الْمَاءِ ☀️ وَالضَّوْءِ وَالتُّرْبَةِ 🌱' : 'تُوَفِّرُ لَهُ الْبِيئَةُ: الْمَسْكَنَ 🏠 وَالطَّعَامَ 🍎 وَالْمَاءَ 💧';
+    closeInfo();
+    const g = ent({}, ui);
+    const cv = canvasFor(1.9, 1.05);
+    drawCard(cv, { title: `${c.e}  ${c.name}`, titleSize: 0.17, textSize: 0.105, accent: C.sky,
+      lines: [{ t: `${where} ${z.emoji}`, bold: true, color: C.leaf, size: 0.12 }, c.fact, { t: needs, size: 0.09, color: '#5b6f80' }] });
+    planeEnt(1.9, 1.05, cv, g);
+    const x = makeButton('✖', g, { w: 0.24, h: 0.24, color: C.red, text: '#fff', onClick: closeInfo });
+    x.setAttribute('position', '0.86 0.46 0.02');
+    infoCard = g;
+    const dir = new THREE.Vector3(); el.object3D.getWorldPosition(dir); dir.sub(camPos);
+    place(g, 2.4, 1.75, dir);
+    speak(`${c.name} ${where}. ${c.fact}`);
+
+    if (!discovered.has(c.id)) {
+      discovered.add(c.id); markDiscovered(c);
+      if (mode === 'explore') {
+        exploreHud();
+        if (discovered.size === EXPLORE_GOAL) setTimeout(exploreDone, 2600);
+      }
+    }
+  }
+
+  function onSign(z, board) {
+    if (mode === 'game') return answer(z, board);
+    if (mode !== 'explore' && mode !== 'free') return;
+    sfx.pop();
+    const members = CREATURES.filter(c => c.zone === z.id);
+    const animals = members.filter(c => !c.plant).map(c => c.name).join('، ');
+    const plants = members.filter(c => c.plant).map(c => c.name).join('، ');
+    closeInfo();
+    const g = ent({}, ui);
+    const cv = canvasFor(2.0, 1.1);
+    drawCard(cv, { title: `${z.emoji}  ${z.name}`, titleSize: 0.17, textSize: 0.1, accent: C.orange,
+      lines: [z.about, { t: `حَيَوَانَاتٌ: ${animals}`, color: C.sky, bold: true }, plants ? { t: `نَبَاتَاتٌ: ${plants}`, color: C.leaf, bold: true } : ''] });
+    planeEnt(2.0, 1.1, cv, g);
+    const x = makeButton('✖', g, { w: 0.24, h: 0.24, color: C.red, text: '#fff', onClick: closeInfo });
+    x.setAttribute('position', '0.9 0.49 0.02');
+    infoCard = g;
+    const dir = new THREE.Vector3(); board.object3D.getWorldPosition(dir); dir.sub(camPos);
+    place(g, 2.4, 1.75, dir);
+    speak(z.about);
+  }
+
+  function exploreDone() {
+    if (mode !== 'explore') return;
+    sfx.good();
+    showPanel({
+      w: 2.3, h: 1.2, accent: C.sun,
+      title: `رَائِعٌ! اكْتَشَفْتَ ${toAr(EXPLORE_GOAL)} كَائِنًا حَيًّا ⭐`,
+      lines: [{ t: 'الْآنَ سَاعِدِ الْكَائِنَاتِ الضَّائِعَةَ لِتَعُودَ إِلَى بِيئَتِهَا.', size: 0.12 }],
+      buttons: [
+        { label: 'الْمَهَمَّةُ ٢', onClick: gameIntro },
+        { label: 'أُكْمِلُ الِاسْتِكْشَافَ', color: '#dff1ff', onClick: () => { closePanel(); } },
+      ],
+      say: 'رائع! الآن ساعد الكائنات الضائعة لتعود إلى بيئتها.',
+    });
+  }
+
+  function gameIntro() {
+    mode = 'intro2';
+    showPanel({
+      w: 2.4, h: 1.4, accent: C.orange,
+      title: 'الْمَهَمَّةُ ٢: أَعِدْ كُلَّ كَائِنٍ إِلَى بِيئَتِهِ',
+      lines: ['ضَاعَتْ بَعْضُ الْكَائِنَاتِ الْحَيَّةِ!', 'انْظُرْ إِلَى الْكَائِنِ، ثُمَّ الْمِسْ لَوْحَةَ الْبِيئَةِ الَّتِي يَعِيشُ فِيهَا.'],
+      buttons: [{ label: 'ابْدَأْ', onClick: startGame }],
+      say: 'المهمة الثانية: أعد كل كائن إلى بيئته. المس لوحة البيئة الصحيحة.',
+    });
+  }
+
+  function pickRounds() {
+    const byZone = ZONES.map(z => shuffle(CREATURES.filter(c => c.zone === z.id))[0]);
+    const rest = shuffle(CREATURES.filter(c => !byZone.includes(c)));
+    return shuffle(byZone.concat(rest.slice(0, GAME_ROUNDS - byZone.length)));
+  }
+
+  function startGame() {
+    closePanel(); closeInfo();
+    mode = 'game';
+    game = { rounds: pickRounds(), i: 0, stars: 0, misses: 0, lost: null, busy: false };
+    nextRound();
+  }
+
+  function nextRound() {
+    if (game.lost) { game.lost.remove(); game.lost = null; }
+    signEls.forEach(b => pulse(b, false));
+    if (game.i >= game.rounds.length) return summary();
+    const c = game.rounds[game.i];
+    game.misses = 0; game.busy = false;
+    const g = ent({}, ui);
+    prim('a-cylinder', { position: '0 0.4 0', radius: 0.3, height: 0.8, color: '#ffffff' }, g);
+    prim('a-cylinder', { position: '0 0.82 0', radius: 0.36, height: 0.05, color: C.sun }, g);
+    const sprite = planeEnt(0.75, 0.75, emojiCanvas(c.e), g);
+    sprite.setAttribute('position', '0 1.25 0');
+    sprite.setAttribute('billboard', { bob: 0.06 });
+    const q = planeEnt(0.28, 0.28, emojiCanvas('❓'), g);
+    q.setAttribute('position', '0.4 1.7 0'); q.setAttribute('billboard', { bob: 0.04 });
+    const { pos } = frontOf(2.2, 0);
+    g.object3D.position.copy(pos);
+    game.lost = g; game.sprite = sprite;
+    setHud(`أَيْنَ ${verbLive(c)} ${c.name}؟ ${c.e}`, `الْمِسْ لَوْحَةَ الْبِيئَةِ الصَّحِيحَةِ • ${toAr(game.i + 1)} / ${toAr(game.rounds.length)}`);
+    speak(`أين ${verbLive(c)} ${c.name}؟`);
+  }
+
+  function answer(z, board) {
+    if (!game || game.busy) return;
+    const c = game.rounds[game.i];
+    if (z.id === c.zone) {
+      game.busy = true;
+      if (game.misses === 0) game.stars++;
+      sfx.good();
+      redrawSign(z, C.leaf);
+      setHud(`أَحْسَنْتَ! ${c.name} ${verbLive(c)} فِي ${z.name} ${z.emoji}`, `⭐ ${toAr(game.stars)}`);
+      speak(`أحسنت! ${c.name} ${verbLive(c)} في ${z.name}`);
+      // fly the lost creature to its zone
+      const from = new THREE.Vector3(); game.sprite.object3D.getWorldPosition(from);
+      const [tx, tz] = polar(z.angle, ZONE_R - 1.5);
+      const to = new THREE.Vector3(tx, 1.2, tz);
+      game.lost.remove(); game.lost = null;
+      const s = planeEnt(0.9, 0.9, emojiCanvas(c.e), ui);
+      s.setAttribute('billboard', { bob: 0 });
+      s.object3D.position.copy(from);
+      tween(1.2, k => {
+        const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+        s.object3D.position.lerpVectors(from, to, e);
+        s.object3D.position.y += Math.sin(k * Math.PI) * 2.2;
+      }, () => {
+        burst(to); s.remove();
+        setTimeout(() => { redrawSign(z, C.orange); game.i++; nextRound(); }, 1300);
+      });
+    } else {
+      game.misses++;
+      sfx.bad(); shake(board);
+      redrawSign(z, C.red);
+      setTimeout(() => redrawSign(z, C.orange), 700);
+      const right = zoneById(c.zone);
+      setHud('حَاوِلْ مَرَّةً أُخْرَى 🙂', game.misses >= 2 ? `تَلْمِيحٌ: ${right.name} ${right.emoji}` : c.fact);
+      speak('حاول مرة أخرى');
+      if (game.misses >= 2) pulse(signEls.get(c.zone), true);
+    }
+  }
+
+  function summary() {
+    mode = 'summary'; hideHud(); sfx.good();
+    const n = game.rounds.length;
+    showPanel({
+      w: 2.6, h: 2.15, accent: C.sky,
+      title: 'مَاذَا تَعَلَّمْتُ؟',
+      lines: [
+        { t: `نُجُومُكَ: ${toAr(game.stars)} / ${toAr(n)}  ${'⭐'.repeat(game.stars)}`, bold: true, color: C.orange, size: 0.14 },
+        '• كُلُّ كَائِنٍ حَيٍّ يَعِيشُ فِي بِيئَتِهِ الْمَحَلِّيَّةِ.',
+        '• تُوَفِّرُ الْبِيئَةُ الْمَحَلِّيَّةُ لِلْكَائِنَاتِ الْحَيَّةِ: الْمَسْكَنَ 🏠 وَالطَّعَامَ 🍎 وَالْمَاءَ 💧.',
+        '• الْحَيَوَانَاتُ الْأَلِيفَةُ تَعِيشُ مَعَنَا فِي الْبَيْتِ.',
+        { t: 'قَارِنْ: الْجَمَلُ يَعِيشُ فِي الصَّحْرَاءِ، وَالسَّمَكَةُ تَعِيشُ فِي الْمَاءِ.', color: C.leaf, bold: true },
+      ],
+      buttons: [
+        { label: 'الْعَبْ مَرَّةً أُخْرَى', onClick: startGame },
+        { label: 'اسْتَكْشِفْ بِحُرِّيَّةٍ', color: '#dff1ff', onClick: () => { closePanel(); mode = 'free'; setHud('اسْتَكْشِفْ بِحُرِّيَّةٍ 🌍', 'الْمِسْ أَيَّ كَائِنٍ أَوْ لَوْحَةٍ'); } },
+      ],
+      say: 'ماذا تعلمت؟ كل كائن حي يعيش في بيئته المحلية. البيئة المحلية توفر للكائنات الحية المسكن والطعام والماء.',
+    });
+    burst(frontOf(2.5, 2.6).pos);
+  }
+
+  // ---------- Boot ----------
+  async function boot() {
+    const timeout = ms => new Promise(r => setTimeout(r, ms));
+    await Promise.race([
+      Promise.all([document.fonts.load(`800 40px "Baloo Bhaijaan 2"`, 'عربي'), document.fonts.load(`600 40px "Baloo Bhaijaan 2"`, 'عربي'), document.fonts.load(`40px "Noto Color Emoji"`, '🐪')]),
+      timeout(3500),
+    ]).catch(() => {});
+    buildWorld();
+    // Let the camera report a position before the first panel is placed.
+    requestAnimationFrame(() => setTimeout(() => {
+      if (scene.camera) scene.camera.getWorldPosition(camPos);
+      welcome();
+      document.getElementById('loader').hidden = true;
+    }, 150));
+  }
+
+  if (scene.hasLoaded) boot(); else scene.addEventListener('loaded', boot);
+})();
+</script>
+</body>
+</html>
