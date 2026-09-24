@@ -1534,7 +1534,11 @@
       const og = actx.createGain(); og.gain.value = 1 - noise; o.connect(og).connect(dest); o.start(t0); o.stop(t0 + dur + 0.05);
     }
     if (noise) { const n = noiseSrc(), ng = actx.createGain(); ng.gain.value = noise; n.connect(ng).connect(dest); n.start(t0, Math.random()); n.stop(t0 + dur + 0.05); }
-    out.connect(bus());
+    if (soundAt) {
+      const pn = actx.createPanner(); pn.panningModel = 'HRTF'; pn.distanceModel = 'inverse'; pn.refDistance = 2.5; pn.rolloffFactor = 0.7;
+      if (pn.positionX) { pn.positionX.value = soundAt.x; pn.positionY.value = soundAt.y; pn.positionZ.value = soundAt.z; } else pn.setPosition(soundAt.x, soundAt.y, soundAt.z);
+      out.connect(pn).connect(bus());
+    } else out.connect(bus());
   }
   const VOICES = {
     lion: () => call({ pitch: [150, 120, 80], dur: 1.4, lp: 650, noise: 0.55, peak: 0.45, attack: 0.3, drive: 3 }),
@@ -2405,10 +2409,11 @@
         { type: 'bullet', t: 'الْتَفِتْ حَوْلَكَ: كُلُّ أُمٍّ مَعَهَا صَغِيرُهَا.', size: 0.066 },
         { type: 'bullet', t: 'الْمِسِ الصَّغِيرَ لِتَعْرِفَ اسْمَهُ.', size: 0.066 },
         { type: 'bullet', t: 'الْمِسِ الْأُمَّ أَوِ اللَّوْحَةَ لِتَعْرِفَ أَكْثَرَ.', size: 0.066 },
+        { type: 'bullet', t: 'امْشِ إِلَيْهَا: ادْفَعْ عَصَا التَّحَكُّمِ لِلْأَمَامِ، وَأَشِّرْ إِلَى الْمَكَانِ 👣', size: 0.066 },
         { type: 'highlight', t: 'فِي النَّظَّارَةِ: حَرِّكْ عَصَا التَّحَكُّمِ يَمِينًا أَوْ يَسَارًا لِتَلْتَفِتَ.', size: 0.058, color: C.sky },
       ],
     }, [{ label: 'هَيَّا نَتَعَرَّفُ', color: C.leaf, text: '#fff', onClick: startExplore }]);
-    setMood('point'); say('m1');
+    setMood('point'); say(['m1', 'walk']);
   }
 
   function exploreHud() { setHud(`تَعَرَّفْتَ عَلَى ${toAr(discovered.size)} مِنْ ${toAr(FAMILIES.length)}`, 'الْمِسِ الصِّغَارَ حَوْلَكَ'); }
@@ -2424,7 +2429,9 @@
     if (mode !== 'explore' && mode !== 'free') return;
     sfx.pop();
     const el = role === 'young' ? creatureEls.get(f.id) : parentEls.get(f.id);
-    hop(el); animalVoice(f.id, role === 'young');
+    hop(el);
+    voiceAt(worldPosOf(el, 0.5), () => animalVoice(f.id, role === 'young'));
+    hearts(worldPosOf(el, (el._h || 1.1) + 0.35)); buzz(lastCursor, 0.35, 50);
     const young = role === 'young';
     showInfo({
       w: 1.8, accent: f.accent, icon: young ? '🍼' : f.icon,
@@ -2474,13 +2481,14 @@
     showPanel({
       w: 2.1, accent: C.coral, icon: '🧭', title: 'الْمَهَمَّةُ الثَّانِيَةُ: مَنْ أُمِّي؟',
       blocks: [
-        { type: 'bullet', t: 'سَيَظْهَرُ أَمَامَكَ صَغِيرٌ ضَائِعٌ.', size: 0.066 },
-        { type: 'bullet', t: 'الْتَفِتْ، وَالْمِسْ أُمَّهُ أَوْ لَوْحَتَهَا.', size: 0.066 },
+        { type: 'bullet', t: 'سَيَظْهَرُ أَمَامَكَ صَغِيرٌ ضَائِعٌ يَبْكِي.', size: 0.066 },
+        { type: 'bullet', t: 'اضْغَطِ الزِّنَادَ عَلَيْهِ وَأَمْسِكْهُ، ثُمَّ احْمِلْهُ إِلَى حَظِيرَةِ أُمِّهِ وَاتْرُكْهُ هُنَاكَ.', size: 0.066 },
+        { type: 'bullet', t: 'اسْتَمِعْ جَيِّدًا: الْأُمُّ تُنَادِي صَغِيرَهَا! 👂', size: 0.066 },
         { type: 'highlight', t: `⏱️ لَدَيْكَ ${toAr(ROUND_TIME)} ثَانِيَةً لِكُلِّ صَغِيرٍ!`, size: 0.066, color: C.coral },
         { type: 'bullet', t: 'تَحْصُلُ عَلَى نَجْمَةٍ لِكُلِّ إِجَابَةٍ صَحِيحَةٍ مِنَ الْمُحَاوَلَةِ الْأُولَى.', size: 0.066 },
       ],
     }, [{ label: 'ابْدَأْ', onClick: () => startGame(false) }]);
-    setMood('point'); say(['m2', 'm2t']);
+    setMood('point'); say(['carry', 'm2t']);
   }
 
   function youngModel(f) {
@@ -2491,38 +2499,59 @@
   function startGame(replay) {
     closePanel(); closeInfo(); clearStage(); stopTimer();
     mode = 'game';
-    game = { rounds: shuffle(FAMILIES.slice()).slice(0, GAME_ROUNDS), i: 0, stars: 0, misses: 0, lost: null, busy: false, replay };
+    game = { rounds: shuffle(FAMILIES.slice()).slice(0, GAME_ROUNDS), i: 0, stars: 0, misses: 0, lost: null, lostEl: null, busy: false, replay };
+    goHome();
     nextRound();
   }
 
+  // Mission 2, in the body: a lost young sits on the grass crying; the child picks it up (trigger /
+  // mouse button), carries it through the park towards its mother's call, and puts it down in her
+  // enclosure. Touching the right mother or sign still works for children who can't carry yet.
   function nextRound() {
-    if (game.lost) { game.lost.parent && game.lost.parent.remove(game.lost); game.lost = null; }
+    if (game.lostEl) { game.lostEl.remove(); game.lostEl = null; game.lost = null; }
     signEls.forEach(b => pulse(b, false));
     if (game.i >= game.rounds.length) return game.replay ? summary() : roundsDone();
     const f = game.rounds[game.i];
     game.misses = 0; game.busy = false;
     const g = new T.Group();
-    const k = new Kit();
-    k.add(GEO.cyl(0.3, 0.36, 0.7, 24), '#fffdf7', [0, 0.35, 0]);
-    k.add(GEO.cyl(0.38, 0.38, 0.06, 24), C.sun, [0, 0.72, 0]);
-    k.add(GEO.tor(0.34, 0.02), C.coral, [0, 0.5, 0], [Math.PI / 2, 0, 0]);
-    g.add(k.build());
     const model = youngModel(f);
     const size = new T.Box3().setFromObject(model).getSize(new T.Vector3());
-    const h = size.y, s = 0.7 / Math.max(size.x, size.y, size.z);
-    model.scale.setScalar(s); model.position.y = 0.75; g.add(model);
+    const h = size.y, s = 0.55 / Math.max(size.x, size.y, size.z);
+    model.scale.setScalar(s); g.add(model);
+    // a soft glowing spot under it so it is easy to find
+    const sk = new Kit(); sk.add(GEO.tor(0.36, 0.03), C.coral, [0, 0.02, 0], [Math.PI / 2, 0, 0]); g.add(sk.build());
     const qc = document.createElement('canvas'); qc.width = qc.height = 128;
     const qx = qc.getContext('2d'); qx.fillStyle = C.coral; qx.beginPath(); qx.arc(64, 64, 58, 0, Math.PI * 2); qx.fill();
     qx.fillStyle = '#fff'; qx.font = `800 96px ${FONT}`; qx.textAlign = 'center'; qx.textBaseline = 'middle'; qx.fillText('؟', 64, 70);
-    const q = planeMesh(qc, 0.28); q.position.set(0.42, 0.75 + h * s + 0.1, 0); g.add(q); billboards.push(q);
-    const { pos, rotY } = frontOf(2.4);
-    g.position.copy(pos); g.rotation.y = rotY;
-    scene.object3D.add(g);
-    idlers.push(g.userData.idle = { step(t) { model.rotation.y = Math.sin(t * 1.2) * 0.5; } });
-    game.lost = g; game.model = model;
-    // the timer: a ring that empties over ROUND_TIME seconds, ticking in the last ten
+    const q = planeMesh(qc, 0.24); q.position.set(0.3, h * s + 0.2, 0); g.add(q); billboards.push(q);
+    // the timer ring
     const tc = document.createElement('canvas'); tc.width = tc.height = 180;
-    const ring = planeMesh(tc, 0.36); ring.position.set(-0.46, 0.75 + h * s + 0.12, 0); g.add(ring); billboards.push(ring);
+    const ring = planeMesh(tc, 0.3); ring.position.set(-0.3, h * s + 0.22, 0); g.add(ring); billboards.push(ring);
+    const hit = new T.Mesh(new T.CylinderGeometry(0.4, 0.4, h * s + 0.4, 12), new T.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+    hit.position.y = (h * s + 0.4) / 2; g.add(hit);
+    const { pos, rotY } = frontOf(1.5);
+    const el = entityWith(g, uiEl);
+    el.object3D.position.set(pos.x, 0, pos.z); el.object3D.rotation.y = rotY;
+    game.lostEl = el; game.lost = el.object3D; game.model = model; game.home = new T.Vector3(pos.x, 0, pos.z);
+    const idle = { step(t) { if (grab.el !== el) model.rotation.y = Math.sin(t * 1.2) * 0.5; else model.rotation.y += 0.02; } };
+    tickers.push(idle); el._idle = idle;
+    grabbable(el, () => {
+      if (game.busy) return;
+      if (grab.cursorEl === scene) camEl.setAttribute('look-controls', 'enabled', false);
+      setHud(`خُذْ ${f.young} إِلَى أُمِّهِ`, 'اتْرُكْهُ دَاخِلَ حَظِيرَةِ أُمِّهِ');
+    }, (el2, w, cursorEl) => {
+      camEl.setAttribute('look-controls', 'enabled', true);
+      if (game.busy || game.lostEl !== el) return;
+      const z = zoneAt(w);
+      if (!z) { game.home.copy(w); return; }
+      if (z.id === f.id) { buzz(cursorEl, 0.9, 140); answer(f, { carried: true }); return; }
+      // wrong mother: she shakes her head, the young runs back to where it was picked up
+      buzz(cursorEl, 0.25, 40);
+      answer(z, { carried: true });
+      const from = el.object3D.position.clone(), back = new T.Vector3(...frontOf(1.5).pos.toArray()); back.y = 0;
+      el.object3D.parent.worldToLocal(back);
+      tween(0.9, k => { el.object3D.position.lerpVectors(from, back, k); el.object3D.position.y = Math.sin(k * Math.PI) * 0.6; });
+    });
     let shown = -1; game.left = ROUND_TIME;
     const draw = sec => {
       const x = tc.getContext('2d'), k = Math.max(0, game.left / ROUND_TIME), warn = sec <= 10;
@@ -2534,31 +2563,39 @@
       ring.material.map.needsUpdate = true;
     };
     draw(ROUND_TIME);
+    let nextCall = 3;
     game.timer = { step(t, d) {
-      if (game.busy || game.lost !== g || mode !== 'game') return;
+      if (game.busy || game.lostEl !== el || mode !== 'game') return;
       game.left -= d;
       const sec = Math.max(0, Math.ceil(game.left));
       if (sec !== shown) { shown = sec; draw(sec); if (sec <= 10 && sec > 0) sfx.tick(); }
+      // every few seconds the young cries and its mother answers — from where they are
+      if ((nextCall -= d) <= 0) {
+        nextCall = 6;
+        voiceAt(worldPosOf(el, 0.4), () => animalVoice(f.id, true));
+        setTimeout(() => { if (game && game.lostEl === el && !game.busy) voiceAt(worldPosOf(parentEls.get(f.id), 1), () => animalVoice(f.id, false)); }, 1100);
+      }
       if (game.left <= 0) timeUp();
     } };
     tickers.push(game.timer);
-    salemBeside(pos.clone().setY(0), rotY, 0.35);
-    setHud(`مَنْ أُمُّ ${inZone(f.young)}؟`, `الْمِسِ الْأُمَّ أَوْ لَوْحَتَهَا • ${toAr(game.i + 1)} / ${toAr(game.rounds.length)}`);
-    setMood('think'); say('q_' + f.id);
+    salemBeside(new T.Vector3(pos.x, 0, pos.z), rotY, 0.45);
+    setHud(`مَنْ أُمُّ ${inZone(f.young)}؟`, `امْسِكْهُ وَخُذْهُ إِلَيْهَا • ${toAr(game.i + 1)} / ${toAr(game.rounds.length)}`);
+    setMood('think'); say(game.i === 0 && !game.replay ? ['q_' + f.id, 'listen'] : 'q_' + f.id);
   }
 
   function stopTimer() { if (game && game.timer) { const i = tickers.indexOf(game.timer); if (i >= 0) tickers.splice(i, 1); game.timer = null; } }
   function timeUp() {
     const c = game.rounds[game.i];
     game.busy = true; stopTimer();
+    if (grab.el === game.lostEl) { grab.el = null; if (grab.ring) grab.ring.visible = false; camEl.setAttribute('look-controls', 'enabled', true); }
     setMood('think'); sfx.bad();
     pulse(signEls.get(c.id), true); tintSign(c, C.gold);
     setHud('انْتَهَى الْوَقْتُ ⏰', `أُمُّهُ: ${c.parent}`);
     say('timeup');
     setTimeout(() => flyHome(c, false), 2600);
   }
-  function answer(f) {
-    if (!game || game.busy || !game.lost) return;
+  function answer(f, { carried = false } = {}) {
+    if (!game || game.busy || !game.lostEl) return;
     const c = game.rounds[game.i];
     if (f.id === c.id) {
       game.busy = true; stopTimer();
@@ -2567,36 +2604,35 @@
       tintSign(f, C.leaf);
       setHud(`أَحْسَنْتَ! ${L.lines['a_' + c.id]}`, `⭐ ${toAr(game.stars)}`);
       say([pick(['right1', 'right2', 'right3']), 'a_' + c.id]);
-      flyHome(c, true);
+      flyHome(c, true, carried);
     } else {
       game.misses++;
-      sfx.bad(); shake(signEls.get(f.id)); setMood('think');
+      sfx.bad(); shake(signEls.get(f.id)); shake(parentEls.get(f.id)); setMood('think');
       tintSign(f, C.red);
       setTimeout(() => tintSign(f, f.accent), 800);
-      setHud('حَاوِلْ مَرَّةً أُخْرَى 🙂', game.misses >= 2 ? `تَلْمِيحٌ: ابْحَثْ عَنْ ${c.parent}` : `هَذَا صَغِيرُ ${genOf(f)}؟ لَا!`);
-      if (game.misses >= 2) { pulse(signEls.get(c.id), true); say(['wrong2', 'hint']); }
-      else say('wrong1');
+      setHud('حَاوِلْ مَرَّةً أُخْرَى 🙂', game.misses >= 2 ? `تَلْمِيحٌ: ابْحَثْ عَنْ ${c.parent}` : `هَذِهِ لَيْسَتْ أُمَّهُ!`);
+      if (game.misses >= 2) { pulse(signEls.get(c.id), true); say(['notmine', 'hint']); }
+      else say(carried ? 'notmine' : 'wrong1');
     }
   }
-  // the lost young flies back to its mother, who calls to it
-  function flyHome(c, happy) {
-    const f = c;
-    {
-      const g = game.lost, from = new T.Vector3(); game.model.getWorldPosition(from);
-      const to = new T.Vector3(); creatureEls.get(c.id).object3D.getWorldPosition(to); to.y += 0.6;
-      const model = game.model; g.remove(model); scene.object3D.add(model); model.position.copy(from);
-      idlers.splice(idlers.indexOf(g.userData.idle), 1);
-      g.parent.remove(g); game.lost = null;
-      tween(1.3, k => {
-        const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
-        model.position.lerpVectors(from, to, e); model.position.y += Math.sin(k * Math.PI) * 2.2;
-        model.rotation.y += 0.15;
-      }, () => {
-        burst(to); scene.object3D.remove(model); hop(creatureEls.get(c.id)); hop(parentEls.get(c.id));
-        animalVoice(c.id, false);
-        setTimeout(() => { pulse(signEls.get(c.id), false); tintSign(f, f.accent); game.i++; nextRound(); }, happy ? 2400 : 1800);
-      });
-    }
+  // the young goes to its mother: it walks the last bit if it was carried, or flies there
+  function flyHome(c, happy, carried = false) {
+    const el = game.lostEl, model = game.model, from = new T.Vector3(); model.getWorldPosition(from);
+    const to = new T.Vector3(); creatureEls.get(c.id).object3D.getWorldPosition(to);
+    tickers.splice(tickers.indexOf(el._idle), 1);
+    el.object3D.remove(model); scene.object3D.add(model); model.position.copy(from);
+    el.remove(); game.lostEl = null; game.lost = null;
+    const up = carried ? 0.5 : 2.2;
+    tween(carried ? 0.8 : 1.3, k => {
+      const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      model.position.lerpVectors(from, to, e); model.position.y += Math.sin(k * Math.PI) * up;
+      model.rotation.y += 0.15;
+    }, () => {
+      const top = to.clone(); top.y += 0.8;
+      (happy ? hearts : burst)(top); scene.object3D.remove(model); hop(creatureEls.get(c.id)); hop(parentEls.get(c.id));
+      voiceAt(worldPosOf(parentEls.get(c.id), 1), () => animalVoice(c.id, false));
+      setTimeout(() => { pulse(signEls.get(c.id), false); tintSign(c, c.accent); game.i++; nextRound(); }, happy ? 2400 : 1800);
+    });
   }
 
   function roundsDone() {
@@ -2659,6 +2695,7 @@
       { i: '🧒', t: 'الْوَلَدُ', m: () => buildSalem().root, h: 1.2 }, { i: '🧔', t: 'الْبَالِغُ', m: () => MODELS.man(), h: 1.78 }] },
   ];
   function growIntro() {
+    goHome();
     mode = 'intro3';
     showPanel({
       w: 2.1, accent: C.leaf, icon: '🌱', title: 'الْمَهَمَّةُ الثَّالِثَةُ: الصَّغِيرُ يَكْبَرُ',
@@ -2718,6 +2755,7 @@
   console.assert(fam('duck').count === 8 && fam('rabbit').count === 9 && fam('human').count === 1, 'counting data does not match the book');
   console.assert(/ثَمَانِيَةُ/.test(L.lines.c_duck) && /تِسْعَةُ/.test(L.lines.c_rabbit), 'counting lines do not match the data');
   function countIntro() {
+    goHome();
     mode = 'intro4'; clearStage();
     showPanel({
       w: 2.1, accent: C.sky, icon: '🔢', title: 'الْمَهَمَّةُ الرَّابِعَةُ: عُدَّ الصِّغَارَ',
@@ -2823,6 +2861,7 @@
   ];
   const SPOT = { it_food: [-0.45, 0.3, -0.35], it_water: [0.45, 0.3, -0.3], it_home: [0, 0.3, -0.75] };
   function nestIntro() {
+    goHome();
     mode = 'intro5';
     showPanel({
       w: 2.1, accent: C.teal, icon: '🏡', title: 'الْمَهَمَّةُ الْخَامِسَةُ: حَاضِنَةٌ لِلْجَدْيِ',
@@ -2914,10 +2953,325 @@
       ],
     }, [
       { label: 'الْعَبْ «مَنْ أُمِّي؟»', onClick: () => startGame(true) },
-      { label: 'اسْتَكْشِفْ بِحُرِّيَّةٍ', color: '#dff1ff', onClick: () => { closePanel(); mode = 'free'; setHud('اسْتَكْشِفْ بِحُرِّيَّةٍ 🦁', 'الْمِسْ أَيَّ حَيَوَانٍ أَوْ لَوْحَةٍ'); say('free'); } },
+      { label: 'كُنْ صَغِيرًا 🐥', color: '#ffe28a', onClick: () => becomeSmall() },
+      { label: 'اسْتَكْشِفْ بِحُرِّيَّةٍ', color: '#dff1ff', onClick: () => { closePanel(); mode = 'free'; setHud('اسْتَكْشِفْ بِحُرِّيَّةٍ 🦁', 'امْشِ، وَالْمِسِ الْحَيَوَانَاتِ وَاللَّوْحَاتِ'); say('free'); } },
     ]);
     setMood('cheer'); say('end');
     const { pos } = frontOf(2.4); pos.y = eyeY() + 1.1; burst(pos);
+  }
+
+  // =====================================================================
+  // Immersion: walk (teleport), grab and carry, feel (haptics), hear in 3D, a living world,
+  // and becoming as small as a duckling.
+  // =====================================================================
+  const rigEl = document.getElementById('rig');
+  const hands = [document.getElementById('handR'), document.getElementById('handL')];
+  const WALK_R = 17; // how far from the centre the child may walk
+
+  // --- comfort fade (teleports and big changes blink through black) ---
+  const fader = new T.Mesh(new T.SphereGeometry(0.25, 16, 12), new T.MeshBasicMaterial({ color: '#000', side: T.BackSide, transparent: true, opacity: 0, depthTest: false, depthWrite: false, fog: false }));
+  fader.renderOrder = 999; fader.visible = false;
+  camEl.object3D.add(fader);
+  function blink(mid, dur = 0.18) {
+    fader.visible = true;
+    tween(dur, k => { fader.material.opacity = k; }, () => { mid(); tween(dur, k => { fader.material.opacity = 1 - k; }, () => { fader.visible = false; }); });
+  }
+
+  // --- haptics: a short buzz in the controller that did something ---
+  function buzz(cursorEl, strength = 0.4, ms = 50) {
+    try {
+      const src = cursorEl && cursorEl.components && cursorEl.components['tracked-controls'] && cursorEl.components['tracked-controls'].controller;
+      const act = src && src.gamepad && src.gamepad.hapticActuators && src.gamepad.hapticActuators[0];
+      if (act) act.pulse(strength, ms);
+    } catch (e) { /* no haptics */ }
+  }
+  let lastCursor = null;
+  document.addEventListener('mousedown', e => { if (e.detail && e.detail.cursorEl) lastCursor = e.detail.cursorEl; }, true);
+  for (const h of hands) h.addEventListener('mouseenter', () => buzz(h, 0.12, 15));
+
+  // --- hearts: when a child pets an animal ---
+  function hearts(pos) {
+    const icons = ['💖', '💛', '💕', '🧡'];
+    for (let i = 0; i < 10; i++) {
+      const c = document.createElement('canvas'); c.width = c.height = 96;
+      drawEmoji(c.getContext('2d'), icons[i % 4], 48, 48, 72);
+      const p = planeMesh(c, 0.2);
+      p.position.copy(pos); scene.object3D.add(p); billboards.push(p);
+      const v = [(Math.random() - 0.5) * 0.8, 0.8 + Math.random() * 0.8, (Math.random() - 0.5) * 0.8];
+      tween(1.4, (k, d) => { p.position.x += v[0] * d; p.position.y += v[1] * d; p.position.z += v[2] * d; p.material.opacity = 1 - k; p.scale.setScalar(1 + k * 0.5); },
+        () => { scene.object3D.remove(p); billboards.splice(billboards.indexOf(p), 1); });
+    }
+  }
+
+  // --- 3D sound: animal voices come from where the animal is ---
+  function updateListener() {
+    if (!actx || !scene.camera) return;
+    const l = actx.listener, m = scene.camera.matrixWorld, p = new T.Vector3().setFromMatrixPosition(m);
+    const f = new T.Vector3(0, 0, -1).transformDirection(m), u = new T.Vector3(0, 1, 0).transformDirection(m);
+    if (l.positionX) {
+      l.positionX.value = p.x; l.positionY.value = p.y; l.positionZ.value = p.z;
+      l.forwardX.value = f.x; l.forwardY.value = f.y; l.forwardZ.value = f.z; l.upX.value = u.x; l.upY.value = u.y; l.upZ.value = u.z;
+    } else { l.setPosition(p.x, p.y, p.z); l.setOrientation(f.x, f.y, f.z, u.x, u.y, u.z); }
+  }
+  tickers.push({ step: updateListener });
+  let soundAt = null; // world position for the next call() — set by voiceAt()
+  function voiceAt(pos, fn) { soundAt = pos; try { fn(); } finally { soundAt = null; } }
+  function worldPosOf(el, up = 0.5) { const v = new T.Vector3(); el.object3D.getWorldPosition(v); v.y += up; return v; }
+
+  // --- walking: push the thumbstick forward, aim the arc, let go to jump there ---
+  // the arc is a row of glowing beads (thin lines are almost invisible in a headset)
+  const arcMat = new T.MeshBasicMaterial({ color: '#ffd166', fog: false });
+  const arc = new T.Group(), beads = [], beadGeo = new T.SphereGeometry(0.035, 8, 6);
+  for (let i = 0; i < 40; i++) { const b = new T.Mesh(beadGeo, arcMat); b.scale.setScalar(1 - i / 60); arc.add(b); beads.push(b); }
+  arc.visible = false; scene.object3D.add(arc);
+  const marker = new T.Group();
+  const mk = new Kit(); mk.add(GEO.tor(0.32, 0.03), '#ffd166', [0, 0.03, 0], [Math.PI / 2, 0, 0]); mk.add(GEO.cyl(0.26, 0.26, 0.01, 24), '#fff3c4', [0, 0.02, 0]);
+  marker.add(mk.build());
+  const footprint = new T.Mesh(new T.PlaneGeometry(0.45, 0.45), new T.MeshBasicMaterial({ map: (() => { const c = document.createElement('canvas'); c.width = c.height = 128; drawEmoji(c.getContext('2d'), '👣', 64, 64, 96); return texFrom(c); })(), transparent: true, depthWrite: false }));
+  footprint.rotation.x = -Math.PI / 2; footprint.position.y = 0.04; marker.add(footprint);
+  marker.visible = false; scene.object3D.add(marker);
+  let aimHand = null, aimTarget = null, aimOk = false;
+  function canWalkTo(p) {
+    if (Math.hypot(p.x, p.z) > WALK_R) return false;
+    // not into the middle of an animal: keep 0.8 m from any parent
+    for (const pel of parentEls.values()) { const w = worldPosOf(pel, 0); if (Math.hypot(w.x - p.x, w.z - p.z) < 0.8) return false; }
+    return true;
+  }
+  function updateAim() {
+    if (!aimHand) return;
+    const rc = aimHand.components.raycaster && aimHand.components.raycaster.raycaster;
+    if (!rc) return;
+    const o = rc.ray.origin.clone(), d = rc.ray.direction.clone();
+    if (![o.x, o.y, o.z, d.x, d.y, d.z].every(Number.isFinite) || d.lengthSq() < 0.5) return;
+    const v = 7.5, g = 9.8; let hit = null, last = o.clone();
+    for (let i = 0; i < 40; i++) {
+      const t = i * 0.05, p = new T.Vector3(o.x + d.x * v * t, o.y + d.y * v * t - 0.5 * g * t * t, o.z + d.z * v * t);
+      // beads follow the curve until it touches the ground; the rest are hidden
+      beads[i].visible = !hit && i >= 2;
+      if (!hit && p.y <= 0) { const k = last.y / (last.y - p.y); hit = last.clone().lerp(p, k); hit.y = 0; }
+      if (beads[i].visible) beads[i].position.set(p.x, Math.max(0.02, p.y), p.z);
+      last = p;
+    }
+    aimTarget = hit; aimOk = !!hit && canWalkTo(hit);
+    arc.visible = true; arcMat.color.set(aimOk ? '#ffd166' : '#e76f51');
+    marker.visible = !!hit; if (hit) { marker.position.copy(hit); footprint.material.opacity = aimOk ? 1 : 0.3; }
+  }
+  tickers.push({ step: updateAim });
+  function walkTo(target, faceTo) {
+    const cam = new T.Vector3(); camEl.object3D.getWorldPosition(cam);
+    blink(() => {
+      rigEl.object3D.position.x += target.x - cam.x; rigEl.object3D.position.z += target.z - cam.z;
+      if (faceTo) {
+        // turn so the child faces faceTo
+        const o = rigEl.object3D, want = Math.atan2(-(faceTo.x - target.x), -(faceTo.z - target.z));
+        const camDir = new T.Vector3(); scene.camera.getWorldDirection(camDir);
+        const have = Math.atan2(-camDir.x, -camDir.z);
+        const before = new T.Vector3(); camEl.object3D.getWorldPosition(before);
+        o.rotation.y += want - have; o.updateMatrixWorld(true);
+        const after = new T.Vector3(); camEl.object3D.getWorldPosition(after);
+        o.position.x += before.x - after.x; o.position.z += before.z - after.z;
+      }
+    });
+    sfx.pop();
+  }
+  for (const h of hands) h.addEventListener('thumbstickmoved', e => {
+    const { x, y } = e.detail;
+    if (y < -0.6 && Math.abs(x) < 0.55 && mode !== 'intro' && !small.on) { aimHand = h; }
+    else if (aimHand === h && Math.abs(y) < 0.3) {
+      if (aimOk && aimTarget) { walkTo(aimTarget); buzz(h, 0.3, 40); if (!walked) { walked = true; } }
+      aimHand = null; aimTarget = null; arc.visible = false; marker.visible = false;
+    }
+  });
+  let walked = false;
+  // on screen: arrow up/down (or W/S) steps forward and back
+  window.addEventListener('keydown', e => {
+    if (mode === 'intro' || small.on) return;
+    const k = e.key.toLowerCase(), dir = k === 'arrowup' || k === 'w' ? 1 : k === 'arrowdown' || k === 's' ? -1 : 0;
+    if (!dir) return;
+    const f = new T.Vector3(); scene.camera.getWorldDirection(f); f.y = 0; f.normalize().multiplyScalar(0.7 * dir);
+    const cam = new T.Vector3(); camEl.object3D.getWorldPosition(cam); cam.add(f); cam.y = 0;
+    if (canWalkTo(cam)) { rigEl.object3D.position.x += f.x; rigEl.object3D.position.z += f.z; }
+  });
+
+  // --- a living world: parents watch the child, the young wander, ducks swim round the pond ---
+  function liveAnimals() {
+    for (const f of FAMILIES) {
+      const pel = parentEls.get(f.id), yel = creatureEls.get(f.id), zone = zoneGroups.get(f.id).object3D;
+      const home = new T.Vector3(...YPOS[f.id]), st = { target: home.clone(), wait: rnd() * 3, ph: rnd() * 6 };
+      const local = new T.Vector3();
+      tickers.push({ step(t, d) {
+        if (reduceMotion || grab.el === yel) return;
+        local.copy(camPos); zone.worldToLocal(local);
+        if (f.id === 'duck') {
+          // mother duck and her ducklings swim round the pond, in a line
+          const a = t * 0.12 + st.ph, r = 1.7;
+          pel.object3D.position.set(Math.cos(a) * r, 0.04, Math.sin(a) * r); pel.object3D.rotation.y = -a + Math.PI;
+          const b = a - 0.6; yel.object3D.position.set(Math.cos(b) * r, 0.04, Math.sin(b) * r); yel.object3D.rotation.y = -b + Math.PI;
+          return;
+        }
+        // the parent turns its head (body) towards a child who comes close
+        const pp = pel.object3D.position, dp = Math.hypot(local.x - pp.x, local.z - pp.z);
+        const want = dp < 5 ? Math.atan2(local.x - pp.x, local.z - pp.z) : 0.35;
+        pel.object3D.rotation.y += (want - pel.object3D.rotation.y) * Math.min(1, d * 1.5);
+        if (f.id === 'human' || f.id === 'rabbit') return;
+        // the young wanders near its parent; it comes to the child if the child is close
+        const yp = yel.object3D.position, dy = Math.hypot(local.x - yp.x, local.z - yp.z);
+        if (dy < 2.2) { st.target.set(local.x, 0, local.z).sub(yp).setLength(Math.max(0, dy - 0.9)).add(yp); }
+        else if ((st.wait -= d) <= 0 && yp.distanceTo(st.target) < 0.05) {
+          st.wait = 2 + rnd() * 4;
+          st.target.set(home.x + (rnd() - 0.5) * 2.2, 0, home.z + (rnd() - 0.5) * 1.8);
+          st.target.x = Math.max(-2.6, Math.min(2.6, st.target.x)); st.target.z = Math.max(-2.2, Math.min(2.4, st.target.z));
+        }
+        const step = st.target.clone().sub(yp); step.y = 0;
+        const dist = step.length();
+        if (dist > 0.03) {
+          const sp = Math.min(dist, 0.45 * d); step.setLength(sp);
+          yp.x += step.x; yp.z += step.z;
+          const face = Math.atan2(step.x, step.z);
+          yel.object3D.rotation.y += Math.atan2(Math.sin(face - yel.object3D.rotation.y), Math.cos(face - yel.object3D.rotation.y)) * Math.min(1, d * 4);
+        } else if (dy < 2.2) {
+          const face = Math.atan2(local.x - yp.x, local.z - yp.z);
+          yel.object3D.rotation.y += Math.atan2(Math.sin(face - yel.object3D.rotation.y), Math.cos(face - yel.object3D.rotation.y)) * Math.min(1, d * 3);
+        }
+      } });
+    }
+  }
+
+  // Salem walks along with the child while they explore.
+  tickers.push({ step(t, d) {
+    if (!salem || !salem.placed || panel || stage || !['explore', 'free', 'game'].includes(mode) || small.on) return;
+    const r = salem.root.position, dist = Math.hypot(r.x - camPos.x, r.z - camPos.z);
+    if (dist < 3.2 && dist > 1.0) return;
+    const f = new T.Vector3(); scene.camera.getWorldDirection(f); f.y = 0; f.normalize();
+    const right = new T.Vector3(-f.z, 0, f.x);
+    const target = new T.Vector3(camPos.x, 0, camPos.z).addScaledVector(f, 1.3).addScaledVector(right, 0.9);
+    const step = target.sub(r); step.y = 0; const len = step.length();
+    if (len < 0.05) return;
+    step.setLength(Math.min(len, 1.6 * d));
+    r.x += step.x; r.z += step.z; r.y = Math.abs(Math.sin(t * 9)) * 0.05;
+    salem.root.rotation.y = Math.atan2(camPos.x - r.x, camPos.z - r.z);
+  } });
+
+  // --- grab and carry: hold the trigger (or mouse button) on something, move it, let go ---
+  const grab = { el: null, cursorEl: null, onDrop: null, lift: 0.45, ring: null };
+  const _plane = new T.Plane(new T.Vector3(0, 1, 0), 0), _hit = new T.Vector3();
+  function rayOf(cursorEl) {
+    const rc = cursorEl && cursorEl.components && cursorEl.components.raycaster;
+    return rc && rc.raycaster ? rc.raycaster.ray : null;
+  }
+  function grabbable(el, onGrab, onDrop) {
+    el.classList.add('clickable'); el._onDrop = onDrop;
+    el.addEventListener('mousedown', e => {
+      if (grab.el || !e.detail || !e.detail.cursorEl) return;
+      unlockAudio();
+      if (game && game.busy) return;
+      grab.el = el; grab.cursorEl = e.detail.cursorEl; grab.onDrop = onDrop;
+      buzz(grab.cursorEl, 0.5, 60); sfx.pop();
+      if (!grab.ring) { const rk = new Kit(); rk.add(GEO.tor(0.35, 0.025), '#ffd166', [0, 0, 0], [Math.PI / 2, 0, 0]); grab.ring = rk.build(); scene.object3D.add(grab.ring); }
+      grab.ring.visible = true;
+      onGrab && onGrab(el);
+    });
+  }
+  function carryStep(t) {
+    if (!grab.el) return;
+    const ray = rayOf(grab.cursorEl);
+    if (!ray) return;
+    // where the pointer meets the ground, but no further than 15 m away
+    if (ray.intersectPlane(_plane, _hit) && _hit.distanceTo(ray.origin) < 15) {
+      const o = grab.el.object3D, parent = o.parent, w = _hit.clone();
+      w.y = grab.lift + Math.sin(t * 6) * 0.05;
+      parent.worldToLocal(w); o.position.lerp(w, 0.35);
+      grab.ring.position.set(_hit.x, 0.03, _hit.z);
+    }
+  }
+  tickers.push({ step: carryStep });
+  function drop() {
+    if (!grab.el) return;
+    const el = grab.el, cursorEl = grab.cursorEl, cb = grab.onDrop;
+    grab.el = null; grab.cursorEl = null; grab.ring.visible = false;
+    const w = worldPosOf(el, 0); w.y = 0;
+    const o = el.object3D, target = w.clone(); o.parent.worldToLocal(target);
+    const from = o.position.clone();
+    tween(0.25, k => { o.position.lerpVectors(from, target, k); }, () => cb && cb(el, w, cursorEl));
+  }
+  for (const h of [...hands, scene]) h.addEventListener('mouseup', () => drop());
+  window.addEventListener('mouseup', () => setTimeout(drop, 30));
+  // which enclosure is this point in?
+  function zoneAt(p) {
+    for (const f of FAMILIES) { const [x, z] = polar(f.angle, ZONE_R); if (Math.hypot(p.x - x, p.z - z) < 4.3) return f; }
+    return null;
+  }
+
+  // --- becoming small: the world grows five times around the child, among the ducklings ---
+  const small = { on: false, s: 1 };
+  function setWorldScale(s, pivot) {
+    const w = worldEl.object3D;
+    // keep the pivot (world point) fixed while scaling
+    const before = pivot.clone().sub(w.position).divideScalar(w.scale.x);
+    w.scale.setScalar(s);
+    w.position.copy(pivot).sub(before.multiplyScalar(s)); w.position.y = 0;
+    small.s = s;
+  }
+  function becomeSmall() {
+    if (small.on) return;
+    small.prev = mode; mode = 'small';
+    closePanel(); closeInfo(); hideHud();
+    const ducks = creatureEls.get('duck');
+    blink(() => {
+      const spot = worldPosOf(ducks, 0); spot.y = 0;
+      const out = spot.clone().normalize().multiplyScalar(-0.9); // stand beside them, on the centre side
+      const stand = spot.clone().add(out);
+      walkToNow(stand, spot);
+      small.on = true; small.pivot = stand;
+      setWorldScale(3, stand);
+      if (salem) { salem.root.visible = false; }
+      setTimeout(() => {
+        say('small');
+        voiceAt(worldPosOf(parentEls.get('duck'), 1), () => animalVoice('duck', false));
+        showBigButton();
+      }, 400);
+    }, 0.35);
+  }
+  function walkToNow(target, faceTo) {
+    const cam = new T.Vector3(); camEl.object3D.getWorldPosition(cam);
+    rigEl.object3D.position.x += target.x - cam.x; rigEl.object3D.position.z += target.z - cam.z;
+    if (faceTo) {
+      const o = rigEl.object3D, want = Math.atan2(-(faceTo.x - target.x), -(faceTo.z - target.z));
+      const camDir = new T.Vector3(); scene.camera.getWorldDirection(camDir);
+      const have = Math.atan2(-camDir.x, -camDir.z);
+      const before = new T.Vector3(); camEl.object3D.getWorldPosition(before);
+      o.rotation.y += want - have; o.updateMatrixWorld(true);
+      const after = new T.Vector3(); camEl.object3D.getWorldPosition(after);
+      o.position.x += before.x - after.x; o.position.z += before.z - after.z;
+    }
+  }
+  function showBigButton() {
+    showPanel({ w: 1.5, accent: C.gold, icon: '🐥', title: 'أَنْتَ الْآنَ صَغِيرٌ مِثْلَ صِغَارِ الْبَطَّةِ!',
+      blocks: [{ t: 'انْظُرْ حَوْلَكَ: كَمْ تَبْدُو الْبَطَّةُ الْأُمُّ كَبِيرَةً!', size: 0.07 }] },
+    [{ label: 'ارْجِعْ إِلَى حَجْمِكَ', onClick: becomeBig }], 1.6);
+  }
+  function becomeBig() {
+    if (!small.on) return;
+    closePanel();
+    blink(() => {
+      setWorldScale(1, small.pivot);
+      worldEl.object3D.position.set(0, 0, 0);
+      small.on = false;
+      if (salem) salem.root.visible = true;
+      say('big');
+      setTimeout(() => { if (small.prev === 'free') { mode = 'free'; setHud('اسْتَكْشِفْ بِحُرِّيَّةٍ 🦁', 'امْشِ، وَالْمِسِ الْحَيَوَانَاتِ وَاللَّوْحَاتِ'); } else { mode = 'back'; summary(); } }, 300);
+    }, 0.35);
+  }
+
+  // back to the middle of the park (instantly, behind a blink) before a mission that builds a stage
+  function goHome() {
+    const cam = new T.Vector3(); camEl.object3D.getWorldPosition(cam);
+    if (Math.hypot(cam.x, cam.z) < 1.5) return;
+    walkToNow(new T.Vector3(0, 0, 0));
+    rigEl.object3D.updateMatrixWorld(true); scene.camera.getWorldPosition(camPos);
+    fader.visible = true; fader.material.opacity = 1;
+    tween(0.35, k => { fader.material.opacity = 1 - k; }, () => { fader.visible = false; });
+    if (salem) salem.placed = false;
   }
 
   // Developer view: ?gallery lines up every model in front of the camera.
@@ -2941,6 +3295,10 @@
     stageEls: () => stage ? [...stage.el.querySelectorAll('.clickable')] : [],
     jump: name => ({ grow: growIntro, count: countIntro, nest: nestIntro })[name](),
     time: () => cycleTime(), sky: () => sky.name,
+    carryTo: id => { const el = game.lostEl, f = fam(id), [x, z] = polar(f.angle, ZONE_R - 1.2); el._onDrop(el, new T.Vector3(x, 0, z), null); },
+    walk: (x, z) => walkToNow(new T.Vector3(x, 0, z)), small: () => becomeSmall(), big: () => becomeBig(),
+    aim: on => { aimHand = on ? scene : null; if (!on) { arc.visible = false; marker.visible = false; } },
+    arcInfo: () => { const r = scene.components.raycaster.raycaster.ray; return { vis: arc.visible, beads: beads.filter(b => b.visible).length, marker: marker.visible, at: marker.position.toArray().map(v => +v.toFixed(2)), ok: aimOk, o: r.origin.toArray().map(v => +v.toFixed(2)), d: r.direction.toArray().map(v => +v.toFixed(2)) }; },
   };
 
   // ---------- Boot ----------
@@ -2956,6 +3314,7 @@
     if (GALLERY) { buildLandscape(); gallery(); document.getElementById('loader').hidden = true; return; }
     buildLandscape();
     buildZones();
+    liveAnimals();
     salem = buildSalem(); salem.baseY = 0;
     scene.object3D.add(salem.root);
     document.getElementById('timeBtn').addEventListener('click', () => { unlockAudio(); cycleTime(); });

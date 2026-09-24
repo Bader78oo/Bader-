@@ -72,6 +72,23 @@ young, and an Omani mother with her baby in a cradle.
    sweets are politely refused.
 8. **What did I learn?** — summary matching the book's «ماذا تعلمت», replay or free explore.
 
+**Immersion (v4)** — the child moves and uses their hands instead of only pointing:
+- *Walk*: push the thumbstick forward to aim an arc of golden beads with a footprint marker, let go
+  to jump there (a short fade to black keeps it comfortable); arrow keys / W-S on screen.
+- *Grab and carry*: in «من أمي؟» the lost young sits on the grass; hold the trigger (or mouse button)
+  on it, carry it across the park and let go inside its mother's enclosure. The wrong mother shakes
+  her head and the young runs back. Touching the mother or her sign still works as a fallback.
+- *Feel and hear*: controller haptics on grab, success and petting; hearts when an animal is touched;
+  animal voices come from where the animal is (HRTF panning), and the lost young and its mother call
+  to each other so the child can follow the sound.
+- *A living park*: parents turn to watch a child who comes close, young wander and come over, the
+  duck swims round the pond with her ducklings in a line, Salem walks along with the child.
+- *Become small*: from the summary, the world grows three times around the child, who stands among
+  the ducklings under a giant mother duck.
+
+The full vision for the project (a hub of lesson worlds, story quests, next settings) is in
+[`vr-plans/VISION.md`](../../vr-plans/VISION.md).
+
 Animal voices (roar, trumpet, bleat, quack, peep …), birdsong by day and crickets at night are
 synthesised with WebAudio, so there are no sound files to host.
 
