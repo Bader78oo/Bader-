@@ -22,10 +22,10 @@ Rules: preflight with `get_cost: true`; draft low-res, final hi-res; B-roll `sou
 - **Aspect**: `soul_2` has no 4:5 (uses 3:4). Kling/Wan take 9:16. A 3:4 start image gets cropped to 9:16 — generate 9:16 stills for video.
 - **Voice clone**: `create_voice_from_confirmed_audio` → "Voice limit reached" on Starter even with zero voices.
 - **Audio upload**: `media_upload` of `.m4a` returns an `.mp3` slot — convert to mp3 first (ffmpeg).
-- **Network (fixed 2026-09-24):** Bader's cloud environment now uses Custom network access with `d8j0ntlcm91z4.cloudfront.net` and `d2ol7oe51mr4n9.cloudfront.net` allowed, so Higgsfield media downloads and local rendering work. `cdn.jsdelivr.net` and `huggingface.co` are NOT allowed — icons and the Cairo font are vendored in the kit; Whisper transcription stays in the Higgsfield sandbox.
+- **Network (fixed 2026-09-24):** Bader's cloud environment now uses Custom network access with `d8j0ntlcm91z4.cloudfront.net` and `d2ol7oe51mr4n9.cloudfront.net` allowed, so Higgsfield media downloads and local rendering work. `huggingface.co`, `*.huggingface.co`, `*.hf.co` are allowed too, so Whisper transcription runs locally. `cdn.jsdelivr.net` is NOT allowed — icons and the Cairo font are vendored in the kit.
 - `sandbox_exec` stdout is truncated around 18 KB, so images can't be pulled through it for review (tried with base64). Visual QA needs the cloudfront allowlist above.
 - Sandbox is discarded ~10 s after a call: chain download → build → upload in one command; long work with `background: true`, poll the log.
-- `transcribe.py` output needs a glance: Whisper can hallucinate a repeated tail (the script drops zero-length / out-of-range words).
+- `transcribe.py` output needs a glance: Whisper can hallucinate words into the trailing silence (the script drops anything after the last speech, found with silencedetect).
 
 ## Open-source upgrades worth adopting (see plan in chat, 2026-09-24)
 - HyperFrames (Apache-2.0) — HTML→MP4 with 21 agent skills; natural successor to `overlay.html`.

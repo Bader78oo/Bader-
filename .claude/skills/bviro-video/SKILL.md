@@ -14,7 +14,7 @@ Reply to Bader in Gulf Arabic. Brand data: `brand/brand.json` (colors, tagline, 
 
 ## Workflow (text first, pixels last)
 1. **Script + storyboard.** Agree the spoken script (≈2.2 words/sec → 20 s ≈ 40 words) and a shot list with Bader. Bader on camera ≤ 7 s; the rest is B-roll under his voice.
-2. **Voice.** Bader records on his phone (m4a). Convert to mp3, then in the Higgsfield sandbox:
+2. **Voice.** Bader records on his phone (m4a). Convert to mp3, then locally (`pip install faster-whisper`; first run downloads the ~1.5 GB medium model, ~1 min per 20 s of audio on CPU):
    `python3 scripts/transcribe.py voice.mp3 script.txt` → `words.json` (pass the script to fix brand spelling)
    `python3 scripts/tighten_vo.py voice.mp3 words.json --tempo 1.05 --talk A:<i>-<j> --talk B:<i>-<j>`
    → `vo.mp3`, `words_final.json`, `talk_A.mp3`… and the exact start time of each talk clip.
@@ -27,7 +27,7 @@ Reply to Bader in Gulf Arabic. Brand data: `brand/brand.json` (colors, tagline, 
    - Submit with `generate_video_batch`, max **2 concurrent** jobs on Starter (else 429).
 5. **Storyboard JSON.** Start from a template in `storyboards/templates/` (talking-head, broll-explainer, event-promo — see `references/templates.md` for fields and the B-roll prompt library); `storyboards/edu-vr-oman.json` is a finished example. Shot durations must sum to `duration`. Use `grade.lut: "brand/bviro_look.cube"` for the house look, `zoom` for free punch-in angles, and still images with `kb` (Ken Burns) instead of paid video where motion isn't essential.
 6. **Render locally when possible** (fastest, no upload tokens): needs `ffmpeg` (`apt-get install -y ffmpeg`), node + playwright (preinstalled in Claude Code cloud), and the environment's network allowlist to include `d8j0ntlcm91z4.cloudfront.net` + `d2ol7oe51mr4n9.cloudfront.net` (Higgsfield media). Put clip URLs in the storyboard (`shots[].url`, `assets`) and run
-   `python3 .claude/skills/bviro-video/scripts/build.py sb.json --qa` from a scratch dir (~1 min for 15–20 s). Hand the MP4 to Bader with SendUserFile. Transcription (`faster-whisper` model download from huggingface.co) still runs in the Higgsfield sandbox unless that host is allowed too.
+   `python3 .claude/skills/bviro-video/scripts/build.py sb.json --qa` from a scratch dir (~1 min for 15–20 s). Hand the MP4 to Bader with SendUserFile.
    **Fallback — Higgsfield sandbox** (has ffmpeg, node+playwright, faster-whisper):
    `bash scripts/pack.sh storyboards/<name>.json /tmp/kit.tgz` → `media_upload` (file) → local `curl PUT` → `media_confirm`.
    In ONE `sandbox_exec` (background:true): `curl <kit url> | tar xz && cd kit && python3 scripts/build.py sb.json --qa && curl -X PUT --upload-file final.mp4 '<video upload_url>'`.

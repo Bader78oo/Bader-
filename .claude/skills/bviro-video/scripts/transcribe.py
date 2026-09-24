@@ -7,7 +7,7 @@ Passing the written script as script.txt biases Whisper toward the right spellin
 (brand names like بيفيرو). Whisper sometimes repeats earlier words after the audio
 ends; those zero-length / out-of-range words are dropped.
 """
-import json, subprocess, sys
+import json, re, subprocess, sys
 
 from faster_whisper import WhisperModel
 
@@ -21,14 +21,21 @@ prompt = open(args[1], encoding="utf-8").read().strip() if len(args) > 1 else No
 dur = float(subprocess.check_output(
     ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", audio]).decode())
 
+# Where the trailing silence starts: Whisper likes to "repeat" earlier words into it.
+log = subprocess.run(["ffmpeg", "-i", audio, "-af", "silencedetect=noise=-35dB:d=0.3", "-f", "null", "-"],
+                     capture_output=True, text=True).stderr
+starts = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", log)]
+ends = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", log)]
+speech_end = starts[-1] if starts and (len(ends) < len(starts) or ends[-1] >= dur - 0.1) else dur
+
 model = WhisperModel(model_name, device="cpu", compute_type="int8")
 segments, _ = model.transcribe(audio, language="ar", word_timestamps=True, initial_prompt=prompt)
 
 words = []
 for seg in segments:
     for w in seg.words:
-        s, e, t = round(w.start, 2), round(w.end, 2), w.word.strip().strip("،.!؟?")
-        if not t or e - s < 0.05 or s >= dur - 0.1:
+        s, e, t = round(float(w.start), 2), round(float(w.end), 2), w.word.strip().strip("،.!؟?")
+        if not t or e - s < 0.05 or s >= speech_end - 0.05:
             continue  # hallucinated tail / empty token
         words.append([s, e, t])
 
