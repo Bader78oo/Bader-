@@ -2954,6 +2954,7 @@
     }, [
       { label: 'الْعَبْ «مَنْ أُمِّي؟»', onClick: () => startGame(true) },
       { label: 'كُنْ صَغِيرًا 🐥', color: '#ffe28a', onClick: () => becomeSmall() },
+      { label: 'الْكَلِمَاتُ السِّحْرِيَّةُ 🪄', color: '#ffd9c2', onClick: () => startMagicWords() },
       { label: 'اسْتَكْشِفْ بِحُرِّيَّةٍ', color: '#dff1ff', onClick: () => { closePanel(); mode = 'free'; setHud('اسْتَكْشِفْ بِحُرِّيَّةٍ 🦁', 'امْشِ، وَالْمِسِ الْحَيَوَانَاتِ وَاللَّوْحَاتِ'); say('free'); } },
     ]);
     setMood('cheer'); say('end');
@@ -3274,6 +3275,161 @@
     if (salem) salem.placed = false;
   }
 
+  // =====================================================================
+  // Magic words: the child says (or taps) an Arabic word, and it appears — summoned in front of
+  // them with a sparkle. Uses the browser's speech recognition where available; word chips work
+  // everywhere (mic, no mic, or a device that doesn't support it) and double as the ?test hook.
+  // =====================================================================
+  const normAr = s => String(s).replace(/[ً-ْٰـ]/g, '')
+    .replace(/[إأآا]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/\s+/g, '').trim();
+  function magicModel(key) {
+    if (key === 'baby') { const g = new T.Group(); g.add(MODELS.cradle()); const b = MODELS.baby(); b.position.y = 0.16; g.add(b); return fitHeight(g, 0.55); }
+    if (key === 'tree') return MODELS.coconut(2.3);
+    if (key === 'hut') return fitHeight(MODELS.hut(), 0.75);
+    return fitHeight(MODELS[key](), { lion: 1.05, cub: 0.5, elephant: 1.1, camel: 1.3, camelCalf: 0.75, goat: 0.75, kid: 0.5, duck: 0.5, rabbit: 0.4 }[key] || 0.8);
+  }
+  const MAGIC = {
+    lion: { syn: ['اسد'], icon: '🦁', label: 'الْأَسَدُ', voice: ['lion', false] },
+    cub: { syn: ['شبل'], icon: '🦁', label: 'الشِّبْلُ', voice: ['lion', true] },
+    elephant: { syn: ['فيل'], icon: '🐘', label: 'الْفِيلُ', voice: ['elephant', false] },
+    camel: { syn: ['جمل', 'ناقه', 'بعير'], icon: '🐪', label: 'الْجَمَلُ', voice: ['camel', false] },
+    camelCalf: { syn: ['حوار'], icon: '🐪', label: 'الْحُوَارُ', voice: ['camel', true] },
+    goat: { syn: ['ماعز', 'عنز'], icon: '🐐', label: 'الْمَاعِزُ', voice: ['goat', false] },
+    kid: { syn: ['جدي'], icon: '🐐', label: 'الْجَدْيُ', voice: ['goat', true] },
+    duck: { syn: ['بطه'], icon: '🦆', label: 'الْبَطَّةُ', voice: ['duck', false] },
+    rabbit: { syn: ['ارنب'], icon: '🐇', label: 'الْأَرْنَبُ', voice: ['rabbit', false] },
+    baby: { syn: ['طفل', 'ولد'], icon: '👶', label: 'الطِّفْلُ', voice: ['human', true] },
+    tree: { syn: ['شجره', 'نخله', 'نخل'], icon: '🌴', label: 'النَّخْلَةُ' },
+    hut: { syn: ['بيت', 'كوخ'], icon: '🏠', label: 'الْبَيْتُ' },
+    water: { syn: ['ماء', 'مويه'], icon: '💧', label: 'الْمَاءُ' },
+    sun: { syn: ['شمس'], icon: '☀️', label: 'الشَّمْسُ' },
+    moon: { syn: ['قمر'], icon: '🌙', label: 'الْقَمَرُ' },
+    star: { syn: ['نجمه', 'نجم'], icon: '🌟', label: 'النَّجْمَةُ' },
+  };
+  const MAGIC_CHIPS = ['lion', 'elephant', 'camel', 'duck', 'water', 'sun', 'moon', 'star'];
+  let magicShown = null, magicBusy = false;
+  function clearMagic() {
+    if (!magicShown) return;
+    const { el, items } = magicShown; magicShown = null;
+    for (const o of items) if (o.userData && o.userData.idle) idlers.splice(idlers.indexOf(o.userData.idle), 1);
+    el.remove();
+  }
+  function summonWord(key) {
+    if (magicBusy || mode !== 'magic') return;
+    const w = MAGIC[key]; if (!w) return;
+    magicBusy = true; clearMagic();
+    sfx.good();
+    const { pos, rotY } = frontOf(1.9);
+    const el = document.createElement('a-entity'); uiEl.appendChild(el);
+    el.object3D.position.copy(pos); el.object3D.rotation.y = rotY;
+    const items = [];
+    let topY = 1.0;
+    if (w.voice || key === 'tree' || key === 'hut' || key === 'baby') {
+      const m = magicModel(key); el.object3D.add(m); items.push(m);
+      topY = heightOf(m) + 0.35;
+      const ph = rnd() * 6; const idle = { step(t) { m.rotation.y = Math.sin(t * 0.8 + ph) * 0.35; } };
+      idlers.push(idle); m.userData.idle = idle;
+    } else {
+      const c = document.createElement('canvas'); c.width = c.height = 300;
+      drawEmoji(c.getContext('2d'), w.icon, 150, 150, 220);
+      const spr = planeMesh(c, 0.85); spr.position.y = 1.1; el.object3D.add(spr); items.push(spr); billboards.push(spr);
+      topY = 1.7;
+    }
+    const label = planeMesh(buttonCanvas(w.label, { color: '#fffdf7', text: C.ink, w: 0.9, h: 0.26 }), 0.9);
+    label.position.y = topY; el.object3D.add(label); items.push(label); billboards.push(label);
+    magicShown = { el, items };
+    el.object3D.scale.setScalar(0.01);
+    tween(0.6, k => { const e = 1 + 2.2 * Math.pow(k - 1, 3) + 1.3 * Math.pow(k - 1, 2); el.object3D.scale.setScalar(Math.max(0.01, e)); });
+    burst(pos.clone().setY(topY * 0.6 + 0.3));
+    buzz(lastCursor, 0.3, 40);
+    if (w.voice) voiceAt(pos.clone().setY(1), () => animalVoice(w.voice[0], w.voice[1]));
+    setMood('cheer'); say('magic_' + key);
+    setTimeout(() => { magicBusy = false; }, 900);
+    setTimeout(() => { if (magicShown && magicShown.el === el) clearMagic(); }, 5000);
+  }
+  function matchWord(text) {
+    const n = normAr(text);
+    for (const [key, w] of Object.entries(MAGIC)) if (w.syn.some(s => n.includes(s))) return key;
+    return null;
+  }
+  // speech recognition: tap the mic, say a word, see it appear (falls back gracefully if unsupported)
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recog = null, listening = false;
+  function micLabel() { return listening ? '🎙️ بَسْمَعُكَ…' : '🎤 اضْغَطْ وَقُلْ كَلِمَةً'; }
+  function updateMicButton() { if (magicUi && magicUi.mic) magicUi.mic.updateLabel(micLabel(), listening ? C.coral : C.leaf); }
+  function startListening() {
+    if (!SR || listening || mode !== 'magic') return;
+    try {
+      recog = new SR(); recog.lang = 'ar-SA'; recog.interimResults = false; recog.maxAlternatives = 4; recog.continuous = false;
+      recog.onstart = () => { listening = true; updateMicButton(); };
+      recog.onresult = e => {
+        let key = null;
+        for (let i = 0; i < e.results[0].length && !key; i++) key = matchWord(e.results[0][i].transcript);
+        if (key) summonWord(key); else onMagicMiss();
+      };
+      recog.onerror = () => { listening = false; updateMicButton(); };
+      recog.onend = () => { listening = false; updateMicButton(); };
+      recog.start();
+    } catch (e) { listening = false; }
+  }
+  let missAt = 0;
+  function onMagicMiss() {
+    if (Date.now() - missAt < 4000) return;
+    missAt = Date.now(); setMood('think'); say('magicMiss');
+  }
+  let magicUi = null;
+  function magicChips(el, cardH) {
+    const items = [];
+    const cols = 4, w = 0.44, gap = 0.06, rowGap = 0.12;
+    const top = -cardH * 0.7 - 0.06;
+    MAGIC_CHIPS.forEach((key, i) => {
+      const wd = MAGIC[key], row = Math.floor(i / cols), col = i % cols, n = Math.min(cols, MAGIC_CHIPS.length - row * cols);
+      const c = buttonCanvas(`${wd.icon} ${wd.label}`, { color: '#fffdf7', text: C.ink, w: 1.0, h: 0.3 });
+      const chip = entityWith(planeMesh(c, w), el);
+      chip.object3D.position.set((col - (n - 1) / 2) * (w + gap), top - row * (0.15 + rowGap), 0.02);
+      clickable(chip, () => summonWord(key), { hover: 1.08 });
+      items.push(chip);
+    });
+    return items;
+  }
+  function startMagicWords() {
+    magic.prev = mode; mode = 'magic'; clearMagic(); closePanel(); closeInfo(); hideHud();
+    const { pos, rotY } = frontOf(2.3);
+    const el = document.createElement('a-entity'); uiEl.appendChild(el);
+    el.object3D.position.set(pos.x, eyeY(), pos.z); el.object3D.rotation.y = rotY;
+    const card = planeMesh(cardCanvas({
+      w: 1.9, accent: C.coral, icon: '🪄', title: 'الْكَلِمَاتُ السِّحْرِيَّةُ',
+      blocks: [{ t: SR ? 'قُلْ كَلِمَةً، أَوِ الْمِسْ كَلِمَةً بِالْأَسْفَلِ:' : 'الْمِسْ إِحْدَى الْكَلِمَاتِ بِالْأَسْفَلِ:', size: 0.06 }],
+    }), 1.9);
+    const h = card.userData.h;
+    card.position.y = h * 0.3; el.object3D.add(card);
+    const items = magicChips(el, h);
+    let mic = null;
+    const micY = -h * 0.7 - 0.62;
+    if (SR) {
+      const mb = document.createElement('a-entity'); el.appendChild(mb);
+      const drawMic = (label, color) => planeMesh(buttonCanvas(label, { color, text: '#fff', w: 1.5, h: 0.28 }), 1.5);
+      let plane = drawMic(micLabel(), C.leaf);
+      mb.object3D.add(plane); mb.object3D.position.set(0, micY, 0.02);
+      clickable(mb, () => { unlockAudio(); startListening(); }, { hover: 1.05 });
+      mic = { el: mb, updateLabel(label, color) { mb.object3D.remove(plane); plane.material.map.dispose(); plane = drawMic(label, color); mb.object3D.add(plane); } };
+      items.push(mb);
+    }
+    const back = button('رُجُوعٌ', el, { w: 0.7, h: 0.22, color: '#dff1ff', text: C.ink }, closeMagicWords);
+    back.object3D.position.set(0, micY - (SR ? 0.36 : 0), 0.02); items.push(back);
+    magicUi = { el, items, card, mic };
+    salemBeside(new T.Vector3(pos.x, 0, pos.z), rotY, 1.05);
+    setMood('point'); say('magicIntro');
+  }
+  function closeMagicWords() {
+    if (magicUi) { magicUi.el.remove(); magicUi = null; }
+    clearMagic();
+    mode = magic.prev || 'free';
+    if (mode === 'free') setHud('اسْتَكْشِفْ بِحُرِّيَّةٍ 🦁', 'امْشِ، وَالْمِسِ الْحَيَوَانَاتِ وَاللَّوْحَاتِ');
+    else summary();
+  }
+  const magic = { prev: 'free' };
+
   // Developer view: ?gallery lines up every model in front of the camera.
   function gallery() {
     document.getElementById('topbar').hidden = true;
@@ -3298,6 +3454,7 @@
     carryTo: id => { const el = game.lostEl, f = fam(id), [x, z] = polar(f.angle, ZONE_R - 1.2); el._onDrop(el, new T.Vector3(x, 0, z), null); },
     walk: (x, z) => walkToNow(new T.Vector3(x, 0, z)), small: () => becomeSmall(), big: () => becomeBig(),
     aim: on => { aimHand = on ? scene : null; if (!on) { arc.visible = false; marker.visible = false; } },
+    magic: () => startMagicWords(), sayWord: t => (mode === 'magic' ? (matchWord(t) ? summonWord(matchWord(t)) : onMagicMiss()) : null), magicKey: k => summonWord(k),
     arcInfo: () => { const r = scene.components.raycaster.raycaster.ray; return { vis: arc.visible, beads: beads.filter(b => b.visible).length, marker: marker.visible, at: marker.position.toArray().map(v => +v.toFixed(2)), ok: aimOk, o: r.origin.toArray().map(v => +v.toFixed(2)), d: r.direction.toArray().map(v => +v.toFixed(2)) }; },
   };
 

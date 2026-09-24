@@ -92,6 +92,13 @@ The full vision for the project (a hub of lesson worlds, story quests, next sett
 Animal voices (roar, trumpet, bleat, quack, peep …), birdsong by day and crickets at night are
 synthesised with WebAudio, so there are no sound files to host.
 
+**Magic words (v5)** — «الكلمات السحرية 🪄» from the summary panel: the child says an Arabic word
+out loud (browser speech recognition, `ar-SA`) or taps a word chip, and it appears in front of them
+with a sparkle and Salem's voice — animals (lion, elephant, camel + حوار, goat + جدي, duck, rabbit,
+baby), objects (a palm tree, a hut), and nature words (water, sun, moon, star) via emoji billboards
+for the abstract ones. Chips work with no mic and no speech recognition support (Quest's browser
+support for it is inconsistent), so the feature is always usable.
+
 `?gallery` lines up all of lesson 2's models; `?test` exposes hooks used by the automated flow check
 (`&rt=8` shortens the timer). Guidance for future lessons (new place and new mechanic each time):
 [`vr-plans/LESSON-GUIDE.md`](../../vr-plans/LESSON-GUIDE.md).
