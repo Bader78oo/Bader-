@@ -11,6 +11,7 @@ Reply to Bader in Gulf Arabic. Brand data: `brand/brand.json` (colors, tagline, 
 ## Fixed IDs
 - Soul v1 "بدر الريسي": `soul_id 50e0dfad-e7d5-4904-8d3d-46277ee3e7a7` — 5 filtered car selfies; faces drift, skin looks plastic.
 - Soul v2 "بدر الريسي v2": `soul_id c8d2cf32-535a-49ac-8681-455a1392aee8` — v1 photos + 15 frames from real talking videos (kuma cap, gestures, open mouth, head tilts, 4 face close-ups). Prefer v2 once its adaptation test passes.
+- NEVER use `Marketing_Avatar` (e3249eb8-…) — it is not Bader; he asked for it to be deleted.
 - Only Soul V2 / Soul Cinema accept a soul_id. Retraining: 15–20 unfiltered images, varied angles/expressions/light, several mid-speech frames; real phone video frames work (crop 3:4, keep sharpest via edge variance).
 - Voice clone is **blocked on the Starter plan** — use Bader's own recordings (lip-synced with `wan2_7`).
 
