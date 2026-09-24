@@ -23,6 +23,7 @@ Reply to Bader in Gulf Arabic. Brand data: `brand/brand.json` (colors, tagline, 
    `python3 scripts/tighten_vo.py voice.mp3 words.json --tempo 1.05 --talk A:<i>-<j> --talk B:<i>-<j>`
    → `vo.mp3`, `words_final.json`, `talk_A.mp3`… and the exact start time of each talk clip.
    Never speed speech above ~1.1×; shorten the script or accept a longer reel instead.
+   **Audio guard (a silent clip once burned 15 credits):** before uploading any audio that drives lip-sync, check `ffmpeg -i x.mp3 -af volumedetect -f null -` (mean must be above −35 dB) and re-transcribe it to confirm the words. When cutting with fades, put `-ss/-t` BEFORE `-i` — with `-ss` after `-i`, `afade=...:st=` uses the original timestamps and silences the whole cut.
 3. **Stills before video.** One `soul_2` still per on-camera angle (~1 credit each). Show Bader, get approval.
 4. **Clips — only approved shots** (see `references/higgsfield.md` for models, costs, gotchas):
    - B-roll: `kling3_0`, `mode: std`, `sound: off`, `duration: 5`, `aspect_ratio: 9:16`, text-to-video.
@@ -36,7 +37,7 @@ Reply to Bader in Gulf Arabic. Brand data: `brand/brand.json` (colors, tagline, 
    `bash scripts/pack.sh storyboards/<name>.json /tmp/kit.tgz` → `media_upload` (file) → local `curl PUT` → `media_confirm`.
    In ONE `sandbox_exec` (background:true): `curl <kit url> | tar xz && cd kit && python3 scripts/build.py sb.json --qa && curl -X PUT --upload-file final.mp4 '<video upload_url>'`.
    Call `media_upload` for the output **before** starting the command. Then `media_confirm`.
-7. **QA before delivery.** Look at frames yourself (contact sheet of 5–9 frames at 240 px, then full-res crops of any caption that looks off — downscaled Arabic can look garbled when it isn't). Check: text never covers the face (keep overlays in y≈700–1030 under a face), no two overlay blocks at once, lip-sync offset 0 ms (cross-correlate clip audio vs talk mp3), loudness ≈ −14 LUFS with voice (≈ −18 pad-only). Deliver via SendUserFile, or the `d2ol7oe51mr4n9.cloudfront.net/...` link with phone download steps.
+7. **QA before delivery.** Run `scripts/lipsync_score.py clip.mp4 voice.mp3` on every talking clip (mouth-vs-voice correlation, lag, face drift, camera push-in). Look at frames yourself (contact sheet of 5–9 frames at 240 px, then full-res crops of any caption that looks off — downscaled Arabic can look garbled when it isn't). Check: text never covers the face (keep overlays in y≈700–1030 under a face), no two overlay blocks at once, lip-sync offset 0 ms (cross-correlate clip audio vs talk mp3), loudness ≈ −14 LUFS with voice (≈ −18 pad-only). Deliver via SendUserFile, or the `d2ol7oe51mr4n9.cloudfront.net/...` link with phone download steps.
 
 ## Editing without new credits
 Text, timing, icons, name card, colors, LUT, music: edit the storyboard and re-run `build.py` (`--reuse-overlay` if only shots/audio changed). Only regenerate a clip when the picture itself is wrong — and quote the cost first.
