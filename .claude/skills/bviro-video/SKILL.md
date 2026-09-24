@@ -8,8 +8,10 @@ description: Produce Bviro (بيفيرو) Instagram reels/ads with Bader's digit
 Everything below was proven on the "VR in Omani education" reel (`storyboards/edu-vr-oman.json`).
 Reply to Bader in Gulf Arabic. Brand data: `brand/brand.json` (colors, tagline, values, founder card).
 
-## Fixed IDs (reuse, never retrain)
-- Soul character "بدر الريسي": `soul_id 50e0dfad-e7d5-4904-8d3d-46277ee3e7a7` (model `soul_2`). Only Soul V2 / Soul Cinema accept it.
+## Fixed IDs
+- Soul v1 "بدر الريسي": `soul_id 50e0dfad-e7d5-4904-8d3d-46277ee3e7a7` — 5 filtered car selfies; faces drift, skin looks plastic.
+- Soul v2 "بدر الريسي v2": `soul_id c8d2cf32-535a-49ac-8681-455a1392aee8` — v1 photos + 15 frames from real talking videos (kuma cap, gestures, open mouth, head tilts, 4 face close-ups). Prefer v2 once its adaptation test passes.
+- Only Soul V2 / Soul Cinema accept a soul_id. Retraining: 15–20 unfiltered images, varied angles/expressions/light, several mid-speech frames; real phone video frames work (crop 3:4, keep sharpest via edge variance).
 - Voice clone is **blocked on the Starter plan** — use Bader's own recordings (lip-synced with `wan2_7`).
 
 ## Workflow (text first, pixels last)
@@ -39,6 +41,6 @@ Text, timing, icons, name card, colors, LUT, music: edit the storyboard and re-r
 
 ## Token discipline
 - Never paste base64, frame dumps or full voice lists into the conversation; use `qa_sheet.jpg` (one small frame per shot) for visual checks.
-- Presigned upload URLs are ~2 KB each: request all uploads in one `media_upload` call and do PUTs inside scripts.
+- Presigned upload URLs are ~2 KB each: request all uploads in one `media_upload` call. With ≥10 files the result is too big for the context and is saved to a tool-results JSON file — that's the cheap path: PUT every file with a short Python loop over that file (`uploads[].upload_url`, `media_id`, `content_type`) without ever printing the URLs.
 - Keep this kit in the repo; edit JSON, don't rewrite scripts. Long waits: `jobs_wait` (15 s) rather than chatty polling; schedule a check-in for trainings.
 - Ask for cost with `get_cost: true` before any generation and tell Bader the number.
