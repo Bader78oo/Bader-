@@ -157,8 +157,38 @@ then.
   a successful grab couldn't be moved. Replaced with near-field touch: pinch near an object to
   grab or press it (works for every button and panel, not just one hardcoded object); pinch in
   empty air to walk to wherever you're looking; while carrying something, it now follows the
-  hand's own position directly instead of a ray. Cannot be verified beyond this without real
-  hand-tracking hardware — needs the user's next real test.
+  hand's own position directly instead of a ray.
+
+**v10 — from the user's third round of testing, hands now render but couldn't move/select/grab:**
+- *Voice still silent after granting the permission*: the mic permission itself now works (the
+  v9 fix), but the underlying speech-recognition *service* may simply not be available on the
+  Quest browser at all — that's a platform limitation, not something fixable from this page.
+  So: timeouts are now much shorter (≈6.5s max instead of 10s), and after any one real failure
+  (not a menu-driven cancel) voice is disabled for the rest of the session — the mic button and
+  its instructions disappear, the panel goes straight to "الصوت غير متاح، جرّب الأمثلة", so the
+  child isn't left repeatedly trying something that plainly won't work on their device. The
+  guaranteed-to-work path (tapping a word chip) was always there and remains the default.
+- *Hands moved but couldn't turn or reach the menu*: two more real gaps. (1) Turning (snap-turn)
+  was thumbstick-only, same problem walking had — a bare hand has no thumbstick, so there was no
+  way to turn at all. Added two touchable buttons (↩️/↪️) always on screen. (2) Menus and panels
+  are shown ~2–3 m in front of the child — far outside any hand's near-field reach, so v9's
+  touch-only interaction could never reach them (this was the "no pointer/cursor to reach the
+  choices" the user reported). Added a head-gaze pointer: a small dot fixed at the centre of the
+  view (a 3D object riding on the camera — an HTML overlay can't render inside an immersive WebXR
+  session) that lights up over anything interactive the child is looking at; a pinch confirms it,
+  from any distance.
+- *Couldn't grab the young: "my hand goes straight through it"*: correct diagnosis, but the fix
+  isn't collision (a bare hand can't be physically stopped by a virtual object without haptic
+  gloves — no WebXR app can do that) — it's detection range. Grab range was a small radius from
+  one centre point, too tight and too exact for a hand that isn't tracked with pinpoint accuracy.
+  Widened it and switched to measuring from the object's full bounding box, not just its centre,
+  and the object now glows softly once a hand is close enough to grab it, before the child pinches.
+
+Verified end to end in the automated check: the rotation buttons turn the rig exactly 30°, a
+real recognition failure flips voice off for the rest of the session, an empty-air pinch walks
+the child, a gaze+pinch on a menu tile ~2.5 m away opens that activity, and a hand placed at the
+lost young's position grabs it and carries it along as the hand moves — all pass clean. Still
+needs the user's real headset for what none of this can simulate: actual hand tracking.
 
 `?gallery` lines up all of lesson 2's models; `?test` exposes hooks used by the automated flow check
 (`&rt=8` shortens the timer). Guidance for future lessons (new place and new mechanic each time):

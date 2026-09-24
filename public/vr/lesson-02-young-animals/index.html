@@ -37,6 +37,8 @@
   #timeBtn, #menuBtn { pointer-events: auto; border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 15px;
     background: #fffdf7; color: var(--ink); border-radius: 999px; padding: 8px 14px; box-shadow: 0 2px 8px rgba(31, 58, 77, .2); }
   #menuBtn { background: #7a5cff; color: #fff; }
+  #turnL, #turnR { pointer-events: auto; border: 0; cursor: pointer; font-size: 18px; background: #fffdf7;
+    border-radius: 999px; width: 40px; height: 40px; box-shadow: 0 2px 8px rgba(31, 58, 77, .2); }
   #topbar {
     position: fixed; top: env(safe-area-inset-top, 0px); inset-inline: 0; z-index: 10;
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -98,7 +100,7 @@
 </div></div>
 <div id="topbar">
   <span class="hint">اسحب لتنظر حولك • المس الصغار • ← → للالتفاف • T لتغيير الوقت • زر VR للنظارة</span>
-  <span style="display:flex;gap:8px"><button id="menuBtn" type="button">🎮 القائمة</button><button id="timeBtn" type="button">🌗 الوقت</button><button id="sound" type="button" aria-pressed="true">🔊 الصوت</button></span>
+  <span style="display:flex;gap:8px"><button id="turnL" type="button">↩️</button><button id="turnR" type="button">↪️</button><button id="menuBtn" type="button">🎮 القائمة</button><button id="timeBtn" type="button">🌗 الوقت</button><button id="sound" type="button" aria-pressed="true">🔊 الصوت</button></span>
 </div>
 
 <a-scene id="scene" loading-screen="enabled: false" renderer="antialias: true; foveationLevel: 1; highRefreshRate: true"
@@ -3378,7 +3380,7 @@
   // Quest browser, silently produce no results at all if speech recognition starts without an
   // explicit getUserMedia grant first), then gives up with a clear reason if it never starts or
   // never returns anything, instead of sitting "listening" forever.
-  let activeCancel = null, micPrimed = false;
+  let activeCancel = null, micPrimed = false, micBroken = false;
   // Ask for the microphone once, up front, while still outside VR — a permission prompt cannot
   // be shown once inside an immersive session, so asking for it there just hangs forever.
   function primeMicPermission() {
@@ -3395,14 +3397,15 @@
       if (done) return; done = true;
       if (activeCancel === cancel) activeCancel = null;
       try { r && r.abort(); } catch (e) { /* already stopped */ }
+      if (reason !== 'cancelled') micBroken = true; // a real failure: voice likely doesn't work on this device at all
       onGiveUp(reason);
     };
     activeCancel = cancel;
     const go = () => {
       try {
         r = new SR(); r.lang = 'ar-SA'; r.interimResults = false; r.maxAlternatives = 4; r.continuous = false;
-        const startTimer = setTimeout(() => giveUp('silent'), 3000);
-        r.onstart = () => { clearTimeout(startTimer); setTimeout(() => { if (!done) giveUp('timeout'); }, 7000); };
+        const startTimer = setTimeout(() => giveUp('silent'), 2500);
+        r.onstart = () => { clearTimeout(startTimer); setTimeout(() => { if (!done) giveUp('timeout'); }, 4000); };
         r.onresult = e => { if (done) return; done = true; if (activeCancel === cancel) activeCancel = null; onResult(e.results[0]); };
         r.onerror = e => giveUp(e.error || 'error');
         r.onend = () => { if (!done) giveUp('ended'); };
@@ -3420,7 +3423,7 @@
   function micLabel() { return listening ? '🎙️ بَسْمَعُكَ…' : '🎤 اضْغَطْ وَقُلْ كَلِمَةً'; }
   function updateMicButton() { if (magicUi && magicUi.mic) magicUi.mic.updateLabel(micLabel(), listening ? C.coral : C.leaf); }
   function startListening() {
-    if (listening || mode !== 'magic') return;
+    if (listening || mode !== 'magic' || micBroken) return;
     listening = true; updateMicButton();
     micRecognize({
       onResult: res => {
@@ -3459,14 +3462,14 @@
     el.object3D.position.set(pos.x, eyeY(), pos.z); el.object3D.rotation.y = rotY;
     const card = planeMesh(cardCanvas({
       w: 1.9, accent: C.coral, icon: '🪄', title: 'الْكَلِمَاتُ السِّحْرِيَّةُ',
-      blocks: [{ t: SR ? 'قُلْ كَلِمَةً، أَوِ الْمِسْ كَلِمَةً بِالْأَسْفَلِ:' : 'الْمِسْ إِحْدَى الْكَلِمَاتِ بِالْأَسْفَلِ:', size: 0.06 }],
+      blocks: [{ t: (SR && !micBroken) ? 'قُلْ كَلِمَةً، أَوِ الْمِسْ كَلِمَةً بِالْأَسْفَلِ:' : 'الْمِسْ إِحْدَى الْكَلِمَاتِ بِالْأَسْفَلِ:', size: 0.06 }],
     }), 1.9);
     const h = card.userData.h;
     card.position.y = h * 0.3; el.object3D.add(card);
     const items = magicChips(el, h);
     let mic = null;
     const micY = -h * 0.7 - 0.62;
-    if (SR) {
+    if (SR && !micBroken) {
       const mb = document.createElement('a-entity'); el.appendChild(mb);
       const drawMic = (label, color) => planeMesh(buttonCanvas(label, { color, text: '#fff', w: 1.5, h: 0.28 }), 1.5);
       let plane = drawMic(micLabel(), C.leaf);
@@ -3545,7 +3548,7 @@
   let askRecog = null, askListening = false;
   function askMicLabel() { return askListening ? '🎙️ بَسْمَعُكَ… اسْأَلْ سَالِمًا' : '🎤 اضْغَطْ وَاسْأَلْ سَالِمًا'; }
   function startAsking() {
-    if (askListening || mode !== 'ask') return;
+    if (askListening || mode !== 'ask' || micBroken) return;
     askListening = true; if (askUi) askUi.updateMic(askMicLabel(), C.coral);
     micRecognize({
       onResult: res => {
@@ -3567,7 +3570,7 @@
     const spec = {
       w: 1.9, accent: C.teal, icon: '🎙️', title: 'تَكَلَّمْ مَعَ سَالِمٍ',
       blocks: [
-        { t: SR ? 'اضْغَطِ الزِّرَّ وَاسْأَلْ سَالِمًا أَيَّ سُؤَالٍ!' : 'هَذَا الْجِهَازُ لَا يَدْعَمُ التَّعَرُّفَ عَلَى الصَّوْتِ 🙁', size: 0.06 },
+        { t: (SR && !micBroken) ? 'اضْغَطِ الزِّرَّ وَاسْأَلْ سَالِمًا أَيَّ سُؤَالٍ!' : 'الصَّوْتُ غَيْرُ مُتَاحٍ عَلَى هَذَا الْجِهَازِ، جَرِّبِ الْأَمْثِلَةَ 🙁', size: 0.06 },
         { type: 'chips', label: 'أَمْثِلَةٌ:', items: ASK_EXAMPLES.map(t => ({ i: '💬', t })) },
       ],
     };
@@ -3581,7 +3584,7 @@
       statusPlane.position.set(0, -h * 0.7 - 0.02, 0.02); el.object3D.add(statusPlane);
     };
     let mic = null;
-    if (SR) {
+    if (SR && !micBroken) {
       const mb = document.createElement('a-entity'); el.appendChild(mb);
       const draw = (label, color) => planeMesh(buttonCanvas(label, { color, text: '#fff', w: 1.7, h: 0.3 }), 1.7);
       let plane = draw(askMicLabel(), C.leaf);
@@ -3590,7 +3593,7 @@
       mic = { updateLabel(label, color) { mb.object3D.remove(plane); plane.material.map.dispose(); plane = draw(label, color); mb.object3D.add(plane); } };
     }
     const back = button('رُجُوعٌ', el, { w: 0.7, h: 0.22, color: '#dff1ff', text: C.ink }, closeAskSalem);
-    back.object3D.position.set(0, -h * 0.7 - (SR ? 0.72 : 0.4), 0.02);
+    back.object3D.position.set(0, -h * 0.7 - ((SR && !micBroken) ? 0.72 : 0.4), 0.02);
     askUi = { el, setStatus, updateMic: (l, c) => mic && mic.updateLabel(l, c) };
     salemBeside(new T.Vector3(pos.x, 0, pos.z), rotY, 1.05);
     setMood('point'); say('askIntro');
@@ -3887,20 +3890,37 @@
   }
 
   // =====================================================================
-  // Hand tracking, rebuilt: no raycaster (a bare hand doesn't point straight the way a
-  // controller does — its ray never landed on the right thing). Instead: pinch near something
-  // to grab/press it; pinch in empty air to walk to wherever you're looking.
+  // Hand tracking, v2: near-field touch for the one grabbable object (the lost young), a
+  // head-gaze pointer + centre dot for far things (menus, buttons, panels — a bare hand can't
+  // reach those), and a pinch to confirm either. Walking still happens when neither is targeted.
   // =====================================================================
-  const HAND_REACH = 0.16; // metres: how close a hand must be to "touch" something
-  function nearestClickable(worldPos) {
-    let best = null, bestD = HAND_REACH;
-    document.querySelectorAll('.clickable').forEach(elx => {
-      if (!elx.object3D || elx.object3D.visible === false) return;
-      const p = new T.Vector3(); elx.object3D.getWorldPosition(p);
-      const d = p.distanceTo(worldPos);
-      if (d < bestD) { best = elx; bestD = d; }
-    });
-    return best;
+  const HAND_GRAB_REACH = 0.32; // metres, measured to the object's bounding box, not just its centre
+  const _box = new T.Box3();
+  function nearestGrabbable(handPos) {
+    const el = game && game.lostEl;
+    if (!el || !el.object3D) return null;
+    _box.setFromObject(el.object3D);
+    if (_box.isEmpty()) return null;
+    return _box.distanceToPoint(handPos) < HAND_GRAB_REACH ? el : null;
+  }
+  // the centre-of-view dot: a 3D mesh riding on the camera (HTML overlays don't render inside
+  // an immersive WebXR session — only the scene itself does), so it always sits in the middle
+  // of what the child sees and works as a gaze cursor for things too far to touch.
+  let gazeDot = null, gazeRay = null, gazeTarget = null;
+  function buildGazeDot() {
+    gazeDot = new T.Mesh(new T.RingGeometry(0.006, 0.011, 20), new T.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.85, depthTest: false, fog: false }));
+    gazeDot.position.set(0, 0, -0.6); gazeDot.renderOrder = 998;
+    camEl.object3D.add(gazeDot);
+    gazeRay = document.createElement('a-entity');
+    gazeRay.setAttribute('raycaster', 'objects: .clickable; far: 60; interval: 100');
+    camEl.appendChild(gazeRay);
+    tickers.push({ step() {
+      const rc = gazeRay.components.raycaster;
+      const hit = rc && rc.intersectedEls && rc.intersectedEls[0];
+      gazeTarget = (hit && hit.object3D && hit.object3D.visible !== false) ? hit : null;
+      gazeDot.material.color.set(gazeTarget ? '#ffd166' : '#ffffff');
+      gazeDot.scale.setScalar(gazeTarget ? 1.8 : 1);
+    } });
   }
   function handWalk(he) {
     const dir = new T.Vector3(); scene.camera.getWorldDirection(dir);
@@ -3914,17 +3934,32 @@
     if (hit && canWalkTo(hit)) { walkTo(hit); buzz(he, 0.3, 40); }
   }
   function setupHandInteract() {
+    buildGazeDot();
+    // a light glow on the lost young once a hand is close enough to grab it
+    tickers.push({ step() {
+      if (!game || !game.lostEl || grab.el) return;
+      const hL = document.getElementById('handTL'), hR = document.getElementById('handTR');
+      const near = [hL, hR].some(h => {
+        if (!h || !h.object3D.visible) return false;
+        const hp = new T.Vector3(); h.object3D.getWorldPosition(hp);
+        return !!nearestGrabbable(hp);
+      });
+      pulse(game.lostEl, near);
+    } });
     for (const id of ['handTL', 'handTR']) {
       const he = document.getElementById(id);
       if (!he) continue;
       let held = null;
       he.addEventListener('pinchstarted', () => {
         const hp = new T.Vector3(); he.object3D.getWorldPosition(hp);
-        const target = nearestClickable(hp);
-        if (target) {
-          held = target; buzz(he, 0.3, 40);
-          if (target._onDrop) target.emit('mousedown', { cursorEl: he }, false); // grabbable
-        } else handWalk(he); // nothing nearby: treat the pinch as "walk to where I'm looking"
+        const grabTarget = nearestGrabbable(hp);
+        if (grabTarget) {
+          held = grabTarget; buzz(he, 0.4, 50); pulse(grabTarget, false);
+          grabTarget.emit('mousedown', { cursorEl: he }, false);
+        } else if (gazeTarget) {
+          held = gazeTarget; buzz(he, 0.25, 30);
+          if (held._onDrop) held.emit('mousedown', { cursorEl: he }, false);
+        } else handWalk(he);
       });
       he.addEventListener('pinchended', () => {
         if (held) { if (held._onDrop) held.emit('mouseup', { cursorEl: he }, false); else held.emit('click', {}, false); }
@@ -3933,7 +3968,7 @@
     }
   }
 
-  // Developer view: ?gallery lines up every model in front of the camera.
+ // Developer view: ?gallery lines up every model in front of the camera.
   function gallery() {
     document.getElementById('topbar').hidden = true;
     const ids = ['lion', 'cub', 'elephant', 'calf', 'camel', 'camelCalf', 'goat', 'kid', 'duck', 'duckling', 'rabbit', 'bunny',
@@ -3959,6 +3994,8 @@
     aim: on => { aimHand = on ? scene : null; if (!on) { arc.visible = false; marker.visible = false; } },
     magic: () => startMagicWords(), sayWord: t => (mode === 'magic' ? (matchWord(t) ? summonWord(matchWord(t)) : onMagicMiss()) : null), magicKey: k => summonWord(k),
     micTap: () => magicUi && magicUi.mic && magicUi.mic.el.emit('click'), askMicTap: () => askUi && startAsking(),
+    micBroken: () => micBroken, turn: dir => rigEl.components['snap-turn'].turn(dir),
+    gazeAt: el => { gazeTarget = el; }, gazeTarget: () => gazeTarget, handPinch: (id, on) => document.getElementById(id).emit(on ? 'pinchstarted' : 'pinchended'),
     ask: () => startAskSalem(), askText: q => askSalem(q), askUrl: () => SALEM_BRAIN_URL,
     menu: () => openLevelMenu(), menuItems: () => MENU_ITEMS.map(i => i.label), menuPick: i => menuTiles[i].emit('click'),
     companion: () => ({ stage: companion.stage, xp: hub.xp() }), showCompanion, journal: () => hub.journalList(), showJournal,
@@ -3990,7 +4027,11 @@
     scene.object3D.add(salem.root);
     document.getElementById('timeBtn').addEventListener('click', () => { unlockAudio(); cycleTime(); });
     document.getElementById('menuBtn').addEventListener('click', () => { unlockAudio(); openLevelMenu(); });
+    const snapTurn = () => rigEl.components['snap-turn'];
+    document.getElementById('turnL').addEventListener('click', () => { unlockAudio(); snapTurn().turn(1); });
+    document.getElementById('turnR').addEventListener('click', () => { unlockAudio(); snapTurn().turn(-1); });
     scene.addEventListener('enter-vr', setupHandInteract, { once: true });
+    if (TEST) setupHandInteract(); // no real WebXR session in the automated check to fire enter-vr
     window.addEventListener('keydown', e => { if ((e.key === 't' || e.key === 'T') && mode !== 'intro') { unlockAudio(); cycleTime(); } });
     const begin = () => {
       document.getElementById('loader').hidden = true;
