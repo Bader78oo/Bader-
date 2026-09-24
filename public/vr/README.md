@@ -108,6 +108,21 @@ backend (`vr-plans/salem-backend/`, built on Replit) is not live yet — publish
 a Replit account/billing restriction; `SALEM_BRAIN_URL` in `index.html` is a placeholder until
 then.
 
+**Salem's Hub (v7)** — shared across every lesson via `lib/hub.js` and `localStorage`:
+- *A growing companion*: a little falcon that hatches from an egg and grows through 4 stages as
+  the child discovers more (and returns on new days). Perched near the entrance in both lessons;
+  tap it to see its progress. Growing across lessons, not just within one, is the point — the
+  same companion is on its perch in lesson 1 too.
+- *A field journal* («دفتري 📖» from the summary panel): every animal and magic word discovered,
+  as a grid of icons.
+- *A portal* between lesson 1 and lesson 2 — a shimmering doorway near the fort in each lesson
+  that walks the child straight into the other one, so the two feel like one connected world.
+- *Sound made visible*: every 3D animal call sends out a soft golden ripple from its source.
+- *Teach-back* («علّم صغيري 🎓» from the summary panel): a student puppet arrives, and the child
+  teaches it by picking the right mother for 3 young — reinforcing the lesson by explaining it.
+- *Hand tracking* (Quest only, untestable outside real hardware): pinch the lost young directly
+  with your fingers in `lesson-02` — no controller needed — via A-Frame's `hand-tracking-controls`.
+
 `?gallery` lines up all of lesson 2's models; `?test` exposes hooks used by the automated flow check
 (`&rt=8` shortens the timer). Guidance for future lessons (new place and new mechanic each time):
 [`vr-plans/LESSON-GUIDE.md`](../../vr-plans/LESSON-GUIDE.md).

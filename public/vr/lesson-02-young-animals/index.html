@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap">
 <script src="../lib/aframe-1.7.1.min.js"></script>
+<script src="../lib/hub.js"></script>
 <script src="content.js"></script>
 <style>
   :root {
@@ -2442,6 +2443,7 @@
     const isNew = !discovered.has(f.id);
     if (isNew) {
       discovered.add(f.id); nameTag({ id: f.id, name: f.young });
+      trackDiscovery(f.id, f.icon, f.parent);
       setMood('cheer');
       say([pick(['praise1', 'praise2', 'praise3']), 'f_' + f.id]);
       if (mode === 'explore') { exploreHud(); if (discovered.size === FAMILIES.length) setTimeout(exploreDone, 5500); }
@@ -2956,6 +2958,8 @@
       { label: 'كُنْ صَغِيرًا 🐥', color: '#ffe28a', onClick: () => becomeSmall() },
       { label: 'الْكَلِمَاتُ السِّحْرِيَّةُ 🪄', color: '#ffd9c2', onClick: () => startMagicWords() },
       { label: 'تَكَلَّمْ مَعَ سَالِمٍ 🎙️', color: '#c8f0e6', onClick: () => startAskSalem() },
+      { label: 'دَفْتَرِي 📖', color: '#ffe9b3', onClick: () => showJournal() },
+      { label: 'عَلِّمْ صَغِيرِي 🎓', color: '#e3ddff', onClick: () => teachIntro() },
       { label: 'اسْتَكْشِفْ بِحُرِّيَّةٍ', color: '#dff1ff', onClick: () => { closePanel(); mode = 'free'; setHud('اسْتَكْشِفْ بِحُرِّيَّةٍ 🦁', 'امْشِ، وَالْمِسِ الْحَيَوَانَاتِ وَاللَّوْحَاتِ'); say('free'); } },
     ]);
     setMood('cheer'); say('end');
@@ -3017,7 +3021,7 @@
   }
   tickers.push({ step: updateListener });
   let soundAt = null; // world position for the next call() — set by voiceAt()
-  function voiceAt(pos, fn) { soundAt = pos; try { fn(); } finally { soundAt = null; } }
+  function voiceAt(pos, fn) { soundAt = pos; soundRipple(pos); try { fn(); } finally { soundAt = null; } }
   function worldPosOf(el, up = 0.5) { const v = new T.Vector3(); el.object3D.getWorldPosition(v); v.y += up; return v; }
 
   // --- walking: push the thumbstick forward, aim the arc, let go to jump there ---
@@ -3344,6 +3348,7 @@
     burst(pos.clone().setY(topY * 0.6 + 0.3));
     buzz(lastCursor, 0.3, 40);
     if (w.voice) voiceAt(pos.clone().setY(1), () => animalVoice(w.voice[0], w.voice[1]));
+    trackDiscovery('magic_' + key, w.icon, w.label);
     setMood('cheer'); say('magic_' + key);
     setTimeout(() => { magicBusy = false; }, 900);
     setTimeout(() => { if (magicShown && magicShown.el === el) clearMagic(); }, 5000);
@@ -3541,6 +3546,271 @@
   }
   const ask = { prev: 'free' };
 
+  // =====================================================================
+  // Salem's Hub: a companion that grows across lessons and days, and a field journal of
+  // everything the child has discovered. Both are backed by window.SalemHub (lib/hub.js),
+  // shared across every lesson on this site via localStorage.
+  // =====================================================================
+  const LESSON_ID = 'lesson-02-young-animals';
+  const HUB_OK = typeof window.SalemHub !== 'undefined';
+  const hub = HUB_OK ? window.SalemHub : { addXp() {}, stage: () => 0, xpToNext: () => null, xp: () => 0, recordDiscovery: () => false, journalList: () => [], journalCount: () => 0, recordVisit: () => false, daysVisited: () => 0 };
+  function trackDiscovery(key, icon, label) { hub.recordDiscovery(LESSON_ID, key, icon, label); refreshCompanionIfGrown(); }
+
+  // a small stylised falcon — Salem's companion, grown from an egg as the child explores
+  function companionModel(stage) {
+    const k = new Kit(), tan = '#c88a4a', dark = '#8a5a2a', cream = '#f4e6c8', speck = '#a87840', eyeC = '#2a1810';
+    if (stage === 0) {
+      k.ell(cream, [0, 0.09, 0], [0.09, 0.11, 0.095]);
+      for (const [x, y, z] of [[0.03, 0.14, 0.04], [-0.04, 0.06, -0.03], [0.02, 0.03, 0.06]]) k.ell(speck, [x, y, z], [0.012, 0.01, 0.012]);
+      return k.build();
+    }
+    const s = stage === 1 ? 0.6 : stage === 2 ? 0.85 : 1.1;
+    k.ell(tan, [0, 0.11 * s, 0], [0.11 * s, 0.11 * s, 0.14 * s]);
+    k.ell(cream, [0, 0.07 * s, 0.06 * s], [0.08 * s, 0.075 * s, 0.09 * s]);
+    k.ell(tan, [0, 0.19 * s, 0.08 * s], [0.075 * s, 0.075 * s, 0.075 * s]);
+    for (const sx of [-1, 1]) { k.ell('#ffffff', [sx * 0.035 * s, 0.2 * s, 0.13 * s], [0.024 * s, 0.024 * s, 0.02 * s]); k.ell(eyeC, [sx * 0.035 * s, 0.2 * s, 0.145 * s], [0.013 * s, 0.013 * s, 0.008 * s]); }
+    k.add(GEO.cone(0.02 * s, 0.045 * s, 8), dark, [0, 0.185 * s, 0.155 * s], [Math.PI / 2, 0, 0]);
+    // wings: folded at stage 1, half-open at 2, spread at 3
+    const wingA = stage === 1 ? 0.15 : stage === 2 ? 0.5 : 1.0;
+    for (const sx of [-1, 1]) k.ell(dark, [sx * 0.1 * s, 0.1 * s, -0.02 * s], [0.05 * s, 0.09 * s * (0.6 + wingA * 0.5), 0.13 * s], [0, 0, sx * (0.25 + wingA * 0.9)]);
+    if (stage >= 2) for (const sx of [-1, 1]) for (let i = 0; i < 3; i++) k.ell(speck, [sx * (0.12 + i * 0.03) * s, 0.03 * s, -0.2 * s], [0.018 * s, 0.012 * s, 0.05 * s], [0, 0, sx * 0.3]);
+    if (stage >= 3) k.ell(dark, [0, 0.24 * s, 0.02 * s], [0.02 * s, 0.03 * s, 0.02 * s]);
+    for (const sx of [-1, 1]) k.add(GEO.cyl(0.006 * s, 0.005 * s, 0.05 * s, 6), dark, [sx * 0.02 * s, 0.005 * s, 0.02 * s]);
+    return k.build();
+  }
+  const COMPANION_TITLE = ['بَيْضَةٌ سِحْرِيَّةٌ', 'رَفِيقُكَ الصَّغِيرُ', 'رَفِيقُكَ يَكْبَرُ', 'رَفِيقُكَ الطَّائِرُ الْكَامِلُ'];
+  const companion = { root: null, mesh: null, stage: -1 };
+  function buildCompanionEntity() {
+    companion.root = new T.Group();
+    const [x, z] = polar(36, 5.6);
+    companion.root.position.set(x, 0.55, z);
+    const perch = new T.Mesh(new T.CylinderGeometry(0.02, 0.025, 0.55, 8), new T.MeshStandardMaterial({ color: '#7a5234' }));
+    perch.position.y = -0.28; companion.root.add(perch);
+    setCompanionStage(hub.stage(), true);
+    const el = entityWith(companion.root, worldEl);
+    clickable(el, () => showCompanion(), { hover: 1.08 });
+    companion.el = el;
+    idlers.push({ ph: rnd() * 6, step(t) { if (companion.mesh) companion.mesh.rotation.y = Math.sin(t * 0.6 + this.ph) * 0.3; } });
+  }
+  function setCompanionStage(stage, silent) {
+    if (companion.mesh) { companion.root.remove(companion.mesh); }
+    companion.mesh = companionModel(stage); companion.root.add(companion.mesh);
+    const grown = companion.stage >= 0 && stage > companion.stage;
+    companion.stage = stage;
+    if (grown && !silent) {
+      burst(companion.root.position.clone().add(new T.Vector3(0, 0.3, 0)));
+      sfx.good();
+      say(stage === 1 ? 'companionHatch' : stage === 3 ? 'companionFull' : 'companionGrow');
+    }
+  }
+  function refreshCompanionIfGrown() { const s = hub.stage(); if (s !== companion.stage) setCompanionStage(s); }
+  function companionBarCanvas() {
+    const c = document.createElement('canvas'); c.width = 900; c.height = 140; const x = c.getContext('2d');
+    x.direction = 'rtl'; x.textAlign = 'right'; x.textBaseline = 'middle';
+    const left = hub.xpToNext();
+    x.fillStyle = '#e8e1d2'; x.beginPath(); x.roundRect(20, 60, 860, 36, 18); x.fill();
+    const pct = left === null ? 1 : Math.min(1, 1 - left / (hub.STAGES[companion.stage + 1] ? hub.STAGES[companion.stage + 1] - hub.STAGES[companion.stage] : 1));
+    x.fillStyle = C.leaf; x.beginPath(); x.roundRect(20, 60, 860 * Math.max(0.06, pct), 36, 18); x.fill();
+    x.fillStyle = C.ink; x.font = `700 30px ${FONT}`;
+    x.fillText(left === null ? 'وَصَلَ لِأَقْصَى حَجْمٍ! 🏆' : `يَحْتَاجُ ${toAr(left)} اكْتِشَافٍ لِيَكْبَرَ`, 880, 30);
+    return c;
+  }
+  function showCompanion() {
+    closePanel(); closeInfo();
+    const bar = planeMesh(companionBarCanvas(), 1.5);
+    showPanel({
+      w: 1.7, accent: '#c88a4a', icon: '🦅', title: COMPANION_TITLE[companion.stage],
+      blocks: [{ t: 'يَكْبَرُ رَفِيقُكَ كُلَّمَا اكْتَشَفْتَ حَيَوَانَاتٍ جَدِيدَةً مَعِي، وَكُلَّمَا زُرْتَنِي يَوْمًا جَدِيدًا.', size: 0.058 }],
+    }, [{ label: 'رُجُوعٌ', color: '#dff1ff', onClick: closePanel }]);
+    if (panel) { bar.position.set(0, -0.55, 0.02); panel.object3D.add(bar); }
+    setMood('point'); say('companionIntro');
+  }
+
+  // ---------- Field journal ----------
+  function journalCanvas() {
+    const list = hub.journalList(), W = 1300, cols = 5, rows = Math.min(5, Math.ceil(Math.min(list.length, 25) / cols) || 1);
+    const cell = 240, H = 90 + rows * cell + 30;
+    const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+    x.fillStyle = '#fffdf7'; x.beginPath(); x.roundRect(0, 0, W, H, 30); x.fill();
+    x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = C.ink;
+    x.font = `800 46px ${FONT}`; x.fillText(`اكْتَشَفْتَ ${toAr(list.length)} شَيْئًا حَتَّى الْآنَ`, W / 2, 46);
+    list.slice(0, 25).forEach((it, i) => {
+      const cx = W - 90 - (i % cols) * cell - cell / 2 + 90, cy = 100 + Math.floor(i / cols) * cell + cell / 2 - 20;
+      x.fillStyle = '#f6ead0'; x.beginPath(); x.arc(cx, cy, 82, 0, Math.PI * 2); x.fill();
+      drawEmoji(x, it.icon, cx, cy - 10, 70);
+      x.fillStyle = C.ink; x.font = `700 26px ${FONT}`; x.fillText(it.label, cx, cy + 78);
+    });
+    if (!list.length) { x.font = `700 32px ${FONT}`; x.fillStyle = C.soft; x.fillText('لَمْ تَكْتَشِفْ شَيْئًا بَعْدُ — رُحْ اسْتَكْشِفْ!', W / 2, H / 2 + 30); }
+    return c;
+  }
+  function showJournal() {
+    closePanel(); closeInfo();
+    const { pos, rotY } = frontOf(2.4);
+    const el = document.createElement('a-entity'); uiEl.appendChild(el);
+    el.object3D.position.set(pos.x, eyeY(), pos.z); el.object3D.rotation.y = rotY;
+    const cv = journalCanvas(); const w = 2.4 * (cv.width / cv.height > 2 ? 1 : cv.width / 1300);
+    const m = planeMesh(cv, 2.4);
+    el.object3D.add(m);
+    const x = button('✕', el, { w: 0.22, h: 0.22, color: C.coral, text: '#fff' }, () => el.remove());
+    x.object3D.position.set(-1.15, m.userData.h / 2 - 0.08, 0.02);
+    salemBeside(new T.Vector3(pos.x, 0, pos.z), rotY, 1.2);
+    setMood('cheer'); say('journalIntro');
+  }
+
+  // =====================================================================
+  // Sound made visible: every 3D animal call also sends out a soft golden ripple from its source.
+  // =====================================================================
+  let rippleTex = null;
+  function rippleTexture() {
+    if (rippleTex) return rippleTex;
+    const c = document.createElement('canvas'); c.width = c.height = 200; const x = c.getContext('2d');
+    for (const [r, a] of [[92, 0.5], [70, 0.65], [46, 0.8]]) { x.beginPath(); x.arc(100, 100, r, 0, Math.PI * 2); x.lineWidth = 10; x.strokeStyle = `rgba(255,209,102,${a})`; x.stroke(); }
+    rippleTex = new T.CanvasTexture(c); rippleTex.colorSpace = T.SRGBColorSpace; return rippleTex;
+  }
+  function soundRipple(pos) {
+    const p = new T.Mesh(new T.PlaneGeometry(0.55, 0.55), new T.MeshBasicMaterial({ map: rippleTexture(), transparent: true, depthWrite: false, blending: T.AdditiveBlending, fog: false }));
+    p.position.copy(pos); scene.object3D.add(p); billboards.push(p); p.scale.setScalar(0.3);
+    tween(0.65, k => { p.scale.setScalar(0.35 + k * 1.5); p.material.opacity = (1 - k) * 0.85; }, () => { scene.object3D.remove(p); billboards.splice(billboards.indexOf(p), 1); p.material.dispose(); });
+  }
+
+  // =====================================================================
+  // Portal: a shimmering doorway to another lesson world.
+  // =====================================================================
+  function portalTexture(t) {
+    const c = document.createElement('canvas'); c.width = c.height = 300; const x = c.getContext('2d');
+    const g = x.createRadialGradient(150, 150, 10, 150, 150, 150);
+    g.addColorStop(0, '#fff3c4'); g.addColorStop(0.5, '#2a9d8f'); g.addColorStop(1, '#1f3a4d');
+    x.fillStyle = g; x.beginPath(); x.arc(150, 150, 148, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,.5)'; x.lineWidth = 3;
+    for (let r = 20; r < 145; r += 22) { x.beginPath(); x.arc(150, 150, r + Math.sin(t * 2 + r) * 6, 0, Math.PI * 2); x.stroke(); }
+    return c;
+  }
+  function buildPortal(toName, toLabel, toHref) {
+    const g = new T.Group();
+    const k = new Kit(), wood = '#8a5a34';
+    for (const s of [-1, 1]) k.add(GEO.cyl(0.14, 0.16, 2.6, 12), wood, [s * 0.85, 1.3, 0], [0, 0, 0], [1, 1, 1], true);
+    k.add(GEO.cyl(0.15, 0.15, 2.0, 12), wood, [0, 2.55, 0], [0, 0, Math.PI / 2], [1, 1, 1], true);
+    g.add(k.build());
+    const disc = new T.Mesh(new T.CircleGeometry(0.78, 32), new T.MeshBasicMaterial({ map: new T.CanvasTexture(portalTexture(0)), fog: false }));
+    disc.position.set(0, 1.3, 0); g.add(disc); disc.userData.t = rnd() * 6;
+    tickers.push({ step() { disc.userData.t += 0.02; disc.material.map.dispose(); disc.material.map = new T.CanvasTexture(portalTexture(disc.userData.t)); disc.material.map.colorSpace = T.SRGBColorSpace; disc.material.needsUpdate = true; } });
+    const sign = planeMesh(buttonCanvas(toLabel, { color: '#fffdf7', text: C.ink, w: 1.4, h: 0.3 }), 1.3);
+    sign.position.set(0, 2.4, 0); g.add(sign); billboards.push(sign);
+    const hit = new T.Mesh(new T.CylinderGeometry(0.85, 0.85, 2.2, 12), new T.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+    hit.position.y = 1.3; g.add(hit);
+    const [x, z] = polar(180, 24);
+    const el = entityWith(g, worldEl);
+    el.object3D.position.set(x, 0, z); el.object3D.rotation.y = rad(-180 - 90);
+    clickable(el, () => onPortal(toName, toHref), { hover: 1.02 });
+  }
+  function onPortal(toName, toHref) {
+    if (mode === 'game' || mode === 'grow' || mode === 'count' || mode === 'nest' || mode === 'magic' || mode === 'ask') return;
+    showPanel({
+      w: 1.8, accent: C.teal, icon: '🚪', title: 'بَوَّابَةٌ سِحْرِيَّةٌ',
+      blocks: [{ t: `تَبِي تَزُورُ ${toName}؟`, size: 0.068 }],
+    }, [
+      { label: 'ادْخُلِ الْبَوَّابَةَ', color: C.teal, text: '#fff', onClick: () => (TEST ? window.__portalWent = toHref : (blink(() => { location.href = toHref; }, 0.5))) },
+      { label: 'رُجُوعٌ', color: '#dff1ff', onClick: closePanel },
+    ]);
+    setMood('point'); say('portalLine');
+  }
+
+  // =====================================================================
+  // Teach-back: a little student puppet arrives; the child teaches it what they learned.
+  // =====================================================================
+  const TEACH_N = 3;
+  let teach = null;
+  function teachIntro() {
+    goHome(); mode = 'teachIntro';
+    showPanel({
+      w: 2.0, accent: '#7a5cff', icon: '🎓', title: 'عَلِّمْ صَغِيرِي!',
+      blocks: [
+        { type: 'bullet', t: 'وَصَلَ طَالِبٌ صَغِيرٌ جَدِيدٌ يُرِيدُ أَنْ يَتَعَلَّمَ مِنْكَ.', size: 0.066 },
+        { type: 'bullet', t: 'سَيَسْأَلُكَ عَنْ أُمِّ كُلِّ صَغِيرٍ — أَشِّرْ عَلَى الْإِجَابَةِ الصَّحِيحَةِ لِتُعَلِّمَهُ.', size: 0.066 },
+      ],
+    }, [{ label: 'هَيَّا نُعَلِّمُهُ', color: '#7a5cff', text: '#fff', onClick: startTeach }]);
+    setMood('point'); say('teachIntro');
+  }
+  function startTeach() {
+    closePanel(); mode = 'teach';
+    teach = { rounds: shuffle(FAMILIES.slice()).slice(0, TEACH_N), i: 0 };
+    makeStage(2.6);
+    const pupil = fitHeight(MODELS.kid(), 0.55); pupil.position.set(0, TOP, -0.2); pupil.rotation.y = Math.PI;
+    stage.el.object3D.add(pupil); stage.items.push(pupil); teach.pupil = pupil;
+    teachRound();
+  }
+  function teachRound() {
+    if (!stage) return;
+    if (teach.i >= teach.rounds.length) return teachDone();
+    const f = teach.rounds[teach.i];
+    const wrong = shuffle(FAMILIES.filter(x => x.id !== f.id)).slice(0, 2);
+    const opts = shuffle([f, ...wrong]);
+    stageCard({ w: 1.3, accent: '#7a5cff', icon: '🎓', title: `مَنْ أُمُّ ${f.young}؟`, blocks: [{ t: 'أَشِّرْ عَلَى الْإِجَابَةِ الصَّحِيحَةِ.', size: 0.06 }] });
+    if (teach.opts) teach.opts.forEach(o => o.remove());
+    teach.opts = opts.map((o, i) => {
+      const b = button(`${o.icon} ${o.parent}`, stage.el, { w: 0.85, h: 0.28, color: '#fffdf7', text: C.ink }, () => teachAnswer(f, o));
+      b.object3D.position.set((i - 1) * 0.95, TOP + 0.65, -0.2);
+      return b;
+    });
+    setMood('think');
+  }
+  function teachAnswer(correct, chosen) {
+    if (!teach || teach.busy) return;
+    if (chosen.id === correct.id) {
+      teach.busy = true; sfx.good(); setMood('cheer');
+      const y0 = teach.pupil.position.y;
+      tween(0.5, k => { teach.pupil.position.y = y0 + Math.sin(k * Math.PI) * 0.3; }, () => { teach.pupil.position.y = y0; });
+      say('teachRight');
+      setTimeout(() => { teach.busy = false; teach.i++; teachRound(); }, 1600);
+    } else { sfx.bad(); setMood('think'); say('teachWrong'); }
+  }
+  function teachDone() {
+    mode = 'teachDone'; sfx.good();
+    const top = stage.pos.clone(); top.y = 1.2; burst(top);
+    clearStage();
+    showPanel({ w: 1.8, accent: '#7a5cff', icon: '🏅', title: 'صِرْتَ مُعَلِّمًا صَغِيرًا!', blocks: [{ type: 'stars', n: TEACH_N, total: TEACH_N }] },
+      [{ label: 'رُجُوعٌ لِلْمُلَخَّصِ', onClick: summary }]);
+    setMood('cheer'); say('teachDone');
+  }
+
+  // =====================================================================
+  // Hand tracking (Quest only): pinch a grabbable object directly with your fingers, no
+  // controller needed. Cannot be exercised outside real hand-tracking hardware.
+  // =====================================================================
+  function setupHandTracking() {
+    const handGrab = { el: null, hand: null };
+    for (const side of ['left', 'right']) {
+      const he = document.createElement('a-entity');
+      he.setAttribute('hand-tracking-controls', `hand: ${side}; modelStyle: mesh`);
+      rigEl.appendChild(he);
+      he.addEventListener('pinchstarted', () => {
+        if (handGrab.el || grab.el) return;
+        const hp = new T.Vector3(); he.object3D.getWorldPosition(hp);
+        let best = null, bestD = 0.16;
+        // currently only the lost young (in "من أمي؟") is grabbable by hand
+        if (game && game.lostEl) { const d = worldPosOf(game.lostEl, 0.2).distanceTo(hp); if (d < bestD) { best = game.lostEl; bestD = d; } }
+        if (best) {
+          handGrab.el = best; handGrab.hand = he;
+          buzz(null, 0.5, 60); sfx.pop();
+          if (game && game.busy) return;
+          if (game) setHud(`خُذْ ${game.rounds[game.i].young} إِلَى أُمِّهِ`, 'اتْرُكْهُ دَاخِلَ حَظِيرَةِ أُمِّهِ');
+        }
+      });
+      he.addEventListener('pinchended', () => {
+        if (handGrab.hand !== he || !handGrab.el) return;
+        const el = handGrab.el; handGrab.el = null; handGrab.hand = null;
+        const hp = new T.Vector3(); he.object3D.getWorldPosition(hp); hp.y = 0;
+        if (el._onDrop) el._onDrop(el, hp, null);
+      });
+      tickers.push({ step() {
+        if (handGrab.hand !== he || !handGrab.el) return;
+        const hp = new T.Vector3(); he.object3D.getWorldPosition(hp); hp.y += 0.05;
+        const o = handGrab.el.object3D, parent = o.parent; const local = hp.clone(); parent.worldToLocal(local);
+        o.position.lerp(local, 0.5);
+      } });
+    }
+  }
+
   // Developer view: ?gallery lines up every model in front of the camera.
   function gallery() {
     document.getElementById('topbar').hidden = true;
@@ -3567,6 +3837,9 @@
     aim: on => { aimHand = on ? scene : null; if (!on) { arc.visible = false; marker.visible = false; } },
     magic: () => startMagicWords(), sayWord: t => (mode === 'magic' ? (matchWord(t) ? summonWord(matchWord(t)) : onMagicMiss()) : null), magicKey: k => summonWord(k),
     ask: () => startAskSalem(), askText: q => askSalem(q), askUrl: () => SALEM_BRAIN_URL,
+    companion: () => ({ stage: companion.stage, xp: hub.xp() }), showCompanion, journal: () => hub.journalList(), showJournal,
+    teach: () => teachIntro(), teachStart: startTeach, teachPick: id => { const f = teach.rounds[teach.i]; teachAnswer(f, fam(id)); },
+    portal: () => onPortal('رِحْلَةِ الْبِيئَاتِ الْمَحَلِّيَّةِ', '../lesson-01-local-habitats/'), portalWent: () => window.__portalWent, portalConfirm: () => panel.querySelectorAll('.clickable')[0].emit('click'),
     arcInfo: () => { const r = scene.components.raycaster.raycaster.ray; return { vis: arc.visible, beads: beads.filter(b => b.visible).length, marker: marker.visible, at: marker.position.toArray().map(v => +v.toFixed(2)), ok: aimOk, o: r.origin.toArray().map(v => +v.toFixed(2)), d: r.direction.toArray().map(v => +v.toFixed(2)) }; },
   };
 
@@ -3584,6 +3857,12 @@
     buildLandscape();
     buildZones();
     liveAnimals();
+    if (!GALLERY) {
+      hub.recordVisit(LESSON_ID);
+      buildCompanionEntity();
+      buildPortal('رِحْلَةِ الْبِيئَاتِ الْمَحَلِّيَّةِ', '١ — الْبِيئَاتُ الْمَحَلِّيَّةُ 🌍', '../lesson-01-local-habitats/');
+      scene.addEventListener('enter-vr', setupHandTracking, { once: true });
+    }
     salem = buildSalem(); salem.baseY = 0;
     scene.object3D.add(salem.root);
     document.getElementById('timeBtn').addEventListener('click', () => { unlockAudio(); cycleTime(); });
