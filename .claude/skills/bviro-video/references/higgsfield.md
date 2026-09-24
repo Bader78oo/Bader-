@@ -16,6 +16,16 @@
 
 Rules: preflight with `get_cost: true`; draft low-res, final hi-res; B-roll `sound: off`; 5 s clips and cut; stills + Ken-Burns in the overlay instead of video where motion isn't essential; reuse the B-roll library across ads.
 
+## Talking-head benchmark (lipsync_score.py, 2026-09-24)
+| Clip | corr | lag | face_drift | face_scale_change |
+|---|---|---|---|---|
+| Bader real phone video (reference) | 0.12–0.25 | ±217 ms | 5.4% | 10–12% |
+| v1 Wan 2.7 720p, "slow dolly-in" prompt | 0.19–0.35 | +200–300 ms | 5.8–6.3% | 45–81% |
+| **v2 Wan 2.7 1080p, static-camera prompt, natural-speed audio** | 0.19 | **+33 ms** | 5.8% | **11%** |
+Winning recipe: v2 still (chest-up, mouth closed, "no text"), audio at natural speed (no atempo), 6 s, 1080p (15 credits),
+prompt = precise lip sync + natural blinking + small nods + "static locked-off tripod camera: no zoom, no dolly" + "no exaggerated smile".
+corr from mouth-gap vs loudness is noisy even on real footage — compare against the real-video baseline, and always look at a mouth-crop strip.
+
 ## Gotchas
 - **Concurrency**: Starter caps at 4 concurrent jobs total (images count too) and in practice runs ~2 video jobs at once; extra submits fail with 429 `rate_limit_reached`. Queue them.
 - **Preset interception**: `generate_video_batch` may answer "Preset X was recommended" instead of submitting — resubmit with `declined_preset_id`.
