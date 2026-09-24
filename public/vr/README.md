@@ -47,25 +47,37 @@ What's in the scene:
 
 ## Lesson 2 structure
 
-Built from lesson 1's engine (same Salem, cards, snap-turn and voice pipeline) in an Omani family
-wildlife park. Seven enclosures surround the child, each with a parent and its young: lion and cub
-(الشبل), elephant and calf, she-camel and حوار, goat and جدي, a duck with eight ducklings, a rabbit
-with nine young, and an Omani mother with her baby in a cradle.
+Set in **Salalah in the khareef**: green Dhofar hills in light mist, coconut palms, banana plants,
+frankincense trees, a Darbat-style waterfall and Omani brass lanterns. A sun-dial post (or the
+«الوقت» button / `T` key) switches between sunrise, day, sunset and night: sky, light, fog, stars,
+moon, glowing lanterns and fireflies all change, and Salem comments on it. Seven enclosures surround
+the child, each with a parent and its young: lion and cub (الشبل), elephant and calf, she-camel
+(in Omani camel dress) and حوار, Omani goat and جدي, a duck with eight ducklings, a rabbit with nine
+young, and an Omani mother with her baby in a cradle.
 
-1. **Welcome** — objectives and vocabulary (صغير، الإنسان، الشبل، طفل).
-2. **Mission 1: Meet the young** — touch each young (or its parent / sign) to hear its name, what it
-   becomes when it grows up, and how many young are born at a time.
-3. **Mission 2: Who is my mother?** — a lost young appears; the child points at its mother or her
-   sign. Five rounds, stars for first-try answers, hint after two misses.
-4. **Mission 3: The young grow up** — press «كبّره!» to watch a cub become a lion, a حوار become a
+1. **Arrival** — a start button (plus one that enters VR directly); a welcome banner with the
+   lesson's name, fireworks and Salem greeting the class.
+2. **Welcome** — objectives and vocabulary (صغير، الإنسان، الشبل، طفل).
+3. **Mission 1: Meet the young** — touch each young (or its parent / sign) to hear its name, its
+   sound, what it becomes when it grows up, and how many young are born at a time.
+4. **Mission 2: Who is my mother?** — a lost young appears with a 40-second timer; the child points
+   at its mother or her sign. Stars for first-try answers, hint after two misses; when time runs out
+   Salem shows the mother and the young flies home.
+5. **Mission 3: The young grow up** — press «كبّره!» to watch a cub become a lion, a حوار become a
    camel, and a baby become a boy and then an adult.
-5. **Mission 4: Count the young** — count eight ducklings, nine young rabbits and the mother's one
-   baby, then compare.
-6. **Mission 5: An enclosure for the kid** — choose food, water and shelter for the جدي; toys and
+6. **Mission 4: Count the young** — the young play on the grass, well apart; each one touched hops
+   onto the next numbered spot on a bench, so the row shows the count (8 ducklings, 9 young rabbits,
+   the mother's one baby). The numbers come from `content.js` and are checked in code.
+7. **Mission 5: An enclosure for the kid** — choose food, water and shelter for the جدي; toys and
    sweets are politely refused.
-7. **What did I learn?** — summary matching the book's «ماذا تعلمت», replay or free explore.
+8. **What did I learn?** — summary matching the book's «ماذا تعلمت», replay or free explore.
 
-`?gallery` lines up all of lesson 2's models; `?test` exposes hooks used by the automated flow check.
+Animal voices (roar, trumpet, bleat, quack, peep …), birdsong by day and crickets at night are
+synthesised with WebAudio, so there are no sound files to host.
+
+`?gallery` lines up all of lesson 2's models; `?test` exposes hooks used by the automated flow check
+(`&rt=8` shortens the timer). Guidance for future lessons (new place and new mechanic each time):
+[`vr-plans/LESSON-GUIDE.md`](../../vr-plans/LESSON-GUIDE.md).
 
 ## Voice
 

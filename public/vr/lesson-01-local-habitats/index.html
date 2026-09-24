@@ -543,79 +543,172 @@
 
   function heightOf(obj) { const b = new T.Box3().setFromObject(obj); return b.max.y - b.min.y; }
 
+  // cylinder from point a to point b (radius r1 at a, r2 at b)
+  const _up = new T.Vector3(0, 1, 0);
+  function seg(k, color, a, b, r1, r2, flat = false) {
+    const A = new T.Vector3(...a), B = new T.Vector3(...b), d = B.clone().sub(A);
+    const q = new T.Quaternion().setFromUnitVectors(_up, d.clone().normalize());
+    const e = new T.Euler().setFromQuaternion(q);
+    const mid = A.clone().add(B).multiplyScalar(0.5);
+    k.add(GEO.cyl(r2, r1, d.length(), 12), color, mid.toArray(), [e.x, e.y, e.z], [1, 1, 1], flat);
+  }
+
   // =====================================================================
-  // Salem — the Omani guide character (dishdasha with tassel, embroidered kumma)
+  // Salem — the Omani guide character: an embroidered kumma and a white dishdasha with its
+  // stitched neckline, front placket and farrakha (the perfumed tassel)
   // =====================================================================
+  const SALEM_TEX = {};
   function kummaTexture() {
-    const c = document.createElement('canvas'); c.width = 512; c.height = 128;
+    if (SALEM_TEX.kumma) return SALEM_TEX.kumma;
+    // side band, unrolled: dense hand embroidery on white cotton, tiny perforations, borders top and bottom
+    const W = 1024, H = 256, c = document.createElement('canvas'); c.width = W; c.height = H;
     const x = c.getContext('2d');
-    x.fillStyle = '#fbfaf4'; x.fillRect(0, 0, 512, 128);
-    const cols = ['#1b8a8a', '#8c1c3a', '#d9a31f', '#24407a'];
-    for (let row = 0; row < 3; row++) for (let i = 0; i < 32; i++) {
-      x.fillStyle = cols[(i + row) % 4];
-      const cx = i * 16 + 8 + (row % 2) * 8, cy = 24 + row * 34;
-      x.beginPath(); x.moveTo(cx, cy - 7); x.lineTo(cx + 6, cy); x.lineTo(cx, cy + 7); x.lineTo(cx - 6, cy); x.closePath(); x.fill();
+    x.fillStyle = '#fbfaf3'; x.fillRect(0, 0, W, H);
+    x.fillStyle = '#e4e0d2';
+    for (let yy = 8; yy < H; yy += 9) for (let xx = (yy % 18) / 2; xx < W; xx += 9) { x.beginPath(); x.arc(xx, yy, 1.3, 0, Math.PI * 2); x.fill(); }
+    const teal = '#15807f', maroon = '#8c1c3a', gold = '#c9971c', navy = '#24407a', green = '#2f7d3a';
+    const band = (y, h, col) => { x.fillStyle = col; x.fillRect(0, y, W, h); };
+    const zig = (y, h, col, n) => { x.fillStyle = col; x.beginPath(); for (let i = 0; i <= n; i++) { const px = i * W / n; x.lineTo(px, y + (i % 2 ? h : 0)); } for (let i = n; i >= 0; i--) { const px = i * W / n; x.lineTo(px, y + (i % 2 ? h : 0) + 4); } x.fill(); };
+    band(0, 7, teal); zig(10, 10, maroon, 64); band(26, 3, gold);
+    // main field: 8 medallions (eight-point stars with rings), linked by diamond chains
+    const n = 8, cy = 128;
+    for (let i = 0; i < n; i++) {
+      const cx = (i + 0.5) * W / n;
+      const star = (r, col) => { x.fillStyle = col; x.beginPath(); for (let j = 0; j < 16; j++) { const a = j * Math.PI / 8, rr = j % 2 ? r * 0.7 : r; x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } x.closePath(); x.fill(); };
+      star(52, [teal, navy, maroon, green][i % 4]); star(40, '#fbfaf3'); star(32, [maroon, gold, teal, navy][i % 4]);
+      x.fillStyle = '#fbfaf3'; x.beginPath(); x.arc(cx, cy, 16, 0, Math.PI * 2); x.fill();
+      x.fillStyle = gold; x.beginPath(); x.arc(cx, cy, 9, 0, Math.PI * 2); x.fill();
+      for (let j = 0; j < 8; j++) { const a = j * Math.PI / 4; x.fillStyle = teal; x.beginPath(); x.arc(cx + Math.cos(a) * 24, cy + Math.sin(a) * 24, 2.4, 0, Math.PI * 2); x.fill(); }
+      const mx = cx + W / n / 2;
+      for (const dy of [-34, 0, 34]) { x.fillStyle = dy ? gold : maroon; x.beginPath(); x.moveTo(mx, cy + dy - 9); x.lineTo(mx + 7, cy + dy); x.lineTo(mx, cy + dy + 9); x.lineTo(mx - 7, cy + dy); x.fill(); }
     }
-    x.fillStyle = '#1b8a8a'; x.fillRect(0, 118, 512, 6);
-    const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.wrapS = T.RepeatWrapping; t.repeat.set(2, 1);
-    return t;
+    band(H - 29, 3, gold); zig(H - 22, 10, maroon, 64); band(H - 7, 7, teal);
+    const side = new T.CanvasTexture(c); side.colorSpace = T.SRGBColorSpace; side.wrapS = T.RepeatWrapping; side.anisotropy = maxAniso;
+    // crown: a stitched rosette
+    const t = document.createElement('canvas'); t.width = t.height = 512;
+    const y = t.getContext('2d');
+    y.fillStyle = '#fbfaf3'; y.fillRect(0, 0, 512, 512);
+    const ring = (r, col, w) => { y.strokeStyle = col; y.lineWidth = w; y.beginPath(); y.arc(256, 256, r, 0, Math.PI * 2); y.stroke(); };
+    for (let r = 230; r > 60; r -= 26) ring(r, [teal, maroon, gold, navy][(r / 26 | 0) % 4], 5);
+    for (let j = 0; j < 24; j++) {
+      const a = j * Math.PI / 12; y.fillStyle = j % 2 ? maroon : teal;
+      y.save(); y.translate(256 + Math.cos(a) * 150, 256 + Math.sin(a) * 150); y.rotate(a);
+      y.beginPath(); y.ellipse(0, 0, 22, 8, 0, 0, Math.PI * 2); y.fill(); y.restore();
+    }
+    y.fillStyle = gold; y.beginPath(); for (let j = 0; j < 16; j++) { const a = j * Math.PI / 8, rr = j % 2 ? 34 : 56; y.lineTo(256 + Math.cos(a) * rr, 256 + Math.sin(a) * rr); } y.fill();
+    y.fillStyle = teal; y.beginPath(); y.arc(256, 256, 18, 0, Math.PI * 2); y.fill();
+    const top = new T.CanvasTexture(t); top.colorSpace = T.SRGBColorSpace; top.anisotropy = maxAniso;
+    return (SALEM_TEX.kumma = { side, top });
+  }
+  function dishdashaTexture() {
+    if (SALEM_TEX.dish) return SALEM_TEX.dish;
+    // unrolled robe: u = around the body (0 = front centre), v = up. Soft folds, stitched neckline and placket.
+    const W = 1024, H = 1024, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d');
+    x.fillStyle = '#f9f8f3'; x.fillRect(0, 0, W, H);
+    for (let i = 0; i < 26; i++) {
+      const px = (i + 0.5) * W / 26, g = x.createLinearGradient(px - 18, 0, px + 18, 0);
+      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.5, 'rgba(120,110,90,0.045)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.fillRect(px - 18, 0, 36, H);
+    }
+    const thread = '#d6c69c', thread2 = '#bfae82';
+    // neckline embroidery (top of the texture = neck)
+    for (const [yy, col] of [[16, thread], [30, thread2], [44, thread]]) { x.fillStyle = col; x.fillRect(0, yy, W, 5); }
+    for (let i = 0; i < 64; i++) { x.fillStyle = thread2; x.beginPath(); const px = i * 16 + 8; x.moveTo(px, 52); x.lineTo(px + 6, 60); x.lineTo(px, 68); x.lineTo(px - 6, 60); x.fill(); }
+    // front placket: runs down from the neck at u = 0 (drawn at both edges so it wraps)
+    for (const cx of [0, W]) {
+      x.fillStyle = thread; x.fillRect(cx - 14, 0, 28, 300);
+      x.fillStyle = '#f9f8f3'; x.fillRect(cx - 9, 0, 18, 296);
+      for (let yy = 60; yy < 290; yy += 22) { x.fillStyle = thread2; x.beginPath(); x.moveTo(cx, yy - 7); x.lineTo(cx + 6, yy); x.lineTo(cx, yy + 7); x.lineTo(cx - 6, yy); x.fill(); }
+    }
+    // hem stitching
+    for (const yy of [H - 26, H - 16]) { x.fillStyle = '#e2dccb'; x.fillRect(0, yy, W, 3); }
+    const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = maxAniso;
+    t.flipY = true;
+    return (SALEM_TEX.dish = t);
   }
 
   function buildSalem() {
     const root = new T.Group();
-    const skin = '#b97a55', white = '#f7f6f1', shade = '#e4e0d4';
+    const skin = '#b97a55', white = '#f7f6f1', shade = '#e4e0d4', hair = '#2a1d17';
+    // the robe: a lathe (hem → shoulders → neck), textured so the embroidery sits where it should
+    const prof = [[0.255, 0.075], [0.25, 0.12], [0.22, 0.35], [0.185, 0.58], [0.18, 0.72], [0.205, 0.83], [0.19, 0.875], [0.12, 0.915], [0.07, 0.935]];
+    const lathe = new T.LatheGeometry(prof.map(p => new T.Vector2(...p)), 36);
+    const robe = new T.Mesh(lathe, new T.MeshStandardMaterial({ map: dishdashaTexture(), roughness: 0.85 }));
+    robe.scale.set(1, 1, 0.82); root.add(robe);
     const k = new Kit();
-    k.add(GEO.cyl(0.15, 0.25, 0.8, 24), white, [0, 0.46, 0]);
-    k.add(GEO.cyl(0.252, 0.252, 0.03, 24), shade, [0, 0.075, 0]);
-    k.ell(white, [0, 0.86, 0], [0.2, 0.08, 0.13]);
-    k.add(GEO.tor(0.075, 0.012), shade, [0, 0.9, 0.01], [Math.PI / 2, 0, 0]);
-    // the dishdasha tassel (فراخة)
-    k.add(GEO.cyl(0.01, 0.01, 0.17, 6), '#cdb88d', [0.03, 0.78, 0.132]);
-    k.add(GEO.cone(0.028, 0.07, 10), '#c2a877', [0.03, 0.67, 0.135], [Math.PI, 0, 0]);
+    k.add(GEO.tor(0.25, 0.008), shade, [0, 0.08, 0], [Math.PI / 2, 0, 0], [1, 0.82, 1]);
+    k.add(GEO.tor(0.068, 0.011), '#d6c69c', [0, 0.93, 0.012], [Math.PI / 2 - 0.15, 0, 0]);
+    // farrakha: a cord from the neckline ending in a tassel
+    seg(k, '#e2d3aa', [0.028, 0.92, 0.075], [0.03, 0.77, 0.155], 0.007, 0.007);
+    k.ell('#e2d3aa', [0.03, 0.765, 0.157], [0.017, 0.017, 0.017]);
+    k.add(GEO.cone(0.026, 0.075, 12), '#d6c290', [0.03, 0.72, 0.16], [Math.PI, 0, 0]);
+    for (let i = 0; i < 5; i++) seg(k, '#c9b27e', [0.03 + (i - 2) * 0.008, 0.7, 0.16], [0.03 + (i - 2) * 0.011, 0.66, 0.162], 0.003, 0.002);
+    // sandals (na'al) with a toe strap
     for (const s of [-1, 1]) {
-      k.ell('#6b4a2e', [s * 0.08, 0.025, 0.08], [0.065, 0.025, 0.11]);
-      k.ell(skin, [s * 0.08, 0.05, 0.12], [0.05, 0.022, 0.055]);
+      k.ell('#6b4a2e', [s * 0.08, 0.018, 0.08], [0.065, 0.018, 0.115]);
+      k.ell(skin, [s * 0.08, 0.042, 0.11], [0.05, 0.022, 0.06]);
+      k.add(GEO.tor(0.035, 0.009, Math.PI), '#8a5a34', [s * 0.08, 0.035, 0.12], [0, 0, 0]);
+      for (let t = 0; t < 4; t++) k.ell(skin, [s * 0.08 + (t - 1.5) * 0.02, 0.04, 0.17], [0.011, 0.011, 0.012]);
     }
-    k.add(GEO.cyl(0.06, 0.065, 0.1, 12), skin, [0, 0.94, 0]);
+    k.add(GEO.cyl(0.058, 0.064, 0.1, 14), skin, [0, 0.95, 0]);
     root.add(k.build());
 
     const arms = {};
     for (const s of [-1, 1]) {
-      const g = new T.Group(); g.position.set(s * 0.2, 0.87, 0);
+      const g = new T.Group(); g.position.set(s * 0.19, 0.86, 0);
       const ka = new Kit();
-      ka.add(GEO.cyl(0.055, 0.075, 0.38, 12), white, [0, -0.19, 0]);
-      ka.ell(skin, [0, -0.41, 0.01], [0.05, 0.055, 0.05]);
+      ka.ell(white, [0, -0.01, 0], [0.074, 0.07, 0.074]);
+      ka.add(GEO.cyl(0.055, 0.075, 0.36, 14), white, [0, -0.18, 0]);
+      ka.add(GEO.tor(0.057, 0.008), '#d6c69c', [0, -0.35, 0], [Math.PI / 2, 0, 0]);
+      ka.ell(skin, [0, -0.4, 0.008], [0.046, 0.05, 0.036]);
+      ka.ell(skin, [-s * 0.036, -0.385, 0.02], [0.016, 0.028, 0.016], [0, 0, s * 0.4]);
       g.add(ka.build()); g.rotation.z = s * 0.12; root.add(g); arms[s] = g;
     }
 
     const head = new T.Group(); head.position.set(0, 0.97, 0); root.add(head);
     const kh = new Kit();
     kh.ell(skin, [0, 0.19, 0], [0.19, 0.185, 0.18]);
+    kh.ell(skin, [0, 0.11, 0.05], [0.15, 0.1, 0.13]);
     for (const s of [-1, 1]) {
-      kh.ell(skin, [s * 0.185, 0.18, 0], [0.035, 0.055, 0.03]);
-      kh.ell('#2a1d17', [s * 0.075, 0.285, 0.155], [0.045, 0.012, 0.014], [0, 0, s * -0.1]);
-      kh.ell('#e39a8a', [s * 0.11, 0.13, 0.14], [0.035, 0.02, 0.012]);
+      kh.ell(skin, [s * 0.185, 0.18, 0], [0.036, 0.056, 0.03]);
+      kh.ell('#a86b48', [s * 0.19, 0.18, 0.012], [0.018, 0.034, 0.012]);
+      kh.ell(hair, [s * 0.16, 0.24, 0.05], [0.03, 0.05, 0.03]);
+      kh.ell(hair, [s * 0.075, 0.278, 0.162], [0.045, 0.011, 0.014], [0, 0, s * -0.12]);
+      kh.ell('#e8968a', [s * 0.115, 0.13, 0.145], [0.036, 0.021, 0.012]);
     }
-    kh.ell('#a86b48', [0, 0.165, 0.18], [0.03, 0.026, 0.026]);
-    kh.ell('#2a1d17', [0, 0.28, -0.03], [0.188, 0.07, 0.17]);
+    kh.ell('#a86b48', [0, 0.17, 0.182], [0.028, 0.03, 0.026]);
+    for (const s of [-1, 1]) kh.ell('#8a5234', [s * 0.012, 0.155, 0.2], [0.008, 0.005, 0.005]);
+    kh.ell(hair, [0, 0.3, -0.03], [0.19, 0.07, 0.172]);
     head.add(kh.build());
-    const eyeG = new T.Group(); eyeG.position.set(0, 0.215, 0.155); head.add(eyeG);
+    const eyeG = new T.Group(); eyeG.position.set(0, 0.22, 0.152); head.add(eyeG);
     const ke = new Kit();
     for (const s of [-1, 1]) {
-      ke.ell('#ffffff', [s * 0.07, 0, 0], [0.045, 0.055, 0.025]);
-      ke.ell('#3b2416', [s * 0.07, -0.004, 0.02], [0.029, 0.035, 0.012]);
-      ke.ell('#ffffff', [s * 0.07 + 0.012, 0.012, 0.03], [0.009, 0.009, 0.004]);
+      ke.ell('#ffffff', [s * 0.07, 0, 0], [0.047, 0.057, 0.026]);
+      ke.ell('#5a3418', [s * 0.07, -0.005, 0.018], [0.031, 0.037, 0.012]);
+      ke.ell('#111111', [s * 0.07, -0.005, 0.026], [0.017, 0.02, 0.008]);
+      ke.ell('#ffffff', [s * 0.07 + 0.013, 0.013, 0.032], [0.01, 0.01, 0.004]);
+      ke.ell('#ffffff', [s * 0.07 - 0.01, -0.018, 0.031], [0.005, 0.005, 0.003]);
     }
     eyeG.add(ke.build());
-    const km = new Kit(); km.add(GEO.tor(0.05, 0.009, Math.PI), '#7a2e2e', [0, 0.105, 0.172], [0, 0, Math.PI]);
+    const km = new Kit();
+    km.add(GEO.tor(0.042, 0.0065, Math.PI), '#8a3a30', [0, 0.108, 0.176], [0, 0, Math.PI]);
     const mouthClosed = km.build(); head.add(mouthClosed);
-    const ko = new Kit(); ko.ell('#6b1f1f', [0, 0.095, 0.172], [0.045, 0.032, 0.014]);
+    const ko = new Kit();
+    ko.ell('#5a1a1a', [0, 0.095, 0.172], [0.045, 0.034, 0.014]);
+    ko.ell('#ffffff', [0, 0.118, 0.178], [0.032, 0.01, 0.006]);
+    ko.ell('#e06a6a', [0, 0.08, 0.176], [0.025, 0.012, 0.006]);
     const mouthOpen = ko.build(); mouthOpen.visible = false; head.add(mouthOpen);
-    const kummaMat = new T.MeshStandardMaterial({ map: kummaTexture(), roughness: 0.9 });
-    const kumma = new T.Mesh(new T.CylinderGeometry(0.183, 0.19, 0.13, 32, 1, true), kummaMat);
-    kumma.position.set(0, 0.325, -0.01); head.add(kumma);
-    const top = new T.Mesh(new T.CircleGeometry(0.183, 32), kummaMat);
-    top.rotation.x = -Math.PI / 2; top.position.set(0, 0.39, -0.01); head.add(top);
+    // kumma: a straight cylinder with a flat crown, a stitched rim at both edges
+    const kt = kummaTexture();
+    const kumma = new T.Mesh(new T.CylinderGeometry(0.186, 0.19, 0.14, 48, 1, true), new T.MeshStandardMaterial({ map: kt.side, roughness: 0.9, side: T.DoubleSide }));
+    kumma.position.set(0, 0.36, -0.012); head.add(kumma);
+    const crown = new T.Mesh(new T.CircleGeometry(0.186, 48), new T.MeshStandardMaterial({ map: kt.top, roughness: 0.9 }));
+    crown.rotation.x = -Math.PI / 2; crown.position.set(0, 0.43, -0.012); head.add(crown);
+    const kr = new Kit();
+    kr.add(GEO.tor(0.19, 0.006), '#15807f', [0, 0.292, -0.012], [Math.PI / 2, 0, 0]);
+    kr.add(GEO.tor(0.186, 0.006), '#15807f', [0, 0.43, -0.012], [Math.PI / 2, 0, 0]);
+    head.add(kr.build());
 
     return { root, head, eyes: eyeG, mouthOpen, mouthClosed, arms, speaking: false, mood: 'idle', moodT: 0, blinkAt: 2 };
   }
