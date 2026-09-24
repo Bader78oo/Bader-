@@ -99,6 +99,15 @@ baby), objects (a palm tree, a hut), and nature words (water, sun, moon, star) v
 for the abstract ones. Chips work with no mic and no speech recognition support (Quest's browser
 support for it is inconsistent), so the feature is always usable.
 
+**Talk to Salem (v6, pending a live backend)** — «تكلم مع سالم 🎙️» from the summary panel: the
+child asks Salem any question by voice; it's sent to a small backend (holds the AI API key,
+never exposed client-side) which returns a short in-character Arabic reply, spoken live via the
+browser's TTS (an AI reply can't be pre-recorded — it's different every time). Falls back to a
+warm recorded line if the backend is unreachable, so the feature never breaks the lesson. The
+backend (`vr-plans/salem-backend/`, built on Replit) is not live yet — publishing is blocked by
+a Replit account/billing restriction; `SALEM_BRAIN_URL` in `index.html` is a placeholder until
+then.
+
 `?gallery` lines up all of lesson 2's models; `?test` exposes hooks used by the automated flow check
 (`&rt=8` shortens the timer). Guidance for future lessons (new place and new mechanic each time):
 [`vr-plans/LESSON-GUIDE.md`](../../vr-plans/LESSON-GUIDE.md).

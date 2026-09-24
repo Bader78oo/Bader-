@@ -2955,6 +2955,7 @@
       { label: 'الْعَبْ «مَنْ أُمِّي؟»', onClick: () => startGame(true) },
       { label: 'كُنْ صَغِيرًا 🐥', color: '#ffe28a', onClick: () => becomeSmall() },
       { label: 'الْكَلِمَاتُ السِّحْرِيَّةُ 🪄', color: '#ffd9c2', onClick: () => startMagicWords() },
+      { label: 'تَكَلَّمْ مَعَ سَالِمٍ 🎙️', color: '#c8f0e6', onClick: () => startAskSalem() },
       { label: 'اسْتَكْشِفْ بِحُرِّيَّةٍ', color: '#dff1ff', onClick: () => { closePanel(); mode = 'free'; setHud('اسْتَكْشِفْ بِحُرِّيَّةٍ 🦁', 'امْشِ، وَالْمِسِ الْحَيَوَانَاتِ وَاللَّوْحَاتِ'); say('free'); } },
     ]);
     setMood('cheer'); say('end');
@@ -3430,6 +3431,116 @@
   }
   const magic = { prev: 'free' };
 
+  // =====================================================================
+  // Talk to Salem: a free question, answered live by an AI (via a small backend that holds the
+  // API key). The reply is never pre-recorded — it's read with the browser's Arabic voice, same
+  // as any un-recorded line. If the backend is unreachable, Salem gives a warm recorded fallback.
+  // =====================================================================
+  const SALEM_BRAIN_URL = 'https://salem-ai-backend.balrisi78.repl.co/api/salem-chat'; // updated once published
+  let askUi = null, asking = false;
+  function currentContext() {
+    if (mode === 'explore' || mode === 'free') return 'الطفل يتجوّل بين حظائر الحيوانات وصغارها في حديقة صلالة';
+    if (mode === 'game') { const f = game && game.rounds[game.i]; return f ? `الطفل يلعب لعبة "من أمي؟" ويبحث عن أم ${f.young}` : 'الطفل يلعب لعبة إرجاع الصغار لأمهاتها'; }
+    if (mode === 'grow') return 'الطفل يشاهد صغيراً يكبر';
+    if (mode === 'count') return 'الطفل يعدّ صغار الحيوانات';
+    if (mode === 'nest') return 'الطفل يبني حاضنة للجدي';
+    if (mode === 'magic') return 'الطفل يلعب لعبة الكلمات السحرية';
+    return 'الطفل في حديقة حيوانات عُمانية في صلالة';
+  }
+  // speak arbitrary dynamic text (never pre-recorded — an AI reply is different every time)
+  function speakDynamic(text) {
+    stopVoice();
+    const my = ++voiceSeq;
+    showBubble(text); salem.speaking = true;
+    return new Promise(res => {
+      const finish = () => { if (my === voiceSeq) { salem.speaking = false; setTimeout(() => { if (my === voiceSeq) hideBubble(); }, 2200); } res(); };
+      if (!soundOn || !ttsVoice) return setTimeout(finish, 900 + text.length * 70);
+      const u = new SpeechSynthesisUtterance(text.replace(/\p{Extended_Pictographic}|️/gu, ''));
+      u.voice = ttsVoice; u.lang = ttsVoice.lang; u.rate = 0.88; u.pitch = 1.5;
+      u.onend = u.onerror = finish;
+      speechSynthesis.speak(u);
+      setTimeout(finish, 900 + text.length * 140);
+    });
+  }
+  async function askSalem(question) {
+    if (asking || !question || !question.trim()) return;
+    asking = true; setMood('think');
+    if (askUi) askUi.setStatus('🤔 سالم يفكّر…');
+    try {
+      const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 12000);
+      const res = await fetch(SALEM_BRAIN_URL, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: question.slice(0, 300), lessonId: 'lesson-02-young-animals', context: currentContext() }),
+        signal: ctrl.signal,
+      });
+      clearTimeout(to);
+      const data = await res.json();
+      const reply = (data && data.reply) ? String(data.reply).slice(0, 400) : L.lines.askError;
+      setMood('cheer'); if (askUi) askUi.setStatus('');
+      await speakDynamic(reply);
+    } catch (e) {
+      setMood('think'); if (askUi) askUi.setStatus('');
+      say('askError');
+    } finally { asking = false; }
+  }
+  let askRecog = null, askListening = false;
+  function askMicLabel() { return askListening ? '🎙️ بَسْمَعُكَ… اسْأَلْ سَالِمًا' : '🎤 اضْغَطْ وَاسْأَلْ سَالِمًا'; }
+  function startAsking() {
+    if (!SR || askListening || mode !== 'ask') return;
+    try {
+      askRecog = new SR(); askRecog.lang = 'ar-SA'; askRecog.interimResults = false; askRecog.maxAlternatives = 1; askRecog.continuous = false;
+      askRecog.onstart = () => { askListening = true; if (askUi) askUi.updateMic(askMicLabel(), C.coral); };
+      askRecog.onresult = e => { const q = e.results[0][0].transcript; if (askUi) askUi.setStatus(`💬 «${q}»`); askSalem(q); };
+      askRecog.onerror = () => { askListening = false; if (askUi) askUi.updateMic(askMicLabel(), C.leaf); };
+      askRecog.onend = () => { askListening = false; if (askUi) askUi.updateMic(askMicLabel(), C.leaf); };
+      askRecog.start();
+    } catch (e) { askListening = false; }
+  }
+  const ASK_EXAMPLES = ['ليش الجمل ما يعطش؟', 'كيف الأرنب يشوف بالليل؟', 'وين تعيش البطة؟'];
+  function startAskSalem() {
+    ask.prev = mode; mode = 'ask'; closePanel(); closeInfo(); hideHud();
+    const { pos, rotY } = frontOf(2.3);
+    const el = document.createElement('a-entity'); uiEl.appendChild(el);
+    el.object3D.position.set(pos.x, eyeY(), pos.z); el.object3D.rotation.y = rotY;
+    const spec = {
+      w: 1.9, accent: C.teal, icon: '🎙️', title: 'تَكَلَّمْ مَعَ سَالِمٍ',
+      blocks: [
+        { t: SR ? 'اضْغَطِ الزِّرَّ وَاسْأَلْ سَالِمًا أَيَّ سُؤَالٍ!' : 'هَذَا الْجِهَازُ لَا يَدْعَمُ التَّعَرُّفَ عَلَى الصَّوْتِ 🙁', size: 0.06 },
+        { type: 'chips', label: 'أَمْثِلَةٌ:', items: ASK_EXAMPLES.map(t => ({ i: '💬', t })) },
+      ],
+    };
+    const card = planeMesh(cardCanvas(spec), spec.w);
+    const h = card.userData.h; card.position.y = h * 0.3; el.object3D.add(card);
+    let statusPlane = null;
+    const setStatus = text => {
+      if (statusPlane) { el.object3D.remove(statusPlane); statusPlane.material.map.dispose(); statusPlane = null; }
+      if (!text) return;
+      statusPlane = planeMesh(buttonCanvas(text, { color: '#fffdf7', text: C.ink, w: 1.6, h: 0.24 }), 1.6);
+      statusPlane.position.set(0, -h * 0.7 - 0.02, 0.02); el.object3D.add(statusPlane);
+    };
+    let mic = null;
+    if (SR) {
+      const mb = document.createElement('a-entity'); el.appendChild(mb);
+      const draw = (label, color) => planeMesh(buttonCanvas(label, { color, text: '#fff', w: 1.7, h: 0.3 }), 1.7);
+      let plane = draw(askMicLabel(), C.leaf);
+      mb.object3D.add(plane); mb.object3D.position.set(0, -h * 0.7 - 0.32, 0.02);
+      clickable(mb, () => { unlockAudio(); startAsking(); }, { hover: 1.05 });
+      mic = { updateLabel(label, color) { mb.object3D.remove(plane); plane.material.map.dispose(); plane = draw(label, color); mb.object3D.add(plane); } };
+    }
+    const back = button('رُجُوعٌ', el, { w: 0.7, h: 0.22, color: '#dff1ff', text: C.ink }, closeAskSalem);
+    back.object3D.position.set(0, -h * 0.7 - (SR ? 0.72 : 0.4), 0.02);
+    askUi = { el, setStatus, updateMic: (l, c) => mic && mic.updateLabel(l, c) };
+    salemBeside(new T.Vector3(pos.x, 0, pos.z), rotY, 1.05);
+    setMood('point'); say('askIntro');
+  }
+  function closeAskSalem() {
+    if (askUi) { askUi.el.remove(); askUi = null; }
+    mode = ask.prev || 'free';
+    if (mode === 'free') setHud('اسْتَكْشِفْ بِحُرِّيَّةٍ 🦁', 'امْشِ، وَالْمِسِ الْحَيَوَانَاتِ وَاللَّوْحَاتِ');
+    else summary();
+  }
+  const ask = { prev: 'free' };
+
   // Developer view: ?gallery lines up every model in front of the camera.
   function gallery() {
     document.getElementById('topbar').hidden = true;
@@ -3455,6 +3566,7 @@
     walk: (x, z) => walkToNow(new T.Vector3(x, 0, z)), small: () => becomeSmall(), big: () => becomeBig(),
     aim: on => { aimHand = on ? scene : null; if (!on) { arc.visible = false; marker.visible = false; } },
     magic: () => startMagicWords(), sayWord: t => (mode === 'magic' ? (matchWord(t) ? summonWord(matchWord(t)) : onMagicMiss()) : null), magicKey: k => summonWord(k),
+    ask: () => startAskSalem(), askText: q => askSalem(q), askUrl: () => SALEM_BRAIN_URL,
     arcInfo: () => { const r = scene.components.raycaster.raycaster.ray; return { vis: arc.visible, beads: beads.filter(b => b.visible).length, marker: marker.visible, at: marker.position.toArray().map(v => +v.toFixed(2)), ok: aimOk, o: r.origin.toArray().map(v => +v.toFixed(2)), d: r.direction.toArray().map(v => +v.toFixed(2)) }; },
   };
 
