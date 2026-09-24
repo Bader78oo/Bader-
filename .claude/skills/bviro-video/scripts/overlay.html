@@ -29,6 +29,14 @@ html,body{margin:0;background:transparent;overflow:hidden;font-family:"Cairo",sa
 .card .t{font-size:46px;font-weight:900;color:#fff;flex:1}
 .card .ok img{width:46px;height:46px;filter:invert(62%) sepia(86%) saturate(560%) hue-rotate(125deg) brightness(95%)}
 #stk{right:40px;background:var(--c);color:var(--d);font-weight:900;font-size:30px;padding:8px 20px;border-radius:40px;box-shadow:0 6px 18px rgba(0,0,0,.35);direction:rtl}
+#hook{left:40px;right:40px;text-align:center;direction:rtl}
+#hook .h{display:inline-block;font-size:62px;font-weight:900;line-height:1.2;color:#fff;background:linear-gradient(135deg,var(--v),var(--v2));padding:10px 28px 16px;border-radius:24px;box-shadow:0 12px 36px rgba(127,0,255,.5)}
+#hook .hs{margin-top:14px;font-size:30px;font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.7)}
+#cta{left:0;right:0;display:flex;justify-content:center}
+#cta .b{display:flex;align-items:center;gap:14px;direction:rtl;background:var(--c);color:var(--d);font-size:40px;font-weight:900;padding:14px 34px;border-radius:60px;box-shadow:0 10px 30px rgba(1,206,201,.45)}
+#cta .b img{width:40px;height:40px}
+.card.info .ok{display:none}
+.card.info .t{font-size:40px}
 #end{inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(90,0,190,.92),rgba(20,0,45,.97) 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px}
 #end .sym{height:150px}
 #end .row{display:flex;align-items:center;gap:26px;direction:ltr}
@@ -43,6 +51,8 @@ html,body{margin:0;background:transparent;overflow:hidden;font-family:"Cairo",sa
 <div id="cap" class="abs"><div class="ic"><img id="capic"></div><div class="line" id="capline"></div></div>
 <div id="name" class="abs"><div class="box"><div class="n" id="nm_n"></div><div class="r" id="nm_r"></div></div><div class="bar"></div></div>
 <div id="chk" class="abs"></div>
+<div id="hook" class="abs"><div class="h" id="hook_t"></div><div class="hs" id="hook_s"></div></div>
+<div id="cta" class="abs"><div class="b"><img id="cta_i"><span id="cta_t"></span></div></div>
 <div id="end" class="abs">
   <img class="sym" src="brand/logo_symbol_white.png">
   <div class="row"><img class="e" src="brand/logo_wordmark_en.png"><div class="bar"></div><img class="a" src="brand/logo_wordmark_ar.png"></div>
@@ -55,7 +65,12 @@ document.getElementById('cap').style.top = (L.caption_top ?? 865) + 'px';
 document.getElementById('name').style.top = (L.name_top ?? 730) + 'px';
 document.getElementById('chk').style.top = (L.checklist_top ?? 760) + 'px';
 document.getElementById('stk').style.top = (L.sticker_top ?? 230) + 'px';
-const NC = SB.name_card, CK = SB.checklist, EC = SB.end_card;
+document.getElementById('hook').style.top = (L.hook_top ?? 250) + 'px';
+document.getElementById('cta').style.top = (L.cta_top ?? 1030) + 'px';
+const NC = SB.name_card, CK = SB.checklist, EC = SB.end_card, HK = SB.hook, CT = SB.cta;
+if (HK) { document.getElementById('hook_t').textContent = HK.text; document.getElementById('hook_s').textContent = HK.sub || ''; }
+if (CT) { document.getElementById('cta_t').textContent = CT.text; const ci = document.getElementById('cta_i');
+          if (CT.icon) ci.src = 'icons/' + CT.icon + '.svg'; else ci.style.display = 'none'; }
 if (NC) { document.getElementById('nm_n').textContent = NC.name; document.getElementById('nm_r').textContent = NC.role; }
 if (EC) { document.getElementById('end_tag').textContent = EC.tag || ''; document.getElementById('end_sub').textContent = EC.sub || ''; }
 const ease = x => 1 - Math.pow(1 - Math.min(Math.max(x, 0), 1), 3);
@@ -75,7 +90,9 @@ function render(t) {
     const ic = cap.querySelector('.ic');
     ic.style.display = p.icon ? 'flex' : 'none';
     if (p.icon) document.getElementById('capic').src = 'icons/' + p.icon + '.svg';
-    document.getElementById('capline').innerHTML = W.slice(p.from, p.to + 1).map(w => {
+    // word-synced (from/to index into WORDS) or a fixed line (text) that appears whole
+    const ws = p.text ? p.text.split(' ').map(x => [p.s - 1, p.s - 1, x]) : W.slice(p.from, p.to + 1);
+    document.getElementById('capline').innerHTML = ws.map(w => {
       const cls = t < w[0] - 0.02 ? 'off' : (t < w[1] ? 'on' : '');
       return `<span class="w ${cls}">${w[2]}</span>`;
     }).join(' ');
@@ -94,9 +111,17 @@ function render(t) {
     chk.innerHTML = CK.items.map(c => {
       if (t < c.t) return '';
       const k = ease((t - c.t) / 0.3);
-      return `<div class="card" style="opacity:${k};transform:translateX(${(1 - k) * 260}px) scale(${0.85 + 0.15 * k})"><div class="ci"><img src="icons/${c.icon}.svg"></div><div class="t">${c.text}</div><div class="ok"><img src="icons/circle-check.svg"></div></div>`;
+      return `<div class="card ${CK.style === 'info' ? 'info' : ''}" style="opacity:${k};transform:translateX(${(1 - k) * 260}px) scale(${0.85 + 0.15 * k})"><div class="ci"><img src="icons/${c.icon}.svg"></div><div class="t">${c.text}</div><div class="ok"><img src="icons/circle-check.svg"></div></div>`;
     }).join('');
   } else chk.innerHTML = '';
+
+  const hk = document.getElementById('hook');
+  if (inWin(HK, t)) { const k = ease((t - HK.s) / 0.3); hk.style.opacity = Math.min(k, (HK.e - t) / 0.2); hk.style.transform = `translateY(${(1 - k) * -60}px) scale(${0.9 + 0.1 * k})`; }
+  else hk.style.opacity = 0;
+
+  const ct = document.getElementById('cta');
+  if (inWin(CT, t)) { const k = ease((t - CT.s) / 0.3), pulse = 1 + 0.03 * Math.sin((t - CT.s) * 6); ct.style.opacity = Math.min(k, (CT.e - t) / 0.2); ct.style.transform = `translateY(${(1 - k) * 80}px) scale(${pulse})`; }
+  else ct.style.opacity = 0;
 
   const end = document.getElementById('end');
   if (t >= endS) { const k = ease((t - endS) / 0.45); end.style.opacity = k; end.style.transform = `scale(${1.06 - 0.06 * k})`; }

@@ -1,0 +1,142 @@
+{
+ "_guide": {
+  "use": "شرح فكرة/قطاع (تعليم، طب، مؤتمرات) 20 ث: صوت بدر فوق لقطات تعبيرية + ظهوره 2× (≤7 ث). المثال الكامل: ../edu-vr-oman.json",
+  "recipe": [
+   "2× soul_2 stills 9:16 بزاويتين (متوسطة + قريبة 3/4) ≈2",
+   "tighten_vo.py --talk A:.. --talk B:.. ثم 2× wan2_7 4s 720p على talk_A/talk_B (preflight)",
+   "4–5× kling3_0 std 5s sound off (6.25 لكل واحدة)",
+   "checklist لثلاث فوائد مع كلمات بدر"
+  ],
+  "estimate_credits": "≈45–65",
+  "rules": [
+   "لقطات الكلام تبدأ بالضبط عند وقت talk_X المطبوع",
+   "كل لقطة B-roll 1.5–2.5 ث، القطع على حدود الكلمات"
+  ]
+ },
+ "title": "TEMPLATE broll-explainer",
+ "width": 720,
+ "height": 1280,
+ "fps": 24,
+ "duration": 20.6,
+ "output": "final.mp4",
+ "voiceover": "vo.mp3",
+ "words": "words_final.json",
+ "grade": {
+  "contrast": 1.05,
+  "saturation": 1.06,
+  "brightness": 0.005,
+  "vignette": true,
+  "lut": "brand/bviro_look.cube"
+ },
+ "shots": [
+  {
+   "src": "b1.mp4",
+   "in": 0.0,
+   "dur": 2.3
+  },
+  {
+   "src": "b2.mp4",
+   "in": 0.6,
+   "dur": 1.6
+  },
+  {
+   "src": "b3.mp4",
+   "in": 0.8,
+   "dur": 1.6
+  },
+  {
+   "src": "b4.mp4",
+   "in": 0.5,
+   "dur": 2.0
+  },
+  {
+   "src": "talkA.mp4",
+   "in": 0.0,
+   "dur": 3.6
+  },
+  {
+   "src": "b5.mp4",
+   "in": 0.3,
+   "dur": 1.8
+  },
+  {
+   "src": "b5.mp4",
+   "in": 2.3,
+   "dur": 1.5
+  },
+  {
+   "src": "b1.mp4",
+   "in": 2.6,
+   "dur": 2.0
+  },
+  {
+   "src": "talkB.mp4",
+   "in": 0.0,
+   "dur": 4.2
+  }
+ ],
+ "captions": [
+  {
+   "s": 0.2,
+   "e": 2.2,
+   "from": 0,
+   "to": 2,
+   "icon": "graduation-cap"
+  }
+ ],
+ "checklist": {
+  "s": 12.7,
+  "e": 16.4,
+  "items": [
+   {
+    "t": 12.8,
+    "text": "<فائدة 1>",
+    "icon": "brain"
+   },
+   {
+    "t": 13.7,
+    "text": "<فائدة 2>",
+    "icon": "users"
+   },
+   {
+    "t": 15.4,
+    "text": "<فائدة 3>",
+    "icon": "trending-up"
+   }
+  ]
+ },
+ "name_card": {
+  "s": 7.7,
+  "e": 10.9,
+  "name": "م. بدر الريسي",
+  "role": "مؤسس بيفيرو للتكنولوجيا"
+ },
+ "stickers": [
+  {
+   "s": 0.3,
+   "e": 5.0,
+   "text": "<ملصق>"
+  }
+ ],
+ "end_card": {
+  "s": 19.5,
+  "tag": "المستقبل يبدأ من عُمان",
+  "sub": "<القطاع>"
+ },
+ "layout": {
+  "caption_top": 865,
+  "name_top": 730,
+  "checklist_top": 760,
+  "sticker_top": 230,
+  "hook_top": 250,
+  "cta_top": 1040
+ },
+ "audio": {
+  "pad": true,
+  "pad_gain": 0.035,
+  "whoosh_on_cuts": true,
+  "impact_at_end": true,
+  "music": null,
+  "music_gain_db": -20
+ }
+}

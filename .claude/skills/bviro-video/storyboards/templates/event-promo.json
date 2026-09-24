@@ -1,0 +1,128 @@
+{
+ "_guide": {
+  "use": "إعلان فعالية/ورشة/مؤتمر 15 ث بدون صوت متكلم (موسيقى + نصوص). أرخص قالب.",
+  "recipe": [
+   "3–4 صور ثابتة (soul_2 لبدر، أو صور المكان الحقيقية من بدر) — تتحرك بـ Ken Burns مجاناً (kb: in/out/left/right/up)",
+   "1–2× kling3_0 std 5s sound off للقطة حركة (6.25 لكل واحدة) — اختياري",
+   "بطاقة معلومات (checklist style=info): التاريخ، المكان، الوقت",
+   "زر CTA: سجّل الآن / الرابط في البايو"
+  ],
+  "estimate_credits": "≈3–16",
+  "rules": [
+   "لا voiceover → اترك voiceover و words فارغة واستخدم captions بحقل text",
+   "أضف موسيقى في audio.music إذا توفرت"
+  ]
+ },
+ "title": "TEMPLATE event-promo",
+ "width": 720,
+ "height": 1280,
+ "fps": 24,
+ "duration": 15.0,
+ "output": "final.mp4",
+ "voiceover": null,
+ "words": null,
+ "grade": {
+  "contrast": 1.05,
+  "saturation": 1.06,
+  "brightness": 0.005,
+  "vignette": true,
+  "lut": "brand/bviro_look.cube"
+ },
+ "shots": [
+  {
+   "src": "still1.png",
+   "dur": 2.5,
+   "kb": "in"
+  },
+  {
+   "src": "clip1.mp4",
+   "in": 0.5,
+   "dur": 2.5
+  },
+  {
+   "src": "still2.png",
+   "dur": 2.5,
+   "kb": "left"
+  },
+  {
+   "src": "clip1.mp4",
+   "in": 3.0,
+   "dur": 2.0,
+   "zoom": 1.3
+  },
+  {
+   "src": "still3.png",
+   "dur": 5.5,
+   "kb": "out"
+  }
+ ],
+ "hook": {
+  "s": 0.1,
+  "e": 2.6,
+  "text": "<اسم الفعالية>",
+  "sub": "<سطر تعريفي>"
+ },
+ "captions": [
+  {
+   "s": 2.6,
+   "e": 5.0,
+   "text": "<جملة 1>",
+   "icon": "glasses"
+  },
+  {
+   "s": 5.0,
+   "e": 7.5,
+   "text": "<جملة 2>",
+   "icon": "sparkles"
+  }
+ ],
+ "checklist": {
+  "s": 7.6,
+  "e": 12.4,
+  "style": "info",
+  "items": [
+   {
+    "t": 7.7,
+    "text": "<التاريخ>",
+    "icon": "calendar"
+   },
+   {
+    "t": 8.3,
+    "text": "<المكان>",
+    "icon": "map-pin"
+   },
+   {
+    "t": 8.9,
+    "text": "<الوقت>",
+    "icon": "clock"
+   }
+  ]
+ },
+ "cta": {
+  "s": 10.0,
+  "e": 13.4,
+  "text": "سجّل الآن",
+  "icon": "ticket"
+ },
+ "end_card": {
+  "s": 13.5,
+  "tag": "المستقبل يبدأ من عُمان",
+  "sub": ""
+ },
+ "layout": {
+  "caption_top": 880,
+  "checklist_top": 620,
+  "hook_top": 250,
+  "cta_top": 1040,
+  "sticker_top": 230,
+  "name_top": 730
+ },
+ "audio": {
+  "pad": true,
+  "pad_gain": 0.06,
+  "whoosh_on_cuts": true,
+  "impact_at_end": true,
+  "music": null,
+  "music_gain_db": -14
+ }
+}

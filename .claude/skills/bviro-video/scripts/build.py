@@ -27,6 +27,8 @@ for item in sb["shots"] + [sb.get("assets", {})]:
 # 1. icons (Lucide, MIT) ----------------------------------------------------------
 icons = {"circle-check"} | {c["icon"] for c in sb.get("captions", []) if c.get("icon")}
 icons |= {c["icon"] for c in sb.get("checklist", {}).get("items", [])}
+if sb.get("cta", {}).get("icon"):
+    icons.add(sb["cta"]["icon"])
 os.makedirs("icons", exist_ok=True)
 for n in icons:
     if not os.path.exists(f"icons/{n}.svg"):
@@ -49,21 +51,38 @@ vf = (f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS
       "unsharp=5:5:0.4")
 if g.get("lut"):
     vf += f",lut3d=file={g['lut']}"
+def still_vf(s):
+    """Ken Burns on a still image: kb = in | out | left | right | up (default in)."""
+    n = max(1, round(s["dur"] * FPS)); z = s.get("kb_zoom", 0.12)
+    zexpr = {"out": f"{1 + z}-{z}*on/{n}"}.get(s.get("kb", "in"), f"1+{z}*on/{n}")
+    pan = {"left": f"(iw-iw/zoom)*(1-on/{n})", "right": f"(iw-iw/zoom)*on/{n}"}.get(s.get("kb"), "(iw-iw/zoom)/2")
+    tilt = f"(ih-ih/zoom)*(1-on/{n})" if s.get("kb") == "up" else "(ih-ih/zoom)/2"
+    return (f"scale={W * 2}:{H * 2}:force_original_aspect_ratio=increase,crop={W * 2}:{H * 2},"
+            f"zoompan=z='{zexpr}':x='{pan}':y='{tilt}':d={n}:s={W}x{H}:fps={FPS},")
+
 cuts, t = [], 0.0
 with open("list.txt", "w") as lst:
     for i, s in enumerate(sb["shots"]):
-        ff("-ss", s["in"], "-i", s["src"], "-t", s["dur"], "-an",
-           "-vf", f"{vf},tpad=stop_mode=clone:stop_duration=3,trim=duration={s['dur']},setpts=PTS-STARTPTS",
+        is_still = s["src"].lower().endswith((".png", ".jpg", ".jpeg", ".webp"))
+        # zoom > 1 = digital punch-in (center crop): a cheap "second camera angle" on the same clip
+        punch = f"crop=iw/{s['zoom']}:ih/{s['zoom']}," if s.get("zoom", 1) > 1 else ""
+        src_args = ["-loop", 1, "-i", s["src"]] if is_still else ["-ss", s["in"], "-i", s["src"]]
+        chain = (still_vf(s) if is_still else "") + punch + vf
+        ff(*src_args, "-t", s["dur"], "-an",
+           "-vf", f"{chain},tpad=stop_mode=clone:stop_duration=3,trim=duration={s['dur']},setpts=PTS-STARTPTS",
            "-c:v", "libx264", "-preset", "veryfast", "-crf", 14, "-pix_fmt", "yuv420p", f"seg{i}.mp4")
         lst.write(f"file 'seg{i}.mp4'\n")
         t += s["dur"]; cuts.append(round(t, 3))
 cuts = cuts[:-1]
 ff("-f", "concat", "-safe", 0, "-i", "list.txt", "-c", "copy", "base.mp4")
 print(f"shots total {t:.2f}s (storyboard duration {DUR}s); cuts at {cuts}")
+if abs(t - DUR) > 0.05:
+    print(f"WARNING: shots sum to {t:.2f}s but duration is {DUR}s — last frame will be frozen or cut")
 
 # 4. sound: voice + ambient pad + whoosh per cut + impact on end card + optional music
 au = sb.get("audio", {})
-inputs, chains, labels = ["-i", sb["voiceover"]], ["[0:a]volume=1.0[vo]"], ["[vo]"]
+vo_src = ["-i", sb["voiceover"]] if sb.get("voiceover") else ["-f", "lavfi", "-i", f"anullsrc=r=48000:cl=stereo:d={DUR}"]
+inputs, chains, labels = vo_src, ["[0:a]volume=1.0[vo]"], ["[vo]"]
 k = 1  # next ffmpeg input index
 if au.get("pad", True):
     pad_labels = []
@@ -85,8 +104,11 @@ if au.get("impact_at_end", True) and sb.get("end_card"):
 if au.get("music"):
     inputs += ["-stream_loop", "-1", "-i", au["music"]]
     chains.append(f"[{k}:a]volume={au.get('music_gain_db', -20)}dB,afade=t=out:st={DUR - 1.5}:d=1.5[mus]"); labels.append("[mus]"); k += 1
+# Instagram-level loudness when there's voice or music; a pad-only bed stays quieter (a drone at -14 LUFS is tiring)
+target = -14 if (sb.get("voiceover") or au.get("music")) else -22
 fc = ";".join(chains) + ";" + "".join(labels) + \
-     f"amix=inputs={len(labels)}:normalize=0,alimiter=limit=0.95,apad=whole_dur={DUR},atrim=0:{DUR}[a]"
+     f"amix=inputs={len(labels)}:normalize=0,apad=whole_dur={DUR},atrim=0:{DUR}," \
+     f"loudnorm=I={target}:TP=-1.5:LRA=11,alimiter=limit=0.95[a]"
 ff(*inputs, "-filter_complex", fc, "-map", "[a]", "-ar", 48000, "-ac", 2, "mix.wav")
 
 # 5. composite + mux ----------------------------------------------------------------

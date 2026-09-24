@@ -6,7 +6,7 @@ const fs = require('fs');
 
 (async () => {
   const sb = JSON.parse(fs.readFileSync(process.argv[2] || 'sb.json', 'utf8'));
-  const words = JSON.parse(fs.readFileSync(sb.words, 'utf8'));
+  const words = sb.words ? JSON.parse(fs.readFileSync(sb.words, 'utf8')) : [];
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: sb.width, height: sb.height } });
   await p.addInitScript(({ SB, W }) => { window.SB = SB; window.WORDS = W; }, { SB: sb, W: words });
@@ -18,6 +18,7 @@ const fs = require('fs');
   const icons = new Set(['circle-check']);
   (sb.captions || []).forEach(c => c.icon && icons.add(c.icon));
   ((sb.checklist || {}).items || []).forEach(c => icons.add(c.icon));
+  if (sb.cta && sb.cta.icon) icons.add(sb.cta.icon);
   await p.evaluate(async names => {
     await Promise.all(names.map(n => new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = 'icons/' + n + '.svg'; })));
   }, [...icons]);

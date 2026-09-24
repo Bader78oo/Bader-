@@ -25,7 +25,7 @@ Reply to Bader in Gulf Arabic. Brand data: `brand/brand.json` (colors, tagline, 
    - Talking: `wan2_7`, start_image = approved still, `audio_references` = `talk_X.mp3`, `duration: 4`, 720p.
      Clip audio starts at t=0 of the talk mp3 → place the shot at the printed start time.
    - Submit with `generate_video_batch`, max **2 concurrent** jobs on Starter (else 429).
-5. **Storyboard JSON.** Copy `storyboards/edu-vr-oman.json`: `shots` are sequential (`src`, `in`, `dur`, optional `url`); `captions` reference word indices from `words_final.json`; icons are Lucide names. Shot durations must sum to `duration` minus the end-card tail.
+5. **Storyboard JSON.** Start from a template in `storyboards/templates/` (talking-head, broll-explainer, event-promo — see `references/templates.md` for fields and the B-roll prompt library); `storyboards/edu-vr-oman.json` is a finished example. Shot durations must sum to `duration`. Use `grade.lut: "brand/bviro_look.cube"` for the house look, `zoom` for free punch-in angles, and still images with `kb` (Ken Burns) instead of paid video where motion isn't essential.
 6. **Render in the Higgsfield sandbox** (has ffmpeg, node+playwright, faster-whisper):
    `bash scripts/pack.sh storyboards/<name>.json /tmp/kit.tgz` → `media_upload` (file) → local `curl PUT` → `media_confirm`.
    In ONE `sandbox_exec` (background:true): `curl <kit url> | tar xz && cd kit && python3 scripts/build.py sb.json --qa && curl -X PUT --upload-file final.mp4 '<video upload_url>'`.
