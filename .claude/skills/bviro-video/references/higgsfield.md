@@ -3,7 +3,7 @@
 ## Costs seen
 | Generation | Credits |
 |---|---|
-| `soul_2` still (2k) | ~1 |
+| `soul_2` still (2k) | 0.12 (shown as "1" in get_cost; balance confirms 0.12) |
 | `kling3_0` std, 5 s, sound off, 9:16 | 6.25 |
 | `kling3_0` std, 10 s, sound on | 17.5 |
 | `kling3_0` pro | blocked — needs Plus |
