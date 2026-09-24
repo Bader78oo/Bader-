@@ -7,6 +7,7 @@ so lessons work without a CDN). Each lesson is a single static `index.html`.
 |---|--------|---------|
 | 1 | [`lesson-01-local-habitats/`](lesson-01-local-habitats/) — رحلة إلى البيئات المحلية | Science, Grade 1 — local habitats |
 | 2 | [`lesson-02-young-animals/`](lesson-02-young-animals/) — صغير الإنسان وصغير الحيوان | Science, Grade 1 — young humans and young animals |
+| 3 | [`lesson-03-sunken-ship/`](lesson-03-sunken-ship/) — سفينة مسقط الغارقة | Science, Grade 1 — a sunken ship as a marine habitat |
 
 ## Running
 
@@ -203,3 +204,39 @@ keys to hosted audio URLs (`{ "key": "https://…mp3" }`) — lessons 1 and 2 cu
 ElevenLabs "Benji" recordings this way; anything not recorded is
 read by the browser's Arabic speech synthesis (if the device has an Arabic voice) and is always
 shown in Salem's speech bubble.
+
+## Lesson 3 — سفينة مسقط الغارقة (the sunken ship)
+
+Built on the same engine as lessons 1–2 (Kit models, Salem, showPanel, hub.js, snap-turn, near-field
++ gaze hand tracking), following [`vr-plans/LESSON-GUIDE.md`](../../vr-plans/LESSON-GUIDE.md): a new
+place (underwater, off Muscat's coast — sand, rocks, coral clusters, swaying kelp, light shafts from
+above, rising bubble particles, `THREE.FogExp2` for underwater depth) and new mechanics not used
+before: walking into an enclosed interior space (the wreck's hull), a multi-select "who lives here?"
+habitat activity, and grabbing a prop (the captain's bottle) and carrying it to Salem to unlock a
+bonus line, reusing the existing `grabbable`/`carryStep` system with a single grab target instead of
+lesson 2's per-round one.
+
+Flow: festive arrival (bubbles instead of confetti) → descend to the seabed → the ship emerges from
+the fog → free exploration of six glowing hotspots on and around the hull (each with a Fusha fact
+line) → enter the ship (dimmer interior, a moray eel and an octopus to find, the grabbable bottle) →
+the habitat activity (pick the five sea creatures that live in/around the ship from a set that also
+includes land-animal distractors) → a 3-question quiz (reusing the `makeStage`/`stageCard` stage
+engine, not lesson 2's teach-back pupil) → "what did I learn?" summary. Salem wears a simple diving
+mask + snorkel (added as an extra `Kit` shape on his existing head, so `buildSalem` itself didn't
+need to change) instead of redesigning the character. The falcon companion and field journal
+(`hub.js`) carry over from lessons 1–2 unchanged, since they're meant to be the same growing
+companion across the whole site; magic-words voice-summon and the "ask Salem" AI chat panel were
+left out of this lesson — the user's real-Quest testing on lesson 2 found speech recognition
+unreliable on that browser, and this lesson's spec didn't call for them. A portal was added in both
+directions: lesson 2 now also links to lesson 3 (`buildPortal` there was given an `angle` parameter
+so a second doorway could be placed without overlapping the existing lesson-1 one), and lesson 3
+links back to lesson 2.
+
+Verified end to end with the `?test` hooks and a Playwright run: intro → welcome → descend → all six
+hotspots discovered → auto-enter the ship → both interior creatures found → bottle grabbed and
+carried to Salem → exit → all five habitat creatures picked correctly → all three quiz questions
+answered → summary, then the level menu and the portal to lesson 2 — zero console/page errors across
+the full run. One real bug caught this way: the habitat activity's panel entity was left assigned to
+the shared `panel` variable after being torn down, so opening the next panel (the quiz intro) called
+`.remove()` on an already-detached element and crashed — fixed by clearing `panel` when the habitat
+activity closes.

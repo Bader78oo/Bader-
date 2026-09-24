@@ -25,6 +25,7 @@ pipeline). They come from the user's version-3 review of lesson 2.
 |---|---|---|
 | 1 | Nizwa fort, Hajar mountains, desert and farm | midday |
 | 2 | Salalah in the khareef: green hills, coconut palms, frankincense, Darbat-style waterfall, mist | sunrise / day / sunset / night button |
+| 3 | Under Muscat's sea: a weathered sunken ship, coral, kelp, rocks, bubbles, light shafts | deep-water blue, fog for depth |
 | next | Seeb beach (بحر السيب): waves, fishing boats, shells, crabs | sunrise, tide going out |
 | | Nizwa souq (سوق نزوى): stalls, pottery, dates, goat market on Friday | morning bustle |
 | | Rustaq fort (قلعة الرستاق) and its falaj | late afternoon |
@@ -38,7 +39,10 @@ Use what the lesson is about to pick the place (sea creatures → Seeb beach, pl
 ## 5. A new way to play every lesson
 Each lesson keeps "explore + cards + summary" and adds at least one mechanic that earlier lessons
 didn't use. Done so far: sorting into places (L1), a 40-second timer per round, growing up with a
-button, counting onto a numbered row, choosing what an animal needs (L2). Ideas for next lessons:
+button, counting onto a numbered row, choosing what an animal needs (L2); entering an enclosed
+interior space (swimming inside the wreck), a multi-select "who lives here?" habitat activity, and
+grabbing a prop (the captain's bottle) and carrying it to Salem to trigger a bonus story (L3). Ideas
+for next lessons:
 - treasure hunt with a map and footprints to follow
 - a camera: photograph the right things, then see the album
 - a boat or cart ride between stations
