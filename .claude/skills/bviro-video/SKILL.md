@@ -24,7 +24,8 @@ Reply to Bader in Gulf Arabic. Brand data: `brand/brand.json` (colors, tagline, 
    → `vo.mp3`, `words_final.json`, `talk_A.mp3`… and the exact start time of each talk clip.
    Never speed speech above ~1.1×; shorten the script or accept a longer reel instead.
    **Audio guard (a silent clip once burned 15 credits):** before uploading any audio that drives lip-sync, check `ffmpeg -i x.mp3 -af volumedetect -f null -` (mean must be above −35 dB) and re-transcribe it to confirm the words. When cutting with fades, put `-ss/-t` BEFORE `-i` — with `-ss` after `-i`, `afade=...:st=` uses the original timestamps and silences the whole cut.
-3. **Stills before video.** One `soul_2` still per on-camera angle (~1 credit each). Show Bader, get approval.
+3. **Retouch the start still (free, local)** when Bader wants it: `scripts/retouch.py in.png out.png --slim 0.07 --skin 0.5 --eyes 0.9` (his preference 2026-09-24: slimmer cheeks, light skin smoothing, no crow's feet; centre of face protected). The video model keeps the start frame's face.
+4. **Stills before video.** One `soul_2` still per on-camera angle (~1 credit each). Show Bader, get approval.
 4. **Clips — only approved shots** (see `references/higgsfield.md` for models, costs, gotchas):
    - B-roll: `kling3_0`, `mode: std`, `sound: off`, `duration: 5`, `aspect_ratio: 9:16`, text-to-video.
    - Talking: `wan2_7`, start_image = approved still, `audio_references` = `talk_X.mp3`, `duration: 4`, 720p.
