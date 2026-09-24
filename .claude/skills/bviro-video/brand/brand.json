@@ -1,0 +1,31 @@
+{
+  "name_en": "Bviro",
+  "name_ar": "بيفيرو",
+  "company_ar": "بيفيرو للتكنولوجيا",
+  "tagline_ar": "المستقبل يبدأ من عُمان",
+  "values_ar": ["ريادة", "ابتكار", "تفاعل", "مستقبل"],
+  "services_ar": ["الواقع الافتراضي", "الواقع المعزز", "الذكاء الاصطناعي", "تصميم 3D", "إدارة المؤتمرات والمعارض", "الورش التدريبية"],
+  "sectors_ar": ["التعليم", "الطب", "العسكري", "الطيران"],
+  "founder": {"name_ar": "م. بدر الريسي", "role_ar": "مؤسس بيفيرو للتكنولوجيا"},
+  "colors": {
+    "primary_violet": "#7F00FF",
+    "teal": "#01CEC9",
+    "deep_purple": "#2B0157",
+    "violet_mid": "#51168C",
+    "violet_light": "#B063FF",
+    "teal_dark": "#00B9B3",
+    "teal_deep": "#005552",
+    "mint": "#82DACA",
+    "grey_light": "#E5E5E5",
+    "grey": "#D3D3D3",
+    "black": "#000000"
+  },
+  "font_ar": "Cairo (Google Fonts, 600/800/900) — stand-in until the official brand font file is supplied",
+  "logos": {
+    "symbol": "logo_symbol.png",
+    "symbol_white": "logo_symbol_white.png",
+    "wordmark_en": "logo_wordmark_en.png",
+    "wordmark_ar": "logo_wordmark_ar.png",
+    "hero_3d": "bg_3d_logo.jpg"
+  }
+}

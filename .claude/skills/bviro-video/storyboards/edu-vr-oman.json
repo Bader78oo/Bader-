@@ -1,0 +1,188 @@
+{
+ "title": "الواقع الافتراضي في التعليم بعُمان — ريل 20 ثانية",
+ "width": 720,
+ "height": 1280,
+ "fps": 24,
+ "duration": 20.6,
+ "output": "final.mp4",
+ "voiceover": "vo.mp3",
+ "words": "words_final.json",
+ "grade": {
+  "contrast": 1.06,
+  "saturation": 1.1,
+  "brightness": 0.005,
+  "vignette": true,
+  "lut": null
+ },
+ "shots": [
+  {
+   "src": "c0.mp4",
+   "in": 0.0,
+   "dur": 2.3,
+   "note": "Kling std 5s: طالب يلبس نظارة VR"
+  },
+  {
+   "src": "c1.mp4",
+   "in": 0.6,
+   "dur": 1.55,
+   "note": "Kling std 5s: داخل قلب ثلاثي الأبعاد"
+  },
+  {
+   "src": "c2.mp4",
+   "in": 0.8,
+   "dur": 1.5,
+   "note": "Kling std 5s: سطح القمر"
+  },
+  {
+   "src": "c3.mp4",
+   "in": 0.5,
+   "dur": 2.09,
+   "note": "Kling std 5s: فصل كامل بنظارات"
+  },
+  {
+   "src": "ta.mp4",
+   "in": 0.0,
+   "dur": 3.61,
+   "note": "Wan 2.7 lip-sync on talk_A.mp3 — must start at 7.44s"
+  },
+  {
+   "src": "c4.mp4",
+   "in": 0.3,
+   "dur": 1.8,
+   "note": "Kling std 5s: يد تلمس هولوغرام"
+  },
+  {
+   "src": "c4.mp4",
+   "in": 2.3,
+   "dur": 1.45
+  },
+  {
+   "src": "c0.mp4",
+   "in": 2.6,
+   "dur": 2.06
+  },
+  {
+   "src": "tb.mp4",
+   "in": 0.0,
+   "dur": 4.24,
+   "note": "Wan 2.7 lip-sync on talk_B.mp3 — must start at 16.36s"
+  }
+ ],
+ "captions": [
+  {
+   "s": 0.2,
+   "e": 2.16,
+   "from": 0,
+   "to": 2,
+   "icon": "graduation-cap"
+  },
+  {
+   "s": 2.16,
+   "e": 3.58,
+   "from": 3,
+   "to": 5,
+   "icon": "heart-pulse"
+  },
+  {
+   "s": 3.58,
+   "e": 5.35,
+   "from": 6,
+   "to": 10,
+   "icon": "moon-star"
+  },
+  {
+   "s": 5.35,
+   "e": 7.6,
+   "from": 11,
+   "to": 14,
+   "icon": "school"
+  },
+  {
+   "s": 7.75,
+   "e": 9.63,
+   "from": 15,
+   "to": 18,
+   "icon": "glasses"
+  },
+  {
+   "s": 9.63,
+   "e": 11.04,
+   "from": 19,
+   "to": 21,
+   "icon": "sparkles"
+  },
+  {
+   "s": 11.04,
+   "e": 12.8,
+   "from": 22,
+   "to": 25,
+   "icon": "book-open"
+  },
+  {
+   "s": 16.75,
+   "e": 19.6,
+   "from": 33,
+   "to": 37,
+   "icon": "rocket"
+  }
+ ],
+ "checklist": {
+  "s": 12.75,
+  "e": 16.45,
+  "items": [
+   {
+    "t": 12.83,
+    "text": "فهم أعمق",
+    "icon": "brain"
+   },
+   {
+    "t": 13.7,
+    "text": "تفاعل أكبر",
+    "icon": "users"
+   },
+   {
+    "t": 15.42,
+    "text": "نتائج أفضل",
+    "icon": "trending-up"
+   }
+  ]
+ },
+ "name_card": {
+  "s": 7.7,
+  "e": 10.9,
+  "name": "م. بدر الريسي",
+  "role": "مؤسس بيفيرو للتكنولوجيا"
+ },
+ "stickers": [
+  {
+   "s": 0.3,
+   "e": 5.3,
+   "text": "تعليم المستقبل"
+  },
+  {
+   "s": 7.6,
+   "e": 11.0,
+   "text": "VR • 3D • AI"
+  }
+ ],
+ "end_card": {
+  "s": 19.55,
+  "tag": "المستقبل يبدأ من عُمان",
+  "sub": "الواقع الافتراضي في التعليم"
+ },
+ "layout": {
+  "caption_top": 865,
+  "name_top": 730,
+  "checklist_top": 760,
+  "sticker_top": 230
+ },
+ "audio": {
+  "pad": true,
+  "pad_gain": 0.035,
+  "whoosh_on_cuts": true,
+  "impact_at_end": true,
+  "music": null,
+  "music_gain_db": -20
+ },
+ "assets": {}
+}

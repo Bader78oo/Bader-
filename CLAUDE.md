@@ -77,3 +77,15 @@ maps to the repo root (see `tsconfig.json`), e.g. `@/lib/db/schema`.
 `.env` (not `.env.local`) holds `POSTGRES_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
 `BASE_URL`, `AUTH_SECRET` — see `.env.example`. `pnpm db:setup` generates this interactively
 rather than it being hand-edited from scratch.
+
+## Video production (Bviro)
+
+Social-media video work for Bviro (بيفيرو) lives in the `bviro-video` skill
+(`.claude/skills/bviro-video/`): brand kit, storyboard format, render scripts, and Higgsfield
+cost notes. Use it instead of rebuilding the pipeline; new ads are a new storyboard JSON.
+
+# Compact instructions
+
+When compacting, keep: current storyboard/shot list, Higgsfield job and media IDs still in use,
+credit balance and costs quoted to the user, and open decisions. Drop presigned upload URLs,
+tool listings, and raw command output.

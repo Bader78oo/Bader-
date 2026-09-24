@@ -1,0 +1,107 @@
+<!doctype html>
+<!-- Bviro reel overlay: rendered frame-by-frame by frames.js into a transparent PNG sequence.
+     Everything it shows comes from window.SB (storyboard) and window.WORDS (word timings). -->
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800;900&display=block" rel="stylesheet">
+<style>
+:root{--v:#7F00FF;--c:#01CEC9;--d:#2B0157;--v2:#51168C}
+*{box-sizing:border-box}
+html,body{margin:0;background:transparent;overflow:hidden;font-family:"Cairo",sans-serif}
+.abs{position:absolute}
+#wm{top:46px;left:36px;display:flex;align-items:center;gap:10px;direction:ltr}
+#wm img.s{height:34px}#wm img.e{height:26px}
+#cap{left:40px;right:40px;display:flex;flex-direction:column;align-items:center;gap:14px}
+#cap .ic{width:78px;height:78px;border-radius:22px;background:linear-gradient(135deg,var(--v),var(--v2));display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(127,0,255,.55),inset 0 0 0 2px rgba(255,255,255,.18)}
+#cap .ic img{width:44px;height:44px;filter:invert(1)}
+#cap .line{font-weight:900;font-size:50px;line-height:1.25;color:#fff;text-align:center;text-shadow:0 3px 0 rgba(0,0,0,.35),0 0 24px rgba(0,0,0,.55);padding:4px 18px}
+#cap .w{display:inline-block;margin:0 5px}
+#cap .w.on{color:var(--c);transform:scale(1.08)}
+#cap .w.off{opacity:0}
+#name{right:36px;display:flex;align-items:stretch;direction:rtl}
+#name .bar{width:8px;background:var(--c);border-radius:4px}
+#name .box{background:rgba(20,0,45,.82);padding:14px 22px 16px}
+#name .n{font-size:40px;font-weight:900;color:#fff;line-height:1.1}
+#name .r{font-size:24px;font-weight:600;color:#bfefff;line-height:1.3}
+#chk{left:60px;right:60px;display:flex;flex-direction:column;gap:22px}
+.card{display:flex;align-items:center;gap:18px;background:rgba(20,0,45,.80);border:2px solid rgba(1,206,201,.55);border-radius:26px;padding:16px 24px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.card .ci{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--c),#00B9B3);display:flex;align-items:center;justify-content:center;flex:none}
+.card .ci img{width:38px;height:38px;filter:invert(1)}
+.card .t{font-size:46px;font-weight:900;color:#fff;flex:1}
+.card .ok img{width:46px;height:46px;filter:invert(62%) sepia(86%) saturate(560%) hue-rotate(125deg) brightness(95%)}
+#stk{right:40px;background:var(--c);color:var(--d);font-weight:900;font-size:30px;padding:8px 20px;border-radius:40px;box-shadow:0 6px 18px rgba(0,0,0,.35);direction:rtl}
+#end{inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(90,0,190,.92),rgba(20,0,45,.97) 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:34px}
+#end .sym{height:150px}
+#end .row{display:flex;align-items:center;gap:26px;direction:ltr}
+#end .row img.e{height:92px}#end .row img.a{height:100px}
+#end .bar{width:4px;height:88px;background:var(--c);border-radius:2px}
+#end .tag{font-size:54px;font-weight:900;color:#fff}
+#end .sub{font-size:28px;font-weight:600;color:#9ff3ef}
+</style></head>
+<body>
+<div id="wm" class="abs"><img class="s" src="brand/logo_symbol.png"><img class="e" src="brand/logo_wordmark_en.png"></div>
+<div id="stk" class="abs"></div>
+<div id="cap" class="abs"><div class="ic"><img id="capic"></div><div class="line" id="capline"></div></div>
+<div id="name" class="abs"><div class="box"><div class="n" id="nm_n"></div><div class="r" id="nm_r"></div></div><div class="bar"></div></div>
+<div id="chk" class="abs"></div>
+<div id="end" class="abs">
+  <img class="sym" src="brand/logo_symbol_white.png">
+  <div class="row"><img class="e" src="brand/logo_wordmark_en.png"><div class="bar"></div><img class="a" src="brand/logo_wordmark_ar.png"></div>
+  <div class="tag" id="end_tag"></div><div class="sub" id="end_sub"></div>
+</div>
+<script>
+const SB = window.SB, W = window.WORDS, L = SB.layout || {};
+document.body.style.width = SB.width + 'px'; document.body.style.height = SB.height + 'px';
+document.getElementById('cap').style.top = (L.caption_top ?? 865) + 'px';
+document.getElementById('name').style.top = (L.name_top ?? 730) + 'px';
+document.getElementById('chk').style.top = (L.checklist_top ?? 760) + 'px';
+document.getElementById('stk').style.top = (L.sticker_top ?? 230) + 'px';
+const NC = SB.name_card, CK = SB.checklist, EC = SB.end_card;
+if (NC) { document.getElementById('nm_n').textContent = NC.name; document.getElementById('nm_r').textContent = NC.role; }
+if (EC) { document.getElementById('end_tag').textContent = EC.tag || ''; document.getElementById('end_sub').textContent = EC.sub || ''; }
+const ease = x => 1 - Math.pow(1 - Math.min(Math.max(x, 0), 1), 3);
+const inWin = (o, t) => o && t >= o.s && t < o.e;
+
+function render(t) {
+  const endS = EC ? EC.s : Infinity;
+  document.getElementById('wm').style.opacity = t < endS ? 0.9 : 0;
+
+  const stk = document.getElementById('stk'), s = (SB.stickers || []).find(x => inWin(x, t));
+  if (s) { const k = ease((t - s.s) / 0.25); stk.textContent = s.text; stk.style.opacity = k; stk.style.transform = `rotate(-6deg) scale(${0.5 + 0.5 * k})`; }
+  else stk.style.opacity = 0;
+
+  const cap = document.getElementById('cap'), p = (SB.captions || []).find(x => inWin(x, t));
+  if (p) {
+    cap.style.display = 'flex';
+    const ic = cap.querySelector('.ic');
+    ic.style.display = p.icon ? 'flex' : 'none';
+    if (p.icon) document.getElementById('capic').src = 'icons/' + p.icon + '.svg';
+    document.getElementById('capline').innerHTML = W.slice(p.from, p.to + 1).map(w => {
+      const cls = t < w[0] - 0.02 ? 'off' : (t < w[1] ? 'on' : '');
+      return `<span class="w ${cls}">${w[2]}</span>`;
+    }).join(' ');
+    const k = ease((t - p.s) / 0.22);
+    ic.style.opacity = k; ic.style.transform = `scale(${0.6 + 0.4 * k}) translateY(${(1 - k) * 30}px)`;
+    cap.style.opacity = Math.min(1, (p.e - t) / 0.12);
+  } else cap.style.display = 'none';
+
+  const nm = document.getElementById('name');
+  if (inWin(NC, t)) { const k = ease((t - NC.s) / 0.35); nm.style.opacity = Math.min(1, (NC.e - t) / 0.25); nm.style.transform = `translateX(${(1 - k) * 380}px)`; }
+  else nm.style.opacity = 0;
+
+  const chk = document.getElementById('chk');
+  if (inWin(CK, t)) {
+    chk.style.opacity = Math.min(1, (CK.e - t) / 0.2);
+    chk.innerHTML = CK.items.map(c => {
+      if (t < c.t) return '';
+      const k = ease((t - c.t) / 0.3);
+      return `<div class="card" style="opacity:${k};transform:translateX(${(1 - k) * 260}px) scale(${0.85 + 0.15 * k})"><div class="ci"><img src="icons/${c.icon}.svg"></div><div class="t">${c.text}</div><div class="ok"><img src="icons/circle-check.svg"></div></div>`;
+    }).join('');
+  } else chk.innerHTML = '';
+
+  const end = document.getElementById('end');
+  if (t >= endS) { const k = ease((t - endS) / 0.45); end.style.opacity = k; end.style.transform = `scale(${1.06 - 0.06 * k})`; }
+  else end.style.opacity = 0;
+}
+window.render = render;
+</script>
+</body></html>
