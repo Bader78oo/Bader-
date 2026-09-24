@@ -62,6 +62,9 @@ window.LESSON = {
     // talk to Salem (AI-powered free chat)
     askIntro: 'اسألني أي سؤال تبيه، وأنا بجاوبك!',
     askError: 'ما قدرت أسمعك زين، جرب مرة ثانية!',
+    // mic reliability + level menu
+    micDenied: 'لازم تسمح للمايكروفون حتى أسمعك! جرّب تلمس بدل.',
+    menuIntro: 'اختر أي لعبة تبي تلعبها!',
     // magic words: say a word, see it appear
     magicIntro: 'قول كلمة زي: أسد، فيل، بطة، شمس، ماء... وشوف السحر أمامك!',
     magicMiss: 'ما فهمت عليك! جرب كلمة زي: أسد، أو نخلة، أو شمس.',

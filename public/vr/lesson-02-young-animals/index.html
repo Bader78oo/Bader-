@@ -34,8 +34,9 @@
     background: var(--sun); border-radius: 999px; padding: 12px 26px; box-shadow: 0 4px 14px rgba(31,58,77,.25); }
   #start #govr { background: #2a9d8f; color: #fff; }
   #start button:focus-visible, #timeBtn:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
-  #timeBtn { pointer-events: auto; border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 15px;
+  #timeBtn, #menuBtn { pointer-events: auto; border: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 15px;
     background: #fffdf7; color: var(--ink); border-radius: 999px; padding: 8px 14px; box-shadow: 0 2px 8px rgba(31, 58, 77, .2); }
+  #menuBtn { background: #7a5cff; color: #fff; }
   #topbar {
     position: fixed; top: env(safe-area-inset-top, 0px); inset-inline: 0; z-index: 10;
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -97,7 +98,7 @@
 </div></div>
 <div id="topbar">
   <span class="hint">اسحب لتنظر حولك • المس الصغار • ← → للالتفاف • T لتغيير الوقت • زر VR للنظارة</span>
-  <span style="display:flex;gap:8px"><button id="timeBtn" type="button">🌗 الوقت</button><button id="sound" type="button" aria-pressed="true">🔊 الصوت</button></span>
+  <span style="display:flex;gap:8px"><button id="menuBtn" type="button">🎮 القائمة</button><button id="timeBtn" type="button">🌗 الوقت</button><button id="sound" type="button" aria-pressed="true">🔊 الصوت</button></span>
 </div>
 
 <a-scene id="scene" loading-screen="enabled: false" renderer="antialias: true; foveationLevel: 1; highRefreshRate: true"
@@ -110,6 +111,10 @@
     <a-entity id="cam" camera="near: 0.05; far: 900" look-controls="magicWindowTrackingEnabled: true" position="0 1.6 0"></a-entity>
     <a-entity id="handR" laser-controls="hand: right" raycaster="objects: .clickable; far: 80; lineColor: #ffd166; lineOpacity: 0.9"></a-entity>
     <a-entity id="handL" laser-controls="hand: left" raycaster="objects: .clickable; far: 80; lineColor: #ffd166; lineOpacity: 0.9"></a-entity>
+    <!-- Hand tracking: only active when the headset sees bare hands (controllers set down), inert otherwise.
+         A pinch is wired to the exact same click/grab pipeline as the controller trigger. -->
+    <a-entity id="handTR" hand-tracking-controls="hand: right; modelStyle: mesh" raycaster="objects: .clickable; far: 1.3; lineColor: #ffe28a; lineOpacity: 0.5" cursor="rayOrigin: entity; downEvents: pinchstarted; upEvents: pinchended; fuse: false"></a-entity>
+    <a-entity id="handTL" hand-tracking-controls="hand: left; modelStyle: mesh" raycaster="objects: .clickable; far: 1.3; lineColor: #ffe28a; lineOpacity: 0.5" cursor="rayOrigin: entity; downEvents: pinchstarted; upEvents: pinchended; fuse: false"></a-entity>
   </a-entity>
 
   <a-entity id="world"></a-entity>
@@ -2399,7 +2404,10 @@
         { type: 'bullet', t: 'أَقُولَ مَاذَا يُصْبِحُ الطِّفْلُ عِنْدَمَا يَكْبَرُ.', size: 0.064 },
         { type: 'chips', label: 'مُفْرَدَاتٌ جَدِيدَةٌ:', items: [{ i: '🐣', t: 'صَغِيرٌ' }, { i: '🧍', t: 'الْإِنْسَانُ' }, { i: '🦁', t: 'الشِّبْلُ' }, { i: '👶', t: 'طِفْلٌ' }] },
       ],
-    }, [{ label: 'ابْدَأِ الرِّحْلَةَ', onClick: exploreIntro }]);
+    }, [
+      { label: 'ابْدَأِ الرِّحْلَةَ', onClick: exploreIntro },
+      { label: 'اخْتَرْ لُعْبَةً 🎮', color: '#e3ddff', onClick: openLevelMenu },
+    ]);
     setMood('wave'); say('hello');
   }
 
@@ -3360,28 +3368,60 @@
   }
   // speech recognition: tap the mic, say a word, see it appear (falls back gracefully if unsupported)
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  // One shared, robust recognizer: asks for the microphone first (some browsers, notably the
+  // Quest browser, silently produce no results at all if speech recognition starts without an
+  // explicit getUserMedia grant first), then gives up with a clear reason if it never starts or
+  // never returns anything, instead of sitting "listening" forever.
+  let activeCancel = null;
+  function micRecognize({ onResult, onGiveUp }) {
+    if (activeCancel) activeCancel();
+    if (!SR) { onGiveUp('unsupported'); return; }
+    let done = false, r = null;
+    const cancel = () => giveUp('cancelled');
+    const giveUp = reason => {
+      if (done) return; done = true;
+      if (activeCancel === cancel) activeCancel = null;
+      try { r && r.abort(); } catch (e) { /* already stopped */ }
+      onGiveUp(reason);
+    };
+    activeCancel = cancel;
+    const go = () => {
+      try {
+        r = new SR(); r.lang = 'ar-SA'; r.interimResults = false; r.maxAlternatives = 4; r.continuous = false;
+        const startTimer = setTimeout(() => giveUp('silent'), 3000);
+        r.onstart = () => { clearTimeout(startTimer); setTimeout(() => { if (!done) giveUp('timeout'); }, 7000); };
+        r.onresult = e => { if (done) return; done = true; if (activeCancel === cancel) activeCancel = null; onResult(e.results[0]); };
+        r.onerror = e => giveUp(e.error || 'error');
+        r.onend = () => { if (!done) giveUp('ended'); };
+        r.start();
+      } catch (e) { giveUp('start-failed'); }
+    };
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => { stream.getTracks().forEach(t => t.stop()); if (!done) go(); })
+        .catch(() => giveUp('denied'));
+    } else go();
+  }
   let recog = null, listening = false;
   function micLabel() { return listening ? '🎙️ بَسْمَعُكَ…' : '🎤 اضْغَطْ وَقُلْ كَلِمَةً'; }
   function updateMicButton() { if (magicUi && magicUi.mic) magicUi.mic.updateLabel(micLabel(), listening ? C.coral : C.leaf); }
   function startListening() {
-    if (!SR || listening || mode !== 'magic') return;
-    try {
-      recog = new SR(); recog.lang = 'ar-SA'; recog.interimResults = false; recog.maxAlternatives = 4; recog.continuous = false;
-      recog.onstart = () => { listening = true; updateMicButton(); };
-      recog.onresult = e => {
+    if (listening || mode !== 'magic') return;
+    listening = true; updateMicButton();
+    micRecognize({
+      onResult: res => {
+        listening = false; updateMicButton();
         let key = null;
-        for (let i = 0; i < e.results[0].length && !key; i++) key = matchWord(e.results[0][i].transcript);
+        for (let i = 0; i < res.length && !key; i++) key = matchWord(res[i].transcript);
         if (key) summonWord(key); else onMagicMiss();
-      };
-      recog.onerror = () => { listening = false; updateMicButton(); };
-      recog.onend = () => { listening = false; updateMicButton(); };
-      recog.start();
-    } catch (e) { listening = false; }
+      },
+      onGiveUp: reason => { listening = false; updateMicButton(); onMagicMiss(reason); },
+    });
   }
   let missAt = 0;
-  function onMagicMiss() {
+  function onMagicMiss(reason) {
     if (Date.now() - missAt < 4000) return;
-    missAt = Date.now(); setMood('think'); say('magicMiss');
+    missAt = Date.now(); setMood('think'); say(reason === 'denied' ? 'micDenied' : 'magicMiss');
   }
   let magicUi = null;
   function magicChips(el, cardH) {
@@ -3491,15 +3531,18 @@
   let askRecog = null, askListening = false;
   function askMicLabel() { return askListening ? '🎙️ بَسْمَعُكَ… اسْأَلْ سَالِمًا' : '🎤 اضْغَطْ وَاسْأَلْ سَالِمًا'; }
   function startAsking() {
-    if (!SR || askListening || mode !== 'ask') return;
-    try {
-      askRecog = new SR(); askRecog.lang = 'ar-SA'; askRecog.interimResults = false; askRecog.maxAlternatives = 1; askRecog.continuous = false;
-      askRecog.onstart = () => { askListening = true; if (askUi) askUi.updateMic(askMicLabel(), C.coral); };
-      askRecog.onresult = e => { const q = e.results[0][0].transcript; if (askUi) askUi.setStatus(`💬 «${q}»`); askSalem(q); };
-      askRecog.onerror = () => { askListening = false; if (askUi) askUi.updateMic(askMicLabel(), C.leaf); };
-      askRecog.onend = () => { askListening = false; if (askUi) askUi.updateMic(askMicLabel(), C.leaf); };
-      askRecog.start();
-    } catch (e) { askListening = false; }
+    if (askListening || mode !== 'ask') return;
+    askListening = true; if (askUi) askUi.updateMic(askMicLabel(), C.coral);
+    micRecognize({
+      onResult: res => {
+        askListening = false; if (askUi) askUi.updateMic(askMicLabel(), C.leaf);
+        const q = res[0].transcript; if (askUi) askUi.setStatus(`💬 «${q}»`); askSalem(q);
+      },
+      onGiveUp: reason => {
+        askListening = false; if (askUi) { askUi.updateMic(askMicLabel(), C.leaf); askUi.setStatus(''); }
+        say(reason === 'denied' ? 'micDenied' : 'askError');
+      },
+    });
   }
   const ASK_EXAMPLES = ['ليش الجمل ما يعطش؟', 'كيف الأرنب يشوف بالليل؟', 'وين تعيش البطة؟'];
   function startAskSalem() {
@@ -3774,41 +3817,59 @@
   }
 
   // =====================================================================
-  // Hand tracking (Quest only): pinch a grabbable object directly with your fingers, no
-  // controller needed. Cannot be exercised outside real hand-tracking hardware.
+  // Games menu: jump straight into any activity, any time — no need to play the whole lesson
+  // in order. Also clears whatever UI/timer the child was in before switching.
   // =====================================================================
-  function setupHandTracking() {
-    const handGrab = { el: null, hand: null };
-    for (const side of ['left', 'right']) {
-      const he = document.createElement('a-entity');
-      he.setAttribute('hand-tracking-controls', `hand: ${side}; modelStyle: mesh`);
-      rigEl.appendChild(he);
-      he.addEventListener('pinchstarted', () => {
-        if (handGrab.el || grab.el) return;
-        const hp = new T.Vector3(); he.object3D.getWorldPosition(hp);
-        let best = null, bestD = 0.16;
-        // currently only the lost young (in "من أمي؟") is grabbable by hand
-        if (game && game.lostEl) { const d = worldPosOf(game.lostEl, 0.2).distanceTo(hp); if (d < bestD) { best = game.lostEl; bestD = d; } }
-        if (best) {
-          handGrab.el = best; handGrab.hand = he;
-          buzz(null, 0.5, 60); sfx.pop();
-          if (game && game.busy) return;
-          if (game) setHud(`خُذْ ${game.rounds[game.i].young} إِلَى أُمِّهِ`, 'اتْرُكْهُ دَاخِلَ حَظِيرَةِ أُمِّهِ');
-        }
-      });
-      he.addEventListener('pinchended', () => {
-        if (handGrab.hand !== he || !handGrab.el) return;
-        const el = handGrab.el; handGrab.el = null; handGrab.hand = null;
-        const hp = new T.Vector3(); he.object3D.getWorldPosition(hp); hp.y = 0;
-        if (el._onDrop) el._onDrop(el, hp, null);
-      });
-      tickers.push({ step() {
-        if (handGrab.hand !== he || !handGrab.el) return;
-        const hp = new T.Vector3(); he.object3D.getWorldPosition(hp); hp.y += 0.05;
-        const o = handGrab.el.object3D, parent = o.parent; const local = hp.clone(); parent.worldToLocal(local);
-        o.position.lerp(local, 0.5);
-      } });
-    }
+  function hardReset() {
+    if (activeCancel) activeCancel();
+    stopTimer();
+    closePanel(); closeInfo(); closeMagicWords_(); closeAskSalem_(); clearStage();
+    if (teach && teach.opts) teach.opts.forEach(o => o.remove()); teach = null;
+    if (game && game.lostEl) { game.lostEl.remove(); game.lostEl = null; game.lost = null; }
+    if (askUi) { askUi.el.remove(); askUi = null; }
+    hideHud(); stopVoice();
+  }
+  function closeMagicWords_() { if (magicUi) { magicUi.el.remove(); magicUi = null; } clearMagic(); }
+  function closeAskSalem_() { if (askUi) { askUi.el.remove(); askUi = null; } }
+
+  const MENU_ITEMS = [
+    { icon: '🔍', label: 'اكْتَشِفِ الصِّغَارَ', fn: exploreIntro },
+    { icon: '🧭', label: 'مَنْ أُمِّي؟', fn: gameIntro },
+    { icon: '🌱', label: 'الصَّغِيرُ يَكْبَرُ', fn: growIntro },
+    { icon: '🔢', label: 'عُدَّ الصِّغَارَ', fn: countIntro },
+    { icon: '🏡', label: 'حَاضِنَةُ الْجَدْيِ', fn: nestIntro },
+    { icon: '🪄', label: 'الْكَلِمَاتُ السِّحْرِيَّةُ', fn: startMagicWords },
+    { icon: '🎓', label: 'عَلِّمْ صَغِيرِي', fn: teachIntro },
+    { icon: '🎙️', label: 'تَكَلَّمْ مَعَ سَالِمٍ', fn: startAskSalem },
+    { icon: '📖', label: 'دَفْتَرِي', fn: showJournal },
+    { icon: '🦅', label: 'رَفِيقِي', fn: showCompanion },
+    { icon: '🎓', label: 'مَاذَا تَعَلَّمْتُ؟', fn: summary },
+    { icon: '🏠', label: 'مِنَ الْبِدَايَةِ', fn: welcome },
+  ];
+  let menuTiles = [];
+  function openLevelMenu() {
+    hardReset(); goHome();
+    mode = 'menu'; menuTiles = [];
+    const { pos, rotY } = frontOf(2.6);
+    const el = document.createElement('a-entity'); uiEl.appendChild(el);
+    el.object3D.position.set(pos.x, eyeY(), pos.z); el.object3D.rotation.y = rotY;
+    const spec = { w: 2.3, accent: '#7a5cff', icon: '🎮', title: 'قَائِمَةُ الْأَلْعَابِ', blocks: [{ t: 'اخْتَرْ أَيَّ لُعْبَةٍ تَبِي تَلْعَبُهَا الْآنَ:', size: 0.058 }] };
+    const card = planeMesh(cardCanvas(spec), spec.w);
+    const h = card.userData.h; card.position.y = h * 0.38; el.object3D.add(card);
+    const cols = 4, w = 0.5, gap = 0.06, rowH = 0.26;
+    const top = -h * 0.62 - 0.05;
+    MENU_ITEMS.forEach((it, i) => {
+      const row = Math.floor(i / cols), col = i % cols, n = Math.min(cols, MENU_ITEMS.length - row * cols);
+      const c = buttonCanvas(`${it.icon} ${it.label}`, { color: '#fffdf7', text: C.ink, w: 1.0, h: 0.28 });
+      const tile = entityWith(planeMesh(c, w), el);
+      tile.object3D.position.set((col - (n - 1) / 2) * (w + gap), top - row * rowH, 0.02);
+      clickable(tile, () => { el.remove(); it.fn(); }, { hover: 1.08 });
+      menuTiles.push(tile);
+    });
+    const back = button('إِغْلَاقٌ', el, { w: 0.7, h: 0.22, color: '#dff1ff', text: C.ink }, () => el.remove());
+    back.object3D.position.set(0, top - Math.ceil(MENU_ITEMS.length / cols) * rowH - 0.06, 0.02);
+    salemBeside(new T.Vector3(pos.x, 0, pos.z), rotY, 1.15);
+    setMood('point'); say('menuIntro');
   }
 
   // Developer view: ?gallery lines up every model in front of the camera.
@@ -3837,6 +3898,7 @@
     aim: on => { aimHand = on ? scene : null; if (!on) { arc.visible = false; marker.visible = false; } },
     magic: () => startMagicWords(), sayWord: t => (mode === 'magic' ? (matchWord(t) ? summonWord(matchWord(t)) : onMagicMiss()) : null), magicKey: k => summonWord(k),
     ask: () => startAskSalem(), askText: q => askSalem(q), askUrl: () => SALEM_BRAIN_URL,
+    menu: () => openLevelMenu(), menuItems: () => MENU_ITEMS.map(i => i.label), menuPick: i => menuTiles[i].emit('click'),
     companion: () => ({ stage: companion.stage, xp: hub.xp() }), showCompanion, journal: () => hub.journalList(), showJournal,
     teach: () => teachIntro(), teachStart: startTeach, teachPick: id => { const f = teach.rounds[teach.i]; teachAnswer(f, fam(id)); },
     portal: () => onPortal('رِحْلَةِ الْبِيئَاتِ الْمَحَلِّيَّةِ', '../lesson-01-local-habitats/'), portalWent: () => window.__portalWent, portalConfirm: () => panel.querySelectorAll('.clickable')[0].emit('click'),
@@ -3861,11 +3923,11 @@
       hub.recordVisit(LESSON_ID);
       buildCompanionEntity();
       buildPortal('رِحْلَةِ الْبِيئَاتِ الْمَحَلِّيَّةِ', '١ — الْبِيئَاتُ الْمَحَلِّيَّةُ 🌍', '../lesson-01-local-habitats/');
-      scene.addEventListener('enter-vr', setupHandTracking, { once: true });
     }
     salem = buildSalem(); salem.baseY = 0;
     scene.object3D.add(salem.root);
     document.getElementById('timeBtn').addEventListener('click', () => { unlockAudio(); cycleTime(); });
+    document.getElementById('menuBtn').addEventListener('click', () => { unlockAudio(); openLevelMenu(); });
     window.addEventListener('keydown', e => { if ((e.key === 't' || e.key === 'T') && mode !== 'intro') { unlockAudio(); cycleTime(); } });
     const begin = () => {
       document.getElementById('loader').hidden = true;

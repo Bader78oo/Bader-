@@ -123,6 +123,21 @@ then.
 - *Hand tracking* (Quest only, untestable outside real hardware): pinch the lost young directly
   with your fingers in `lesson-02` — no controller needed — via A-Frame's `hand-tracking-controls`.
 
+**v8 — fixes from real-headset testing:**
+- *Voice reliability*: speech recognition (magic words, talk to Salem) now explicitly requests
+  microphone permission before starting, and gives up with a clear spoken reason (denied /
+  timed out / unsupported) instead of silently sitting "listening" forever — this was the
+  reported cause of voice input doing nothing on the Quest browser.
+- *Hand tracking, fixed properly*: pinching now drives the exact same click/grab pipeline as the
+  controller trigger (via A-Frame's `cursor` component remapped to `pinchstarted`/`pinchended`),
+  so it works on every button and panel, not just the one grabbable object it could reach before.
+  Hands only render instead of the controller model once the headset stops seeing the physical
+  controllers (put them down) — that switch is the Quest OS's, not this page's.
+- *Games menu* («🎮 القائمة», always on screen, also offered on the welcome screen): jump straight
+  into any activity — explore, who's my mother, grow up, count, the enclosure, magic words,
+  teach-back, talk to Salem, the journal, the companion, the summary, or back to the start —
+  without playing through everything in order.
+
 `?gallery` lines up all of lesson 2's models; `?test` exposes hooks used by the automated flow check
 (`&rt=8` shortens the timer). Guidance for future lessons (new place and new mechanic each time):
 [`vr-plans/LESSON-GUIDE.md`](../../vr-plans/LESSON-GUIDE.md).
