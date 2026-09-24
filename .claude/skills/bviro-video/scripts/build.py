@@ -7,9 +7,9 @@ Usage (work dir holds sb.json, the shot clips, vo.mp3, words_final.json, and the
 
 --reuse-overlay  skip re-rendering ov/*.png (only shots/audio changed)
 --qa             also write qa_sheet.jpg: one small frame per shot, for a cheap visual check
-Needs ffmpeg, node + playwright (for the overlay), internet on first run (Cairo font, icons).
+Needs ffmpeg, node + playwright (for the overlay). Font and icons are vendored (brand/fonts, icons/).
 """
-import json, os, subprocess, sys, urllib.request
+import json, os, shutil, subprocess, sys, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sb = json.load(open(sys.argv[1], encoding="utf-8"))
@@ -30,9 +30,13 @@ icons |= {c["icon"] for c in sb.get("checklist", {}).get("items", [])}
 if sb.get("cta", {}).get("icon"):
     icons.add(sb["cta"]["icon"])
 os.makedirs("icons", exist_ok=True)
-for n in icons:
+for n in icons:  # vendored set first (works offline); fetch anything else from the CDN
     if not os.path.exists(f"icons/{n}.svg"):
-        urllib.request.urlretrieve(f"https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/{n}.svg", f"icons/{n}.svg")
+        local = os.path.join(HERE, "..", "icons", f"{n}.svg")
+        if os.path.exists(local):
+            shutil.copy(local, f"icons/{n}.svg")
+        else:
+            urllib.request.urlretrieve(f"https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/{n}.svg", f"icons/{n}.svg")
 
 # 2. overlay frames ---------------------------------------------------------------
 for f in ("overlay.html", "frames.js"):

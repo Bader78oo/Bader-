@@ -10,7 +10,8 @@
   "estimate_credits": "≈3–16",
   "rules": [
    "لا voiceover → اترك voiceover و words فارغة واستخدم captions بحقل text",
-   "أضف موسيقى في audio.music إذا توفرت"
+   "أضف موسيقى في audio.music إذا توفرت",
+   "لا تعرض بطاقة المعلومات والزر في نفس الوقت؛ والنصوص تحت الوجه (y 700–1030)"
   ]
  },
  "title": "TEMPLATE event-promo",
@@ -78,7 +79,7 @@
  ],
  "checklist": {
   "s": 7.6,
-  "e": 12.4,
+  "e": 10.4,
   "style": "info",
   "items": [
    {
@@ -99,7 +100,7 @@
   ]
  },
  "cta": {
-  "s": 10.0,
+  "s": 10.4,
   "e": 13.4,
   "text": "سجّل الآن",
   "icon": "ticket"
@@ -111,9 +112,9 @@
  },
  "layout": {
   "caption_top": 880,
-  "checklist_top": 620,
-  "hook_top": 250,
-  "cta_top": 1040,
+  "checklist_top": 740,
+  "hook_top": 760,
+  "cta_top": 900,
   "sticker_top": 230,
   "name_top": 730
  },

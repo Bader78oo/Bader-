@@ -2,8 +2,10 @@
 <!-- Bviro reel overlay: rendered frame-by-frame by frames.js into a transparent PNG sequence.
      Everything it shows comes from window.SB (storyboard) and window.WORDS (word timings). -->
 <html lang="ar" dir="rtl"><head><meta charset="utf-8">
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;800;900&display=block" rel="stylesheet">
 <style>
+@font-face{font-family:"Cairo";font-weight:600;src:url("brand/fonts/Cairo-600.ttf") format("truetype")}
+@font-face{font-family:"Cairo";font-weight:800;src:url("brand/fonts/Cairo-800.ttf") format("truetype")}
+@font-face{font-family:"Cairo";font-weight:900;src:url("brand/fonts/Cairo-900.ttf") format("truetype")}
 :root{--v:#7F00FF;--c:#01CEC9;--d:#2B0157;--v2:#51168C}
 *{box-sizing:border-box}
 html,body{margin:0;background:transparent;overflow:hidden;font-family:"Cairo",sans-serif}
@@ -13,7 +15,7 @@ html,body{margin:0;background:transparent;overflow:hidden;font-family:"Cairo",sa
 #cap{left:40px;right:40px;display:flex;flex-direction:column;align-items:center;gap:14px}
 #cap .ic{width:78px;height:78px;border-radius:22px;background:linear-gradient(135deg,var(--v),var(--v2));display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(127,0,255,.55),inset 0 0 0 2px rgba(255,255,255,.18)}
 #cap .ic img{width:44px;height:44px;filter:invert(1)}
-#cap .line{font-weight:900;font-size:50px;line-height:1.25;color:#fff;text-align:center;text-shadow:0 3px 0 rgba(0,0,0,.35),0 0 24px rgba(0,0,0,.55);padding:4px 18px}
+#cap .line{font-weight:900;font-size:50px;line-height:1.25;color:#fff;text-align:center;text-shadow:0 3px 0 rgba(0,0,0,.35),0 0 24px rgba(0,0,0,.55);padding:6px 22px 10px;background:rgba(20,0,45,.55);border-radius:20px;backdrop-filter:blur(3px)}
 #cap .w{display:inline-block;margin:0 5px}
 #cap .w.on{color:var(--c);transform:scale(1.08)}
 #cap .w.off{opacity:0}
@@ -65,7 +67,7 @@ document.getElementById('cap').style.top = (L.caption_top ?? 865) + 'px';
 document.getElementById('name').style.top = (L.name_top ?? 730) + 'px';
 document.getElementById('chk').style.top = (L.checklist_top ?? 760) + 'px';
 document.getElementById('stk').style.top = (L.sticker_top ?? 230) + 'px';
-document.getElementById('hook').style.top = (L.hook_top ?? 250) + 'px';
+document.getElementById('hook').style.top = (L.hook_top ?? 760) + 'px';
 document.getElementById('cta').style.top = (L.cta_top ?? 1030) + 'px';
 const NC = SB.name_card, CK = SB.checklist, EC = SB.end_card, HK = SB.hook, CT = SB.cta;
 if (HK) { document.getElementById('hook_t').textContent = HK.text; document.getElementById('hook_s').textContent = HK.sub || ''; }

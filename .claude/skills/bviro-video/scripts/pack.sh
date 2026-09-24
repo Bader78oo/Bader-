@@ -8,7 +8,7 @@ sb="$1"; out="${2:-bviro-kit.tar.gz}"
 words="${sb%.json}.words.json"
 tmp=$(mktemp -d)
 mkdir -p "$tmp/kit"
-cp -r scripts brand "$tmp/kit/"
+cp -r scripts brand icons "$tmp/kit/"
 cp "$sb" "$tmp/kit/sb.json"
 [ -f "$words" ] && cp "$words" "$tmp/kit/words_final.json"
 tar czf "$out" -C "$tmp" kit
