@@ -138,6 +138,28 @@ then.
   teach-back, talk to Salem, the journal, the companion, the summary, or back to the start —
   without playing through everything in order.
 
+**v9 — real fixes, not guesses, from the user's second round of headset testing:**
+- *Voice still did nothing*: found the actual cause — a browser cannot show a microphone
+  permission prompt while already inside an immersive VR session, so asking for it there (as
+  v8 still did, the first time a mic feature was opened) just hung forever with no prompt and
+  no error. Now the microphone is requested once, explicitly, at the "ابدأ الرحلة" tap — while
+  still flat, before entering VR — so the OS prompt can actually appear; and the request itself
+  now has a hard 5-second timeout so a prompt that genuinely can't appear (e.g. a mic feature
+  opened without ever having primed it) fails fast with a spoken reason instead of hanging.
+  Verified with a mocked `getUserMedia`/`SpeechRecognition` end to end (mic tap → recognized
+  word → it appears) and with a `getUserMedia` promise that never resolves (times out in ~5s
+  with the friendly `micDenied` line, instead of hanging).
+- *Hands appeared but couldn't move or grab*: two real bugs. (1) Walking was built entirely
+  around a controller's thumbstick, which a bare hand doesn't have — there was no way to move
+  at all with hand tracking. (2) Grabbing was wired through the same long-range pointing ray a
+  controller uses, but a bare hand doesn't aim as precisely as a controller is shaped to, so the
+  ray rarely landed on anything — and carrying an object entirely depended on that ray, so even
+  a successful grab couldn't be moved. Replaced with near-field touch: pinch near an object to
+  grab or press it (works for every button and panel, not just one hardcoded object); pinch in
+  empty air to walk to wherever you're looking; while carrying something, it now follows the
+  hand's own position directly instead of a ray. Cannot be verified beyond this without real
+  hand-tracking hardware — needs the user's next real test.
+
 `?gallery` lines up all of lesson 2's models; `?test` exposes hooks used by the automated flow check
 (`&rt=8` shortens the timer). Guidance for future lessons (new place and new mechanic each time):
 [`vr-plans/LESSON-GUIDE.md`](../../vr-plans/LESSON-GUIDE.md).

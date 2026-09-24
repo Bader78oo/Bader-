@@ -113,8 +113,8 @@
     <a-entity id="handL" laser-controls="hand: left" raycaster="objects: .clickable; far: 80; lineColor: #ffd166; lineOpacity: 0.9"></a-entity>
     <!-- Hand tracking: only active when the headset sees bare hands (controllers set down), inert otherwise.
          A pinch is wired to the exact same click/grab pipeline as the controller trigger. -->
-    <a-entity id="handTR" hand-tracking-controls="hand: right; modelStyle: mesh" raycaster="objects: .clickable; far: 1.3; lineColor: #ffe28a; lineOpacity: 0.5" cursor="rayOrigin: entity; downEvents: pinchstarted; upEvents: pinchended; fuse: false"></a-entity>
-    <a-entity id="handTL" hand-tracking-controls="hand: left; modelStyle: mesh" raycaster="objects: .clickable; far: 1.3; lineColor: #ffe28a; lineOpacity: 0.5" cursor="rayOrigin: entity; downEvents: pinchstarted; upEvents: pinchended; fuse: false"></a-entity>
+    <a-entity id="handTR" hand-tracking-controls="hand: right; modelStyle: mesh"></a-entity>
+    <a-entity id="handTL" hand-tracking-controls="hand: left; modelStyle: mesh"></a-entity>
   </a-entity>
 
   <a-entity id="world"></a-entity>
@@ -3189,13 +3189,19 @@
   function carryStep(t) {
     if (!grab.el) return;
     const ray = rayOf(grab.cursorEl);
-    if (!ray) return;
-    // where the pointer meets the ground, but no further than 15 m away
-    if (ray.intersectPlane(_plane, _hit) && _hit.distanceTo(ray.origin) < 15) {
-      const o = grab.el.object3D, parent = o.parent, w = _hit.clone();
-      w.y = grab.lift + Math.sin(t * 6) * 0.05;
-      parent.worldToLocal(w); o.position.lerp(w, 0.35);
-      grab.ring.position.set(_hit.x, 0.03, _hit.z);
+    let w = null;
+    if (ray && ray.direction.lengthSq() > 0.5) {
+      // a controller or the mouse: project its pointing ray onto the ground, up to 15 m away
+      if (ray.intersectPlane(_plane, _hit) && _hit.distanceTo(ray.origin) < 15) w = _hit.clone();
+    } else if (grab.cursorEl && grab.cursorEl.object3D) {
+      // a bare hand: no reliable pointing ray, so just follow the hand itself
+      w = new T.Vector3(); grab.cursorEl.object3D.getWorldPosition(w);
+    }
+    if (w) {
+      const o = grab.el.object3D, parent = o.parent, wp = w.clone();
+      wp.y = grab.lift + Math.sin(t * 6) * 0.05;
+      parent.worldToLocal(wp); o.position.lerp(wp, 0.35);
+      grab.ring.position.set(w.x, 0.03, w.z);
     }
   }
   tickers.push({ step: carryStep });
@@ -3372,7 +3378,14 @@
   // Quest browser, silently produce no results at all if speech recognition starts without an
   // explicit getUserMedia grant first), then gives up with a clear reason if it never starts or
   // never returns anything, instead of sitting "listening" forever.
-  let activeCancel = null;
+  let activeCancel = null, micPrimed = false;
+  // Ask for the microphone once, up front, while still outside VR — a permission prompt cannot
+  // be shown once inside an immersive session, so asking for it there just hangs forever.
+  function primeMicPermission() {
+    if (micPrimed || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    micPrimed = true;
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => stream.getTracks().forEach(t => t.stop())).catch(() => {});
+  }
   function micRecognize({ onResult, onGiveUp }) {
     if (activeCancel) activeCancel();
     if (!SR) { onGiveUp('unsupported'); return; }
@@ -3397,9 +3410,10 @@
       } catch (e) { giveUp('start-failed'); }
     };
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      const askTimer = setTimeout(() => giveUp('denied'), 5000); // the permission prompt can't show inside VR — don't hang forever
       navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => { stream.getTracks().forEach(t => t.stop()); if (!done) go(); })
-        .catch(() => giveUp('denied'));
+        .then(stream => { clearTimeout(askTimer); stream.getTracks().forEach(t => t.stop()); if (!done) go(); })
+        .catch(() => { clearTimeout(askTimer); giveUp('denied'); });
     } else go();
   }
   let recog = null, listening = false;
@@ -3872,6 +3886,53 @@
     setMood('point'); say('menuIntro');
   }
 
+  // =====================================================================
+  // Hand tracking, rebuilt: no raycaster (a bare hand doesn't point straight the way a
+  // controller does — its ray never landed on the right thing). Instead: pinch near something
+  // to grab/press it; pinch in empty air to walk to wherever you're looking.
+  // =====================================================================
+  const HAND_REACH = 0.16; // metres: how close a hand must be to "touch" something
+  function nearestClickable(worldPos) {
+    let best = null, bestD = HAND_REACH;
+    document.querySelectorAll('.clickable').forEach(elx => {
+      if (!elx.object3D || elx.object3D.visible === false) return;
+      const p = new T.Vector3(); elx.object3D.getWorldPosition(p);
+      const d = p.distanceTo(worldPos);
+      if (d < bestD) { best = elx; bestD = d; }
+    });
+    return best;
+  }
+  function handWalk(he) {
+    const dir = new T.Vector3(); scene.camera.getWorldDirection(dir);
+    const o = new T.Vector3(); camEl.object3D.getWorldPosition(o);
+    const v = 7.5, g = 9.8; let hit = null, last = o.clone();
+    for (let i = 0; i < 40 && !hit; i++) {
+      const t = i * 0.05, p = new T.Vector3(o.x + dir.x * v * t, o.y + dir.y * v * t - 0.5 * g * t * t, o.z + dir.z * v * t);
+      if (p.y <= 0) { const k = last.y / (last.y - p.y); hit = last.clone().lerp(p, k); hit.y = 0; }
+      last = p;
+    }
+    if (hit && canWalkTo(hit)) { walkTo(hit); buzz(he, 0.3, 40); }
+  }
+  function setupHandInteract() {
+    for (const id of ['handTL', 'handTR']) {
+      const he = document.getElementById(id);
+      if (!he) continue;
+      let held = null;
+      he.addEventListener('pinchstarted', () => {
+        const hp = new T.Vector3(); he.object3D.getWorldPosition(hp);
+        const target = nearestClickable(hp);
+        if (target) {
+          held = target; buzz(he, 0.3, 40);
+          if (target._onDrop) target.emit('mousedown', { cursorEl: he }, false); // grabbable
+        } else handWalk(he); // nothing nearby: treat the pinch as "walk to where I'm looking"
+      });
+      he.addEventListener('pinchended', () => {
+        if (held) { if (held._onDrop) held.emit('mouseup', { cursorEl: he }, false); else held.emit('click', {}, false); }
+        held = null;
+      });
+    }
+  }
+
   // Developer view: ?gallery lines up every model in front of the camera.
   function gallery() {
     document.getElementById('topbar').hidden = true;
@@ -3897,6 +3958,7 @@
     walk: (x, z) => walkToNow(new T.Vector3(x, 0, z)), small: () => becomeSmall(), big: () => becomeBig(),
     aim: on => { aimHand = on ? scene : null; if (!on) { arc.visible = false; marker.visible = false; } },
     magic: () => startMagicWords(), sayWord: t => (mode === 'magic' ? (matchWord(t) ? summonWord(matchWord(t)) : onMagicMiss()) : null), magicKey: k => summonWord(k),
+    micTap: () => magicUi && magicUi.mic && magicUi.mic.el.emit('click'), askMicTap: () => askUi && startAsking(),
     ask: () => startAskSalem(), askText: q => askSalem(q), askUrl: () => SALEM_BRAIN_URL,
     menu: () => openLevelMenu(), menuItems: () => MENU_ITEMS.map(i => i.label), menuPick: i => menuTiles[i].emit('click'),
     companion: () => ({ stage: companion.stage, xp: hub.xp() }), showCompanion, journal: () => hub.journalList(), showJournal,
@@ -3928,10 +3990,12 @@
     scene.object3D.add(salem.root);
     document.getElementById('timeBtn').addEventListener('click', () => { unlockAudio(); cycleTime(); });
     document.getElementById('menuBtn').addEventListener('click', () => { unlockAudio(); openLevelMenu(); });
+    scene.addEventListener('enter-vr', setupHandInteract, { once: true });
     window.addEventListener('keydown', e => { if ((e.key === 't' || e.key === 'T') && mode !== 'intro') { unlockAudio(); cycleTime(); } });
     const begin = () => {
       document.getElementById('loader').hidden = true;
       unlockAudio();
+      primeMicPermission();
       setTimeout(intro, 150);
     };
     document.getElementById('loading').hidden = true;
