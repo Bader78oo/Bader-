@@ -12,12 +12,12 @@
 | `seedance_2_5` 10 s 1080p / 720p | 120 / 70 |
 | `grok_video_v15` 10 s 720p | 45 |
 | `minimax_h3` 10 s | 20 |
-| Soul training (5 photos) | no separate charge seen; ~25 min wall time (quoted as ~10) |
+| Soul training | v1 (5 photos): no charge seen · v2 (20 photos): **25 credits**; ~15–25 min wall time |
 
 Rules: preflight with `get_cost: true`; draft low-res, final hi-res; B-roll `sound: off`; 5 s clips and cut; stills + Ken-Burns in the overlay instead of video where motion isn't essential; reuse the B-roll library across ads.
 
 ## Gotchas
-- **Concurrency**: Starter runs 2 jobs; extra submits fail with 429 `rate_limit_reached`. Queue them.
+- **Concurrency**: Starter caps at 4 concurrent jobs total (images count too) and in practice runs ~2 video jobs at once; extra submits fail with 429 `rate_limit_reached`. Queue them.
 - **Preset interception**: `generate_video_batch` may answer "Preset X was recommended" instead of submitting — resubmit with `declined_preset_id`.
 - **Aspect**: `soul_2` has no 4:5 (uses 3:4). Kling/Wan take 9:16. A 3:4 start image gets cropped to 9:16 — generate 9:16 stills for video.
 - **Voice clone**: `create_voice_from_confirmed_audio` → "Voice limit reached" on Starter even with zero voices.
