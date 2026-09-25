@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>سفينة مسقط الغارقة — عرض تقني عالي الجودة</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #020b12; overflow: hidden; font-family: "Baloo Bhaijaan 2", Tahoma, sans-serif; }
+  canvas { display: block; }
+  #hud { position: fixed; inset-inline: 0; top: env(safe-area-inset-top, 0); display: flex; justify-content: space-between;
+    align-items: center; padding: 14px 18px; pointer-events: none; z-index: 5; }
+  #hud .tag { background: rgba(4,20,30,.55); backdrop-filter: blur(6px); color: #cdeafc; padding: 8px 16px; border-radius: 999px;
+    font-size: 14px; font-weight: 700; letter-spacing: .3px; border: 1px solid rgba(205,234,252,.18); }
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; background: #020b12; color: #cdeafc; z-index: 10;
+    font-size: 18px; letter-spacing: .5px; transition: opacity .6s ease; }
+  #loading b { display: block; font-size: 26px; margin-bottom: 10px; color: #fff; }
+  #bar { width: 220px; height: 4px; background: rgba(255,255,255,.15); border-radius: 4px; overflow: hidden; margin-top: 16px; }
+  #bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg,#3fd0e0,#7fe8d8); transition: width .25s ease; }
+  #hint { position: fixed; bottom: env(safe-area-inset-bottom, 0); inset-inline: 0; text-align: center; padding: 14px;
+    color: rgba(205,234,252,.75); font-size: 13px; pointer-events: none; z-index: 5; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
+</style>
+</head>
+<body>
+<div id="loading"><div style="text-align:center">
+  <b>سَفِينَةُ مَسْقَطَ الْغَارِقَةُ</b>
+  <span id="loadingText">جارٍ تجهيز المشهد عالي الجودة…</span>
+  <div id="bar"><i></i></div>
+</div></div>
+<div id="hud">
+  <a class="tag" href="../../../" style="text-decoration:none; pointer-events:auto">⬅️ رجوع للدروس</a>
+  <span class="tag" id="fps">…</span>
+</div>
+<div id="hint">اسحب للدوران حول السفينة • عجلة الفأرة للتقريب • لمس واحد للسحب على الجوال</div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "./lib/three/three.module.js",
+    "three/addons/": "./lib/three/addons/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const loadingEl = document.getElementById('loading');
+const barEl = document.querySelector('#bar i');
+const loadingTextEl = document.getElementById('loadingText');
+function setProgress(p, text) { barEl.style.width = (p * 100) + '%'; if (text) loadingTextEl.textContent = text; }
+
+// =====================================================================
+// Renderer, scene, camera
+// =====================================================================
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.35;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const FOG_COLOR = 0x0a3548;
+scene.background = new THREE.Color(FOG_COLOR);
+scene.fog = new THREE.FogExp2(FOG_COLOR, 0.02);
+
+const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 200);
+camera.position.set(9, 5.5, 11);
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envRT = pmrem.fromScene(new RoomEnvironment(), 0.04);
+scene.environment = envRT.texture;
+
+// =====================================================================
+// Procedural PBR-ish textures painted on canvas: diffuse + bump, real UVs.
+// =====================================================================
+const ANISO = renderer.capabilities.getMaxAnisotropy();
+function mkTex(canvas, { repeat = [1, 1], srgb = true } = {}) {
+  const t = new THREE.CanvasTexture(canvas);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(...repeat);
+  t.anisotropy = ANISO;
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+function noise2D(size, freq, octaves = 4) {
+  // cheap value-noise field, used to paint organic detail without external images
+  const g = document.createElement('canvas'); g.width = g.height = size;
+  const gx = g.getContext('2d');
+  const img = gx.createImageData(size, size);
+  const rnd = (() => { let s = 1234; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+  // simple multi-octave value noise via randomly seeded grids + bilinear interpolation
+  function grid(n) { const a = new Float32Array((n + 1) * (n + 1)); for (let i = 0; i < a.length; i++) a[i] = rnd(); return a; }
+  const layers = [];
+  for (let o = 0; o < octaves; o++) { const n = freq * Math.pow(2, o); layers.push({ n, g: grid(n), amp: 1 / Math.pow(1.9, o) }); }
+  let total = layers.reduce((a, l) => a + l.amp, 0);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    let v = 0;
+    for (const l of layers) {
+      const u = x / size * l.n, w = y / size * l.n, x0 = Math.floor(u), y0 = Math.floor(w), fx = u - x0, fy = w - y0;
+      const at = (xx, yy) => l.g[(yy % (l.n + 1)) * (l.n + 1) + (xx % (l.n + 1))];
+      const a0 = at(x0, y0) * (1 - fx) + at(x0 + 1, y0) * fx, a1 = at(x0, y0 + 1) * (1 - fx) + at(x0 + 1, y0 + 1) * fx;
+      v += (a0 * (1 - fy) + a1 * fy) * l.amp;
+    }
+    v /= total;
+    const idx = (y * size + x) * 4;
+    const c = Math.round(v * 255);
+    img.data[idx] = img.data[idx + 1] = img.data[idx + 2] = c; img.data[idx + 3] = 255;
+  }
+  gx.putImageData(img, 0, 0);
+  return g;
+}
+function shade(c1, c2, v) {
+  const a = new THREE.Color(c1), b = new THREE.Color(c2);
+  return a.clone().lerp(b, v);
+}
+function woodTexture({ base = '#9a7048', dark = '#5a3d20', planks = 14 } = {}) {
+  const size = 1024, c = document.createElement('canvas'); c.width = size; c.height = size;
+  const x = c.getContext('2d');
+  const n = noise2D(size, 6, 5);
+  const nx = n.getContext('2d').getImageData(0, 0, size, size).data;
+  const grainN = noise2D(size, 40, 3);
+  const gx = grainN.getContext('2d').getImageData(0, 0, size, size).data;
+  const img = x.createImageData(size, size);
+  for (let y = 0; y < size; y++) {
+    const plankY = Math.floor(y / (size / planks));
+    const edgeDist = Math.min(y % (size / planks), (size / planks) - (y % (size / planks)));
+    for (let xx = 0; xx < size; xx++) {
+      const i = (y * size + xx) * 4;
+      const grainV = gx[i] / 255, baseV = nx[i] / 255;
+      let col = shade(base, dark, 0.15 + grainV * 0.5 + (plankY % 2 ? 0.06 : 0) + baseV * 0.15);
+      if (edgeDist < 3) col = col.clone().lerp(new THREE.Color(dark), 0.6); // plank seams
+      img.data[i] = Math.round(col.r * 255); img.data[i + 1] = Math.round(col.g * 255); img.data[i + 2] = Math.round(col.b * 255); img.data[i + 3] = 255;
+    }
+  }
+  x.putImageData(img, 0, 0);
+  return c;
+}
+function bumpFrom(canvas, { strength = 1 } = {}) {
+  const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height;
+  const x = c.getContext('2d');
+  x.drawImage(canvas, 0, 0);
+  const img = x.getImageData(0, 0, c.width, c.height);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const l = (img.data[i] * 0.3 + img.data[i + 1] * 0.59 + img.data[i + 2] * 0.11);
+    const v = Math.min(255, Math.max(0, 128 + (l - 128) * strength));
+    img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+  }
+  x.putImageData(img, 0, 0);
+  return c;
+}
+function coralCanvas() {
+  const size = 512, c = document.createElement('canvas'); c.width = c.height = size;
+  const x = c.getContext('2d');
+  const n = noise2D(size, 8, 4).getContext('2d').getImageData(0, 0, size, size).data;
+  const cols = ['#e8672f', '#c94f8a', '#7fd8c8', '#e8a13f', '#d64f6a'];
+  const img = x.createImageData(size, size);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = n[i] / 255;
+    const col = new THREE.Color(cols[Math.floor(v * cols.length) % cols.length]).lerp(new THREE.Color('#3a2717'), Math.max(0, 0.55 - v));
+    img.data[i] = col.r * 255; img.data[i + 1] = col.g * 255; img.data[i + 2] = col.b * 255; img.data[i + 3] = 255;
+  }
+  x.putImageData(img, 0, 0);
+  return c;
+}
+function sandCanvas() {
+  const size = 1024, c = document.createElement('canvas'); c.width = c.height = size;
+  const x = c.getContext('2d');
+  const n = noise2D(size, 10, 5).getContext('2d').getImageData(0, 0, size, size).data;
+  const img = x.createImageData(size, size);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = n[i] / 255;
+    const col = shade('#8a744a', '#d9c68a', v);
+    img.data[i] = col.r * 255; img.data[i + 1] = col.g * 255; img.data[i + 2] = col.b * 255; img.data[i + 3] = 255;
+  }
+  x.putImageData(img, 0, 0);
+  return c;
+}
+function rockCanvas() {
+  const size = 512, c = document.createElement('canvas'); c.width = c.height = size;
+  const x = c.getContext('2d');
+  const n = noise2D(size, 7, 5).getContext('2d').getImageData(0, 0, size, size).data;
+  const img = x.createImageData(size, size);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = n[i] / 255;
+    const col = shade('#39433f', '#7a8a80', v);
+    img.data[i] = col.r * 255; img.data[i + 1] = col.g * 255; img.data[i + 2] = col.b * 255; img.data[i + 3] = 255;
+  }
+  x.putImageData(img, 0, 0);
+  return c;
+}
+function metalCanvas() {
+  const size = 512, c = document.createElement('canvas'); c.width = c.height = size;
+  const x = c.getContext('2d');
+  const n = noise2D(size, 9, 4).getContext('2d').getImageData(0, 0, size, size).data;
+  const img = x.createImageData(size, size);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = n[i] / 255;
+    const col = shade('#3a3530', '#8a6a4a', v * 0.7); // rust-streaked dark metal
+    img.data[i] = col.r * 255; img.data[i + 1] = col.g * 255; img.data[i + 2] = col.b * 255; img.data[i + 3] = 255;
+  }
+  x.putImageData(img, 0, 0);
+  return c;
+}
+
+setProgress(0.15, 'جارٍ رسم الخامات…');
+const woodCanvas = woodTexture();
+const woodTex = mkTex(woodCanvas, { repeat: [3, 6] });
+const woodBump = mkTex(bumpFrom(woodCanvas, { strength: 1.6 }), { repeat: [3, 6], srgb: false });
+const woodDarkCanvas = woodTexture({ base: '#3a2a18', dark: '#1c130a' });
+const woodDarkTex = mkTex(woodDarkCanvas, { repeat: [2, 3] });
+const woodDarkBump = mkTex(bumpFrom(woodDarkCanvas, { strength: 1.8 }), { repeat: [2, 3], srgb: false });
+const coralC = coralCanvas();
+const coralTex = mkTex(coralC, { repeat: [2, 2] });
+const coralBump = mkTex(bumpFrom(coralC, { strength: 2 }), { repeat: [2, 2], srgb: false });
+const sandC = sandCanvas();
+const sandTex = mkTex(sandC, { repeat: [10, 10] });
+const sandBump = mkTex(bumpFrom(sandC, { strength: 1.2 }), { repeat: [10, 10], srgb: false });
+const rockC = rockCanvas();
+const rockTex = mkTex(rockC, { repeat: [2, 2] });
+const rockBump = mkTex(bumpFrom(rockC, { strength: 2.2 }), { repeat: [2, 2], srgb: false });
+const metalC = metalCanvas();
+const metalTex = mkTex(metalC, { repeat: [2, 2] });
+const metalBump = mkTex(bumpFrom(metalC, { strength: 1.4 }), { repeat: [2, 2], srgb: false });
+
+// =====================================================================
+// Materials — physically based, tuned for a wet, encrusted, sunken wreck.
+// =====================================================================
+const matWood = new THREE.MeshPhysicalMaterial({ map: woodTex, bumpMap: woodBump, bumpScale: 0.04, roughness: 0.6, metalness: 0.02, clearcoat: 0.12, clearcoatRoughness: 0.6 });
+const matWoodDark = new THREE.MeshPhysicalMaterial({ map: woodDarkTex, bumpMap: woodDarkBump, bumpScale: 0.05, roughness: 0.7, metalness: 0.02, clearcoat: 0.3, clearcoatRoughness: 0.55 });
+const matCoral = new THREE.MeshPhysicalMaterial({ map: coralTex, bumpMap: coralBump, bumpScale: 0.06, roughness: 0.75, metalness: 0, clearcoat: 0.15 });
+const matSand = new THREE.MeshPhysicalMaterial({ map: sandTex, bumpMap: sandBump, bumpScale: 0.05, roughness: 0.95, metalness: 0 });
+const matRock = new THREE.MeshPhysicalMaterial({ map: rockTex, bumpMap: rockBump, bumpScale: 0.08, roughness: 0.85, metalness: 0.02 });
+const matMetal = new THREE.MeshPhysicalMaterial({ map: metalTex, bumpMap: metalBump, bumpScale: 0.03, roughness: 0.45, metalness: 0.85, clearcoat: 0.4, clearcoatRoughness: 0.3 });
+
+// =====================================================================
+// Seabed
+// =====================================================================
+setProgress(0.3, 'جارٍ بناء قاع البحر…');
+const seabedGeo = new THREE.CircleGeometry(40, 96);
+seabedGeo.rotateX(-Math.PI / 2);
+// gentle undulation so the sand isn't perfectly flat
+{
+  const pos = seabedGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i);
+    const y = Math.sin(x * 0.25) * 0.12 + Math.cos(z * 0.22) * 0.1 + Math.sin((x + z) * 0.5) * 0.04;
+    pos.setY(i, y);
+  }
+  seabedGeo.computeVertexNormals();
+}
+const seabed = new THREE.Mesh(seabedGeo, matSand);
+seabed.receiveShadow = true;
+scene.add(seabed);
+
+function rockMesh(radius, detail = 1) {
+  const geo = new THREE.IcosahedronGeometry(radius, detail);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const v = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i));
+    const n = v.clone().normalize();
+    const disp = (Math.sin(n.x * 6) * Math.cos(n.y * 5) * 0.18 + Math.sin(n.z * 7) * 0.12) * radius * 0.35;
+    v.addScaledVector(n, disp);
+    pos.setXYZ(i, v.x, v.y, v.z);
+  }
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, matRock);
+  m.castShadow = m.receiveShadow = true;
+  return m;
+}
+const rockField = new THREE.Group();
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+for (let i = 0; i < 16; i++) {
+  const a = rnd() * Math.PI * 2, r = 6 + rnd() * 16;
+  const m = rockMesh(0.5 + rnd() * 1.3, 1);
+  m.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+  m.rotation.set(rnd() * 6, rnd() * 6, rnd() * 6);
+  m.scale.y *= 0.55 + rnd() * 0.3;
+  rockField.add(m);
+}
+scene.add(rockField);
+
+// coral clusters (small displaced spheres + branching tubes) scattered on rocks/sand
+const CORAL_TINTS = [0xe8672f, 0xc94f8a, 0x3fd0c0, 0xe8a13f, 0xd64f6a];
+function coralCluster(scale = 1) {
+  const g = new THREE.Group();
+  const tint = CORAL_TINTS[Math.floor(rnd() * CORAL_TINTS.length)];
+  const mat = matCoral.clone();
+  mat.color = new THREE.Color(tint);
+  const branches = 5 + Math.floor(rnd() * 6);
+  for (let b = 0; b < branches; b++) {
+    const ang = rnd() * Math.PI * 2, len = (0.32 + rnd() * 0.5) * scale;
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(Math.cos(ang) * len * 0.4, len * 0.5, Math.sin(ang) * len * 0.4),
+      new THREE.Vector3(Math.cos(ang) * len * 0.7, len, Math.sin(ang + 0.3) * len * 0.7),
+    ]);
+    const tube = new THREE.TubeGeometry(curve, 8, 0.065 * scale, 7, false);
+    const m = new THREE.Mesh(tube, mat);
+    m.castShadow = true;
+    g.add(m);
+    const tip = new THREE.Mesh(new THREE.IcosahedronGeometry(0.11 * scale, 1), mat);
+    tip.position.copy(curve.getPoint(1));
+    g.add(tip);
+  }
+  return g;
+}
+const coralGroup = new THREE.Group();
+for (let i = 0; i < 20; i++) {
+  const a = rnd() * Math.PI * 2, r = 3 + rnd() * 15;
+  const cl = coralCluster(0.7 + rnd() * 1.1);
+  cl.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+  coralGroup.add(cl);
+}
+scene.add(coralGroup);
+
+// =====================================================================
+// The wreck: a curved, broken, coral-encrusted wooden hull resting on its side.
+// =====================================================================
+setProgress(0.5, 'جارٍ بناء هيكل السفينة…');
+const wreck = new THREE.Group();
+
+function hullMesh() {
+  const length = 11, segsL = 48, segsC = 28;
+  const geo = new THREE.CylinderGeometry(1.7, 1.7, length, segsC, segsL, true, Math.PI * 0.15, Math.PI * 1.7);
+  geo.rotateZ(Math.PI / 2);
+  const pos = geo.attributes.position;
+  const uv = geo.attributes.uv;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+    const t = (x + length / 2) / length; // 0..1 along the hull
+    const taper = Math.sin(Math.min(1, t * 2.2)) * Math.sin(Math.min(1, (1 - t) * 2.6));
+    const r = 0.35 + taper * 1.0;
+    const ny = y, nz = z;
+    const len2 = Math.hypot(ny, nz) || 1;
+    let ny2 = ny / len2 * r, nz2 = nz / len2 * r;
+    // planking ridges: subtle ring grooves along the length
+    const groove = Math.sin(t * 90) * 0.012;
+    ny2 += ny / len2 * groove; nz2 += nz / len2 * groove;
+    pos.setXYZ(i, x, ny2, nz2);
+  }
+  geo.computeVertexNormals();
+  const mesh = new THREE.Mesh(geo, matWood);
+  mesh.castShadow = mesh.receiveShadow = true;
+  return mesh;
+}
+const hull = hullMesh();
+wreck.add(hull);
+
+// interior ribs — sized to the hull's own taper so they read as structure, not a cage
+const hullLen = 11;
+function hullRadiusAt(x) {
+  const t = (x + hullLen / 2) / hullLen;
+  const taper = Math.sin(Math.min(1, t * 2.2)) * Math.sin(Math.min(1, (1 - t) * 2.6));
+  return 0.35 + taper * 1.0;
+}
+for (let i = -4; i <= 4; i++) {
+  const x = i * 1.1, r = Math.max(0.15, hullRadiusAt(x) - 0.08);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.045, 8, 24, Math.PI * 1.6), matWoodDark);
+  ring.rotation.y = Math.PI / 2;
+  ring.rotation.z = Math.PI * 0.1;
+  ring.position.x = x;
+  ring.castShadow = true;
+  wreck.add(ring);
+}
+// deck planks (partial, broken in the middle)
+for (let i = -18; i <= 18; i++) {
+  if (Math.abs(i) < 5 && i % 2 === 0) continue; // a broken gap amidships
+  const plank = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.06, 2.6), matWood);
+  plank.position.set(i * 0.3, 1.2, -0.2);
+  plank.rotation.z = 0.03 * (rnd() - 0.5);
+  plank.castShadow = plank.receiveShadow = true;
+  wreck.add(plank);
+}
+// broken mast, resting diagonally across the wreck
+const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 7.5, 14), matWoodDark);
+mast.position.set(-1.5, 2.4, 1.2);
+mast.rotation.set(0.2, 0.4, 1.15);
+mast.castShadow = true;
+wreck.add(mast);
+// a snapped stump where the mast broke
+const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.22, 0.6, 14), matWoodDark);
+stump.position.set(0.3, 1.55, 0.1);
+stump.castShadow = true;
+wreck.add(stump);
+
+// rusted anchor
+const anchorGroup = new THREE.Group();
+const shank = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.1, 10), matMetal);
+shank.castShadow = true;
+anchorGroup.add(shank);
+const stock = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.55, 8), matMetal);
+stock.rotation.z = Math.PI / 2; stock.position.y = 0.4; stock.castShadow = true;
+anchorGroup.add(stock);
+for (const s of [-1, 1]) {
+  const fluke = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.5, 4), matMetal);
+  fluke.position.set(s * 0.18, -0.55, 0); fluke.rotation.z = s * 0.9; fluke.castShadow = true;
+  anchorGroup.add(fluke);
+}
+anchorGroup.position.set(4.2, 0.55, -2.4);
+anchorGroup.rotation.z = 0.3;
+wreck.add(anchorGroup);
+
+// coral growth patches directly on the hull exterior
+for (let i = 0; i < 28; i++) {
+  const cl = coralCluster(0.35 + rnd() * 0.5);
+  const t = rnd(), ang = Math.PI * 0.25 + rnd() * Math.PI * 1.1;
+  const r = 1.9;
+  cl.position.set((t - 0.5) * 9.5, Math.sin(ang) * r, Math.cos(ang) * r);
+  cl.lookAt(cl.position.clone().multiplyScalar(2));
+  wreck.add(cl);
+}
+
+wreck.rotation.z = -0.32; // resting tilted on the seabed, as if it settled on its side
+wreck.position.set(0, 1.55, 0);
+scene.add(wreck);
+
+// scattered broken barrels / debris for storytelling
+function barrel() {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.34, 0.6, 16), matWood);
+  body.castShadow = body.receiveShadow = true;
+  g.add(body);
+  for (const y of [-0.24, 0.24]) {
+    const band = new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.02, 6, 20), matMetal);
+    band.rotation.x = Math.PI / 2; band.position.y = y;
+    g.add(band);
+  }
+  return g;
+}
+for (let i = 0; i < 3; i++) {
+  const b = barrel();
+  b.position.set(-3 + rnd() * 2, 0.3, 3.5 + rnd() * 1.5);
+  b.rotation.set(rnd() * 0.6 - 0.3, rnd() * 6, Math.PI / 2 * (rnd() > 0.5 ? 1 : 0));
+  wreck.parent === scene ? scene.add(b) : null;
+}
+
+// =====================================================================
+// Lighting: a sunlit-from-above look with soft fill and a rim light.
+// =====================================================================
+setProgress(0.7, 'جارٍ ضبط الإضاءة…');
+scene.add(new THREE.AmbientLight(0x5a9ab0, 0.85));
+const sun = new THREE.DirectionalLight(0xfff2da, 4.2);
+sun.position.set(6, 18, 4);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.left = -18; sun.shadow.camera.right = 18; sun.shadow.camera.top = 18; sun.shadow.camera.bottom = -18;
+sun.shadow.camera.near = 1; sun.shadow.camera.far = 50;
+sun.shadow.bias = -0.0015;
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0x3fa0c0, 0.4);
+fill.position.set(-8, 4, -6);
+scene.add(fill);
+const rim = new THREE.PointLight(0x7fe8d8, 1.5, 20, 2);
+rim.position.set(-2, 3, -5);
+scene.add(rim);
+
+// volumetric-looking light shafts (additive-blended cones, animated)
+const shaftTex = (() => {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 256;
+  const x = c.getContext('2d'); const g = x.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, 'rgba(255,255,255,.65)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 64, 256);
+  return new THREE.CanvasTexture(c);
+})();
+const shafts = [];
+for (let i = 0; i < 5; i++) {
+  const shaft = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 22), new THREE.MeshBasicMaterial({ map: shaftTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, opacity: 0.14 }));
+  shaft.position.set((rnd() - 0.5) * 20, 11, (rnd() - 0.5) * 14);
+  shaft.rotation.x = 0.12; shaft.rotation.y = rnd() * Math.PI;
+  scene.add(shaft); shafts.push(shaft);
+}
+
+// rising bubble particles
+const bubbleGeo = new THREE.BufferGeometry();
+const N = 260;
+const bubblePos = new Float32Array(N * 3);
+const bubbleSpeed = new Float32Array(N);
+for (let i = 0; i < N; i++) {
+  const a = rnd() * Math.PI * 2, r = rnd() * 18;
+  bubblePos[i * 3] = Math.cos(a) * r; bubblePos[i * 3 + 1] = rnd() * 14; bubblePos[i * 3 + 2] = Math.sin(a) * r;
+  bubbleSpeed[i] = 0.3 + rnd() * 0.5;
+}
+bubbleGeo.setAttribute('position', new THREE.BufferAttribute(bubblePos, 3));
+const bubbleTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  x.strokeStyle = 'rgba(255,255,255,.9)'; x.lineWidth = 4; x.beginPath(); x.arc(32, 32, 22, 0, Math.PI * 2); x.stroke();
+  return new THREE.CanvasTexture(c);
+})();
+const bubbles = new THREE.Points(bubbleGeo, new THREE.PointsMaterial({ map: bubbleTex, size: 0.12, transparent: true, opacity: 0.75, depthWrite: false, sizeAttenuation: true }));
+scene.add(bubbles);
+
+// floating particulate ("marine snow") for depth cues
+const dustGeo = new THREE.BufferGeometry();
+const D = 400;
+const dustPos = new Float32Array(D * 3);
+for (let i = 0; i < D; i++) { dustPos[i * 3] = (rnd() - 0.5) * 40; dustPos[i * 3 + 1] = rnd() * 14; dustPos[i * 3 + 2] = (rnd() - 0.5) * 40; }
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: 0xbfe0e8, size: 0.02, transparent: true, opacity: 0.5, depthWrite: false }));
+scene.add(dust);
+
+// =====================================================================
+// Post-processing: bloom + ACES tonemapping (set on renderer) for a cinematic look.
+// =====================================================================
+setProgress(0.85, 'جارٍ تجهيز التأثيرات البصرية…');
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.55, 0.6, 0.82);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+// =====================================================================
+// Controls: smooth damped orbit for precise, cinematic movement.
+// =====================================================================
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.6, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 4;
+controls.maxDistance = 26;
+controls.maxPolarAngle = Math.PI * 0.53;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.35;
+controls.addEventListener('start', () => { controls.autoRotate = false; });
+
+// =====================================================================
+// Resize + render loop
+// =====================================================================
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+});
+
+const clock = new THREE.Clock();
+const fpsEl = document.getElementById('fps');
+let frames = 0, fpsT = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.1), t = clock.elapsedTime;
+
+  const pos = bubbleGeo.attributes.position;
+  for (let i = 0; i < N; i++) {
+    let y = pos.getY(i) + bubbleSpeed[i] * dt;
+    if (y > 14) y = 0;
+    pos.setY(i, y);
+    pos.setX(i, pos.getX(i) + Math.sin(t * 0.6 + i) * 0.002);
+  }
+  pos.needsUpdate = true;
+
+  for (const [i, s] of shafts.entries()) s.material.opacity = 0.1 + Math.sin(t * 0.3 + i) * 0.04;
+  dust.rotation.y = t * 0.01;
+  rim.intensity = 1.3 + Math.sin(t * 0.8) * 0.3;
+
+  controls.update();
+  composer.render();
+
+  frames++; fpsT += dt;
+  if (fpsT > 0.5) { fpsEl.textContent = Math.round(frames / fpsT) + ' fps'; frames = 0; fpsT = 0; }
+}
+
+setProgress(1, 'جاهز!');
+setTimeout(() => { loadingEl.style.opacity = '0'; setTimeout(() => loadingEl.remove(), 650); }, 300);
+animate();
+
+window.__t = { ready: () => true, camera, scene, wreck, woodCanvas, coralC, sandC, rockC, metalC, controls };
+</script>
+</body>
+</html>
