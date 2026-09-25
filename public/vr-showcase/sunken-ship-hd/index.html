@@ -72,7 +72,7 @@ scene.background = new THREE.Color(FOG_COLOR);
 scene.fog = new THREE.FogExp2(FOG_COLOR, 0.02);
 
 const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 200);
-camera.position.set(9, 5.5, 11);
+camera.position.set(14, 8, 17);
 
 const pmrem = new THREE.PMREMGenerator(renderer);
 const envRT = pmrem.fromScene(new RoomEnvironment(), 0.04);
@@ -327,102 +327,217 @@ scene.add(coralGroup);
 setProgress(0.5, 'جارٍ بناء هيكل السفينة…');
 const wreck = new THREE.Group();
 
-function hullMesh() {
-  const length = 11, segsL = 48, segsC = 28;
-  const geo = new THREE.CylinderGeometry(1.7, 1.7, length, segsC, segsL, true, Math.PI * 0.15, Math.PI * 1.7);
-  geo.rotateZ(Math.PI / 2);
-  const pos = geo.attributes.position;
-  const uv = geo.attributes.uv;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-    const t = (x + length / 2) / length; // 0..1 along the hull
-    const taper = Math.sin(Math.min(1, t * 2.2)) * Math.sin(Math.min(1, (1 - t) * 2.6));
-    const r = 0.35 + taper * 1.0;
-    const ny = y, nz = z;
-    const len2 = Math.hypot(ny, nz) || 1;
-    let ny2 = ny / len2 * r, nz2 = nz / len2 * r;
-    // planking ridges: subtle ring grooves along the length
-    const groove = Math.sin(t * 90) * 0.012;
-    ny2 += ny / len2 * groove; nz2 += nz / len2 * groove;
-    pos.setXYZ(i, x, ny2, nz2);
+// ---- A proper lofted hull: naval-style cross-sections (keel → bilge → waterline
+// bulge → tumblehome → deck edge), swept along the length with bow taper, stern
+// transom and sheer, so it reads as a real old warship instead of a tapered tube.
+const HULL_LEN = 18, HALF_BEAM = 2.6, HULL_H = 5.6, STATIONS = 44;
+const PROFILE = [ // [u: 0 keel..1 deck edge, rFactor: half-width factor]
+  [0.00, 0.04], [0.12, 0.26], [0.26, 0.52], [0.40, 0.72],
+  [0.54, 0.85], [0.68, 0.80], [0.80, 0.68], [0.91, 0.59], [1.00, 0.52],
+];
+const P = PROFILE.length;
+function lenTaper(t) { // t: 0 stern .. 1 bow
+  if (t < 0.1) return 0.55 + (t / 0.1) * 0.45; // flattish transom, ramps up fast
+  if (t > 0.76) { const k = (t - 0.76) / 0.24; return 1 - Math.pow(k, 1.7) * 0.97; } // pointed bow
+  return 1;
+}
+function sheer(t) { return Math.pow(Math.abs(t - 0.5) * 2, 2.2) * 0.7; } // deck rises at bow/stern
+function hHeight(t) { return HULL_H * (0.62 + 0.38 * lenTaper(t)); }
+function ringPointsAt(s) {
+  const t = s / STATIONS, x = -HULL_LEN / 2 + t * HULL_LEN;
+  const wScale = lenTaper(t), y0 = sheer(t), h = hHeight(t);
+  const pts = []; // side/u recorded for hole-cutting + UVs
+  for (let i = P - 1; i >= 0; i--) { const [u, rF] = PROFILE[i]; pts.push({ x, y: y0 + u * h, z: -rF * HALF_BEAM * wScale, u, side: 'L' }); }
+  for (let i = 1; i < P; i++) { const [u, rF] = PROFILE[i]; pts.push({ x, y: y0 + u * h, z: rF * HALF_BEAM * wScale, u, side: 'R' }); }
+  return pts; // length 2P-1; index 0 = left deck edge, P-1 = keel, 2P-2 = right deck edge
+}
+// battle damage: a splintered cannonball hole through the starboard hull, amidships —
+// the entrance. Right side (+z) spans profile indices ~3..6 => ring indices P+2..P+5.
+const HOLE_S0 = Math.round(STATIONS * 0.42), HOLE_S1 = Math.round(STATIONS * 0.58);
+const HOLE_K0 = P + 2, HOLE_K1 = P + 5;
+function inHole(s, k) { return s >= HOLE_S0 && s < HOLE_S1 && k >= HOLE_K0 && k < HOLE_K1; }
+function buildHull() {
+  const rings = []; for (let s = 0; s <= STATIONS; s++) rings.push(ringPointsAt(s));
+  // jagged splintering around the hole boundary
+  for (let s = HOLE_S0 - 2; s <= HOLE_S1 + 1; s++) {
+    if (s < 0 || s > STATIONS) continue;
+    for (let k = HOLE_K0 - 2; k <= HOLE_K1 + 1; k++) {
+      if (k < 0 || k >= rings[s].length) continue;
+      const nearEdge = s === HOLE_S0 - 1 || s === HOLE_S1 || k === HOLE_K0 - 1 || k === HOLE_K1;
+      const inside = s >= HOLE_S0 && s < HOLE_S1 && k >= HOLE_K0 && k < HOLE_K1;
+      if (nearEdge || inside) {
+        const p = rings[s][k], jr = (rnd() - 0.5) * (inside ? 0.5 : 0.32);
+        const len2 = Math.hypot(p.z, p.y - sheer(s / STATIONS)) || 1;
+        p.z *= 1 + jr / len2; p.y += (rnd() - 0.5) * 0.22;
+      }
+    }
   }
+  const positions = [], uvs = [], indices = [];
+  const idx = (s, k) => s * (2 * P - 1) + k;
+  for (const ring of rings) for (const p of ring) { positions.push(p.x, p.y, p.z); uvs.push((p.side === 'L' ? -p.u : p.u) * 1.4, p.x / HULL_LEN * 4); }
+  for (let s = 0; s < STATIONS; s++) {
+    for (let k = 0; k < 2 * P - 2; k++) {
+      if (inHole(s, k)) continue;
+      const a = idx(s, k), b = idx(s, k + 1), c = idx(s + 1, k), d = idx(s + 1, k + 1);
+      indices.push(a, c, b, b, c, d);
+    }
+  }
+  // stern transom cap and bow-tip cap (fans from each end ring's centroid) — without
+  // these the hull is an open tube and daylight leaks straight through at both ends
+  for (const ring of [rings[0], rings[STATIONS]]) {
+    const sIdx = ring === rings[0] ? 0 : STATIONS, base = positions.length / 3;
+    const cx = ring.reduce((a, p) => a + p.x, 0) / ring.length, cy = ring.reduce((a, p) => a + p.y, 0) / ring.length;
+    positions.push(cx, cy, 0); uvs.push(0, 0);
+    for (let k = 0; k < ring.length - 1; k++) {
+      if (sIdx === 0) indices.push(base, idx(sIdx, k + 1), idx(sIdx, k));
+      else indices.push(base, idx(sIdx, k), idx(sIdx, k + 1));
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
   geo.computeVertexNormals();
   const mesh = new THREE.Mesh(geo, matWood);
+  mesh.material.side = THREE.DoubleSide; // so the hollow interior renders when seen through the hole
   mesh.castShadow = mesh.receiveShadow = true;
   return mesh;
 }
-const hull = hullMesh();
+function hullHalfWidthAt(t, u) {
+  const wScale = lenTaper(t);
+  let lo = PROFILE[0], hi = PROFILE[P - 1];
+  for (let i = 0; i < P - 1; i++) if (u >= PROFILE[i][0] && u <= PROFILE[i + 1][0]) { lo = PROFILE[i]; hi = PROFILE[i + 1]; break; }
+  const span = hi[0] - lo[0], k = span > 1e-6 ? (u - lo[0]) / span : 0;
+  return (lo[1] + (hi[1] - lo[1]) * k) * HALF_BEAM * wScale;
+}
+const hull = buildHull();
 wreck.add(hull);
 
-// interior ribs — sized to the hull's own taper so they read as structure, not a cage
-const hullLen = 11;
-function hullRadiusAt(x) {
-  const t = (x + hullLen / 2) / hullLen;
-  const taper = Math.sin(Math.min(1, t * 2.2)) * Math.sin(Math.min(1, (1 - t) * 2.6));
-  return 0.35 + taper * 1.0;
+// interior deck: a walkable lower-hold floor, following the hull's own taper, that a
+// visitor reaches through the cannonball hole in the starboard side.
+const FLOOR_U = 0.34;
+{
+  const positions = [], indices = [];
+  const segs = 36, x0 = -HULL_LEN * 0.42, x1 = HULL_LEN * 0.4;
+  for (let s = 0; s <= segs; s++) {
+    const x = x0 + (x1 - x0) * (s / segs), t = (x + HULL_LEN / 2) / HULL_LEN;
+    const y = sheer(t) + FLOOR_U * hHeight(t), r = hullHalfWidthAt(t, FLOOR_U) * 0.94;
+    positions.push(x, y, -r, x, y, r);
+  }
+  for (let s = 0; s < segs; s++) { const a = s * 2, b = a + 1, c = a + 2, d = a + 3; indices.push(a, c, b, b, c, d); }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.computeVertexNormals();
+  const uvArr = []; for (let i = 0; i < positions.length / 3; i++) uvArr.push((i % 2), Math.floor(i / 2) / segs * 6);
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvArr, 2));
+  const floor = new THREE.Mesh(geo, matWoodDark);
+  floor.receiveShadow = floor.castShadow = true;
+  wreck.add(floor);
 }
-for (let i = -4; i <= 4; i++) {
-  const x = i * 1.1, r = Math.max(0.15, hullRadiusAt(x) - 0.08);
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.045, 8, 24, Math.PI * 1.6), matWoodDark);
-  ring.rotation.y = Math.PI / 2;
-  ring.rotation.z = Math.PI * 0.1;
-  ring.position.x = x;
-  ring.castShadow = true;
-  wreck.add(ring);
+// interior frames (the hull's structural ribs), spaced along the walkable hold
+for (let s = 6; s <= STATIONS - 6; s += 4) {
+  const t = s / STATIONS, x = -HULL_LEN / 2 + t * HULL_LEN, h = hHeight(t), y0 = sheer(t);
+  const g = new THREE.Group();
+  for (let seg = 0; seg < 10; seg++) {
+    const u0 = seg / 10, u1 = (seg + 1) / 10;
+    const r0 = hullHalfWidthAt(t, u0) * 0.92, r1 = hullHalfWidthAt(t, u1) * 0.92;
+    for (const side of [-1, 1]) {
+      const a = new THREE.Vector3(x, y0 + u0 * h, side * r0), b = new THREE.Vector3(x, y0 + u1 * h, side * r1);
+      const mid = a.clone().add(b).multiplyScalar(0.5), dir = b.clone().sub(a);
+      const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.055, dir.length(), 6), matWoodDark);
+      beam.position.copy(mid);
+      beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+      beam.castShadow = true;
+      g.add(beam);
+    }
+  }
+  wreck.add(g);
 }
-// deck planks (partial, broken in the middle)
-for (let i = -18; i <= 18; i++) {
-  if (Math.abs(i) < 5 && i % 2 === 0) continue; // a broken gap amidships
-  const plank = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.06, 2.6), matWood);
-  plank.position.set(i * 0.3, 1.2, -0.2);
-  plank.rotation.z = 0.03 * (rnd() - 0.5);
+// a horizontal deck beam over the hold, near the hole, to walk under
+for (const s of [HOLE_S0 - 3, HOLE_S1 + 3]) {
+  const t = s / STATIONS, x = -HULL_LEN / 2 + t * HULL_LEN, h = hHeight(t), y0 = sheer(t);
+  const r = hullHalfWidthAt(t, 0.92) * 1.7;
+  const beam = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, r), matWoodDark);
+  beam.position.set(x, y0 + 0.95 * h, 0);
+  beam.castShadow = beam.receiveShadow = true;
+  wreck.add(beam);
+}
+// splinter shards scattered around the hole — sells the "broken by a cannonball" story
+{
+  const holeT = ((HOLE_S0 + HOLE_S1) / 2) / STATIONS, holeX = -HULL_LEN / 2 + holeT * HULL_LEN;
+  const holeY = sheer(holeT) + 0.7 * hHeight(holeT), holeR = hullHalfWidthAt(holeT, 0.7);
+  for (let i = 0; i < 10; i++) {
+    const shard = new THREE.Mesh(new THREE.ConeGeometry(0.04 + rnd() * 0.05, 0.3 + rnd() * 0.5, 4), matWood);
+    const a = rnd() * Math.PI * 2, rr = 0.3 + rnd() * 1.1;
+    shard.position.set(holeX + (rnd() - 0.5) * 1.6, holeY + Math.sin(a) * rr * 0.6, holeR + (rnd() - 0.5) * 0.6);
+    shard.rotation.set(rnd() * Math.PI, rnd() * Math.PI, rnd() * Math.PI);
+    shard.castShadow = true;
+    wreck.add(shard);
+  }
+}
+// upper (weather) deck, with the classic broken-planks gap, sized to the real hull width
+for (let s = 4; s <= STATIONS - 4; s++) {
+  if (s % 6 < 2 && s > STATIONS * 0.3 && s < STATIONS * 0.65) continue; // storm-broken gap
+  const t = s / STATIONS, x = -HULL_LEN / 2 + t * HULL_LEN, h = hHeight(t), y0 = sheer(t);
+  const r = hullHalfWidthAt(t, 1.0);
+  if (r < 0.15) continue;
+  const plank = new THREE.Mesh(new THREE.BoxGeometry(HULL_LEN / STATIONS * 1.3, 0.07, r * 1.9), matWood);
+  plank.position.set(x, y0 + h * 1.0, 0);
+  plank.rotation.z = 0.02 * (rnd() - 0.5);
   plank.castShadow = plank.receiveShadow = true;
   wreck.add(plank);
 }
-// broken mast, resting diagonally across the wreck
-const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 7.5, 14), matWoodDark);
-mast.position.set(-1.5, 2.4, 1.2);
-mast.rotation.set(0.2, 0.4, 1.15);
-mast.castShadow = true;
-wreck.add(mast);
-// a snapped stump where the mast broke
-const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.22, 0.6, 14), matWoodDark);
-stump.position.set(0.3, 1.55, 0.1);
-stump.castShadow = true;
-wreck.add(stump);
+// two masts, broken, resting across the deck (a warship's scale needs more than one)
+for (const [x, z, len] of [[-3.5, 0.4, 11], [2.8, -0.5, 8.5]]) {
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.26, len, 14), matWoodDark);
+  mast.position.set(x, hHeight(0.5) + 0.5, z);
+  mast.rotation.set(0.15 + rnd() * 0.15, rnd() * 0.6, 1.2 + rnd() * 0.3);
+  mast.castShadow = true;
+  wreck.add(mast);
+  const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.6, 14), matWoodDark);
+  stump.position.set(x, hHeight(0.5) + 0.3, z);
+  stump.castShadow = true;
+  wreck.add(stump);
+}
 
-// rusted anchor
+// rusted anchor, hanging off the bow
 const anchorGroup = new THREE.Group();
-const shank = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.1, 10), matMetal);
+const shank = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.6, 10), matMetal);
 shank.castShadow = true;
 anchorGroup.add(shank);
-const stock = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.55, 8), matMetal);
-stock.rotation.z = Math.PI / 2; stock.position.y = 0.4; stock.castShadow = true;
+const stock = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.8, 8), matMetal);
+stock.rotation.z = Math.PI / 2; stock.position.y = 0.58; stock.castShadow = true;
 anchorGroup.add(stock);
 for (const s of [-1, 1]) {
-  const fluke = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.5, 4), matMetal);
-  fluke.position.set(s * 0.18, -0.55, 0); fluke.rotation.z = s * 0.9; fluke.castShadow = true;
+  const fluke = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.72, 4), matMetal);
+  fluke.position.set(s * 0.26, -0.8, 0); fluke.rotation.z = s * 0.9; fluke.castShadow = true;
   anchorGroup.add(fluke);
 }
-anchorGroup.position.set(4.2, 0.55, -2.4);
+anchorGroup.position.set(HULL_LEN * 0.42, hHeight(0.9) * 0.4, hullHalfWidthAt(0.9, 0.5) + 0.3);
 anchorGroup.rotation.z = 0.3;
 wreck.add(anchorGroup);
 
-// coral growth patches directly on the hull exterior
-for (let i = 0; i < 28; i++) {
-  const cl = coralCluster(0.35 + rnd() * 0.5);
-  const t = rnd(), ang = Math.PI * 0.25 + rnd() * Math.PI * 1.1;
-  const r = 1.9;
-  cl.position.set((t - 0.5) * 9.5, Math.sin(ang) * r, Math.cos(ang) * r);
-  cl.lookAt(cl.position.clone().multiplyScalar(2));
+// coral growth patches directly on the hull exterior (skipping the hole itself)
+for (let i = 0; i < 40; i++) {
+  const t = rnd(), x = -HULL_LEN / 2 + t * HULL_LEN, side = rnd() > 0.5 ? 1 : -1, u = rnd();
+  if (t > HOLE_S0 / STATIONS - 0.03 && t < HOLE_S1 / STATIONS + 0.03 && side > 0 && u > 0.4 && u < 0.85) continue;
+  const r = hullHalfWidthAt(t, u);
+  if (r < 0.1) continue;
+  const cl = coralCluster(0.3 + rnd() * 0.55);
+  cl.position.set(x, sheer(t) + u * hHeight(t), side * r);
+  cl.lookAt(cl.position.clone().add(new THREE.Vector3(0, 0, side)));
   wreck.add(cl);
 }
 
-wreck.rotation.z = -0.32; // resting tilted on the seabed, as if it settled on its side
-wreck.position.set(0, 1.55, 0);
+wreck.rotation.z = -0.1; // a slight list, but standing — this is a ship to walk into, not lying flat
+wreck.position.set(0, 0.3, 0);
 scene.add(wreck);
+const holeWorld = (() => { const t = ((HOLE_S0 + HOLE_S1) / 2) / STATIONS, x = -HULL_LEN / 2 + t * HULL_LEN, y = sheer(t) + 0.72 * hHeight(t), r = hullHalfWidthAt(t, 0.72);
+  const p = new THREE.Vector3(x, y, r); wreck.localToWorld(p); return p; })();
+const interiorWorld = (() => { const t = ((HOLE_S0 + HOLE_S1) / 2) / STATIONS, x = -HULL_LEN / 2 + t * HULL_LEN, y = sheer(t) + FLOOR_U * hHeight(t) + 1.5;
+  const p = new THREE.Vector3(x, y, 0); wreck.localToWorld(p); return p; })();
 
-// scattered broken barrels / debris for storytelling
+// scattered broken barrels / crates for storytelling — some outside, some in the hold
 function barrel() {
   const g = new THREE.Group();
   const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.34, 0.6, 16), matWood);
@@ -437,9 +552,21 @@ function barrel() {
 }
 for (let i = 0; i < 3; i++) {
   const b = barrel();
-  b.position.set(-3 + rnd() * 2, 0.3, 3.5 + rnd() * 1.5);
+  b.position.set(-3 + rnd() * 2, 0.3, 6 + rnd() * 1.5);
   b.rotation.set(rnd() * 0.6 - 0.3, rnd() * 6, Math.PI / 2 * (rnd() > 0.5 ? 1 : 0));
-  wreck.parent === scene ? scene.add(b) : null;
+  scene.add(b);
+}
+// crates inside the hold, near the entrance
+for (let i = 0; i < 4; i++) {
+  const crate = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 0.5), matWood);
+  crate.castShadow = crate.receiveShadow = true;
+  const t = 0.46 + rnd() * 0.12, x = -HULL_LEN / 2 + t * HULL_LEN, y = sheer(t) + FLOOR_U * hHeight(t) + 0.26;
+  crate.position.set(x, y, 0.9 + rnd() * 0.6); // kept to one side so the centre walkway stays clear
+  crate.rotation.y = rnd() * Math.PI;
+  wreck.add(crate);
+  const b2 = barrel(); b2.scale.setScalar(0.85);
+  b2.position.set(x + (rnd() - 0.5) * 1.5, y - 0.06, 0.9 + rnd() * 0.6);
+  wreck.add(b2);
 }
 
 // =====================================================================
@@ -520,15 +647,58 @@ composer.addPass(new OutputPass());
 // Controls: smooth damped orbit for precise, cinematic movement.
 // =====================================================================
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 1.6, 0);
+controls.target.set(0, 2.2, 0);
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
-controls.minDistance = 4;
-controls.maxDistance = 26;
+controls.minDistance = 5;
+controls.maxDistance = 38;
 controls.maxPolarAngle = Math.PI * 0.53;
 controls.autoRotate = true;
-controls.autoRotateSpeed = 0.35;
+controls.autoRotateSpeed = 0.28;
 controls.addEventListener('start', () => { controls.autoRotate = false; });
+
+// =====================================================================
+// Two viewing modes: an exterior hero orbit, and stepping inside through the
+// cannonball hole to look around the hold — a smooth camera tween between them,
+// not physics-based walking, since this is a viewing showcase.
+// =====================================================================
+let insideShip = false;
+function flyCamera(toPos, toTarget, dur = 1.6) {
+  const fromPos = camera.position.clone(), fromTarget = controls.target.clone();
+  controls.enabled = false; controls.autoRotate = false;
+  const t0 = performance.now();
+  function step() {
+    const k = Math.min(1, (performance.now() - t0) / (dur * 1000));
+    const e = 1 - Math.pow(1 - k, 3);
+    camera.position.lerpVectors(fromPos, toPos, e);
+    controls.target.lerpVectors(fromTarget, toTarget, e);
+    if (k < 1) requestAnimationFrame(step); else controls.enabled = true;
+  }
+  step();
+}
+function enterShip() {
+  insideShip = true;
+  controls.minDistance = 0.3; controls.maxDistance = 9; controls.maxPolarAngle = Math.PI * 0.85;
+  const approach = holeWorld.clone().add(new THREE.Vector3(2.2, 0.4, 2.4));
+  flyCamera(approach, holeWorld, 1.1);
+  const standPos = interiorWorld.clone().add(new THREE.Vector3(-3.2, -0.9, -0.6));
+  const lookAt = interiorWorld.clone().add(new THREE.Vector3(3, -1.1, -0.6));
+  setTimeout(() => flyCamera(standPos, lookAt, 1.5), 1150);
+  modeBtn.textContent = '🔭 اخرج إلى المنظر الخارجي';
+}
+function exitShip() {
+  insideShip = false;
+  controls.minDistance = 5; controls.maxDistance = 38; controls.maxPolarAngle = Math.PI * 0.53;
+  flyCamera(new THREE.Vector3(14, 8, 17), new THREE.Vector3(0, 2.2, 0), 1.6);
+  modeBtn.textContent = '🚪 ادخل السفينة من الفتحة';
+}
+const modeBtn = document.createElement('button');
+modeBtn.textContent = '🚪 ادخل السفينة من الفتحة';
+modeBtn.style.cssText = 'position:fixed;left:18px;bottom:52px;z-index:6;pointer-events:auto;border:0;cursor:pointer;' +
+  'font:inherit;font-weight:800;font-size:14px;color:#04141e;background:linear-gradient(180deg,#7fe8d8,#3fd0c0);' +
+  'padding:11px 18px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.4)';
+modeBtn.addEventListener('click', () => (insideShip ? exitShip() : enterShip()));
+document.body.appendChild(modeBtn);
 
 // =====================================================================
 // Resize + render loop
