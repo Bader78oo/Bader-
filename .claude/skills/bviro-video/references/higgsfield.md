@@ -6,7 +6,10 @@
 | `soul_2` still (2k) | 0.12 (shown as "1" in get_cost; balance confirms 0.12) |
 | `gpt_image_2_5` medium 1k (752×1344) / 2k / high 2k | 0.5 / 1 / 2.75 |
 | `nano_banana_pro` 1k or 2k · `nano_banana_2` 1k | 2 · 1.5 |
-| `kling3_0` std, 5 s, sound off, 9:16 | 6.25 |
+| `seedance_2_0_mini` i2v 4 s, 720p, no audio | 4 (480p: 2) — good hero clips from GPT-Image stills; start_image = the image job_id |
+| `kling3_0` std / pro, 5 s, sound off, 9:16 | 6.25 / 7.5 |
+| `seedance_2_0` std 5 s 720p / 1080p | 22.5 / 45 |
+| image upscale (`bytedance_image_upscale` 2k) | 2 |
 | `kling3_0` std, 10 s, sound on | 17.5 |
 | `kling3_0` pro | blocked — needs Plus |
 | `wan2_7` 720p 5 s with audio reference (preflight) | 7.5 (real 4 s runs cost more — whole edu reel spent ~63 vs ~45 estimated; always preflight) |
@@ -29,6 +32,7 @@ prompt = precise lip sync + natural blinking + small nods + "static locked-off t
 corr from mouth-gap vs loudness is noisy even on real footage — compare against the real-video baseline, and always look at a mouth-crop strip.
 
 ## Gotchas
+- **Seedance Mini**: runs 2 video jobs at a time; first submits often get the "IN THE DARK" preset recommendation — resubmit with `declined_preset_id` 24bae836-2c4a-48e0-89b6-49fcc0b21612. Prompt only the motion and say "clothing stays exactly the same"; ~2–3 min per clip.
 - **Concurrency**: Starter caps at 4 concurrent jobs total (images count too) and in practice runs ~2 video jobs at once; extra submits fail with 429 `rate_limit_reached`. Queue them.
 - **Preset interception**: `generate_video_batch` may answer "Preset X was recommended" instead of submitting — resubmit with `declined_preset_id`.
 - **Aspect**: `soul_2` has no 4:5 (uses 3:4). Kling/Wan take 9:16. A 3:4 start image gets cropped to 9:16 — generate 9:16 stills for video.

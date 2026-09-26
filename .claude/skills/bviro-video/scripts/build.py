@@ -51,7 +51,7 @@ if "--reuse-overlay" not in sys.argv or not os.path.isdir("ov"):
 
 # 3. shots: cut, fill 9:16, grade -------------------------------------------------
 g = sb.get("grade", {})
-vf = (f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS},setsar=1,"
+vf = (f"scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos,crop={W}:{H},fps={FPS},setsar=1,"
       f"eq=contrast={g.get('contrast', 1.06)}:saturation={g.get('saturation', 1.10)}:brightness={g.get('brightness', 0.005)},"
       "unsharp=5:5:0.4")
 if g.get("lut"):

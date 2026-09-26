@@ -3,32 +3,36 @@
  "height": 1920,
  "fps": 30,
  "duration": 39,
- "output": "bviro_realestate.mp4",
+ "output": "bviro_realestate_v2.mp4",
  "voiceover": "vo.mp3",
  "words": "words_final.json",
  "shots": [
   {
-   "src": "r61.png",
+   "src": "v71.mp4",
    "dur": 3.2,
-   "depth": "push"
+   "in": 0.3,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185255_ee951b48-02e4-4db9-8974-a74932bc19a3.mp4"
   },
   {
-   "src": "g44.png",
+   "src": "v72.mp4",
    "dur": 3.6,
-   "depth": "right",
-   "tin": "flash"
+   "tin": "flash",
+   "in": 0.2,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185022_be332970-11c2-4611-88fe-e6be8fdc1e76.mp4"
   },
   {
-   "src": "g47.png",
+   "src": "v73.mp4",
    "dur": 2.1,
-   "depth": "left",
-   "tin": "zoom"
+   "tin": "zoom",
+   "in": 0.5,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185254_743e1446-de72-4e37-ae23-22197cdd2220.mp4"
   },
   {
-   "src": "r64.png",
+   "src": "v76.mp4",
    "dur": 1.5,
-   "depth": "push",
-   "tin": "whip"
+   "tin": "whip",
+   "in": 0.3,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185544_7f81f8c9-606b-4df6-a351-d628db42a1c0.mp4"
   },
   {
    "src": "r62.png",
@@ -49,10 +53,11 @@
    "tin": "flash"
   },
   {
-   "src": "r63.png",
+   "src": "v74.mp4",
    "dur": 2.2,
-   "depth": "push",
-   "tin": "flash"
+   "tin": "flash",
+   "in": 0.8,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185453_fb5b0c59-7891-46fd-a74a-dec09cb9b91f.mp4"
   },
   {
    "src": "g48.png",
@@ -74,16 +79,18 @@
    "tin": "flash"
   },
   {
-   "src": "g52.png",
+   "src": "v75.mp4",
    "dur": 2.9,
-   "depth": "push",
-   "tin": "flash"
+   "tin": "flash",
+   "in": 0.9,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185021_7e49d168-a513-421d-9f73-9d1a0e77a22a.mp4"
   },
   {
-   "src": "r64.png",
+   "src": "v76.mp4",
    "dur": 1.3,
-   "depth": "pull",
-   "tin": "zoom"
+   "tin": "zoom",
+   "in": 2.5,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185544_7f81f8c9-606b-4df6-a351-d628db42a1c0.mp4"
   },
   {
    "src": "s2.png",
@@ -92,10 +99,11 @@
    "tin": "flash"
   },
   {
-   "src": "r61.png",
+   "src": "v71.mp4",
    "dur": 2.5,
-   "depth": "pull",
-   "tin": "zoom"
+   "tin": "zoom",
+   "in": 1.4,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185255_ee951b48-02e4-4db9-8974-a74932bc19a3.mp4"
   },
   {
    "src": "bg_3d_logo.jpg",
