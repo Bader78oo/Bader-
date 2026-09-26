@@ -3,7 +3,7 @@
  "height": 1920,
  "fps": 30,
  "duration": 57,
- "output": "bviro_oman_promo_v2.mp4",
+ "output": "bviro_oman_promo_v3.mp4",
  "voiceover": "vo.mp3",
  "words": "words_final.json",
  "shots": [
@@ -30,7 +30,7 @@
    "tin": "flash"
   },
   {
-   "src": "g45.png",
+   "src": "g45_fix.png",
    "dur": 1.5,
    "depth": "push",
    "tin": "whip"
@@ -117,7 +117,7 @@
    "tin": "flash"
   },
   {
-   "src": "g45.png",
+   "src": "g45_fix.png",
    "dur": 2.7,
    "depth": "pull",
    "tin": "whip"
