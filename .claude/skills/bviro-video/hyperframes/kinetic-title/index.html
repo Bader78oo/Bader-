@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#12002a}
+#root{width:100%;height:100%;position:relative;font-family:Cairo;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 40%,#5a00be 0%,#2B0157 45%,#0d001f 100%)}
+.line{direction:rtl;position:absolute;left:0;right:0;text-align:center;font-weight:900;color:#fff}
+#l1{top:700px;font-size:104px;white-space:nowrap}
+#l2{top:880px;font-size:88px;color:#01CEC9;white-space:nowrap}
+.w{display:inline-block;margin:0 14px}
+#bar{position:absolute;top:1060px;left:340px;width:400px;height:10px;border-radius:5px;background:#01CEC9;transform-origin:center}
+#logo{position:absolute;top:1180px;left:465px;width:150px}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="3" data-width="1080" data-height="1920">
+  <div id="l1" class="line clip" data-start="0" data-duration="3" data-track-index="0"><span class="w">مشروعك</span><span class="w">ما</span><span class="w">انبنى…</span></div>
+  <div id="l2" class="line clip" data-start="0" data-duration="3" data-track-index="1"><span class="w">وعميلك</span><span class="w">ساكن</span><span class="w">فيه!</span></div>
+  <div id="bar" class="clip" data-start="0" data-duration="3" data-track-index="2"></div>
+  <img id="logo" class="clip" src="logo_symbol_white.png" data-start="0" data-duration="3" data-track-index="3">
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+tl.from("#l1 .w", { y: 140, opacity: 0, rotation: -6, duration: 0.5, stagger: 0.12, ease: "back.out(1.8)" }, 0.1)
+  .from("#l2 .w", { scale: 2.2, opacity: 0, filter: "blur(18px)", duration: 0.45, stagger: 0.1, ease: "power3.out" }, 0.9)
+  .from("#bar", { scaleX: 0, duration: 0.5, ease: "expo.out" }, 1.5)
+  .from("#logo", { y: 60, opacity: 0, rotation: 90, duration: 0.6, ease: "back.out(2)" }, 1.8)
+  .to("#root", { scale: 1.04, duration: 3, ease: "none" }, 0);
+window.__timelines["main"] = tl;
+tl.seek(0);
+</script>
+</body>
+</html>

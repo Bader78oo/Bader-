@@ -53,3 +53,13 @@ Text, timing, icons, name card, colors, LUT, music: edit the storyboard and re-r
 - Presigned upload URLs are ~2 KB each: request all uploads in one `media_upload` call. With ≥10 files the result is too big for the context and is saved to a tool-results JSON file — that's the cheap path: PUT every file with a short Python loop over that file (`uploads[].upload_url`, `media_id`, `content_type`) without ever printing the URLs.
 - Keep this kit in the repo; edit JSON, don't rewrite scripts. Long waits: `jobs_wait` (15 s) rather than chatty polling; schedule a check-in for trainings.
 - Ask for cost with `get_cost: true` before any generation and tell Bader the number.
+
+## HyperFrames (motion graphics, Apache-2.0)
+Installed by `.claude/hooks/session-start.sh` (CLI + ~20 agent skills in `~/.claude/skills/hyperframes*`). Use it for kinetic
+Arabic titles, animated stickers/lower-thirds, stat count-ups and logo stings; render to MP4 (or `--format webm` for a
+transparent overlay) and drop the result into a storyboard shot. Starter: `hyperframes/kinetic-title/index.html` (9:16).
+Environment rules (learned 2026-09-26):
+- `cdn.jsdelivr.net` is blocked: copy `vendor/gsap.min.js` next to index.html and use `<script src="gsap.min.js">`; fonts from `brand/fonts`.
+- Rendering uses the preinstalled Playwright headless shell via `HYPERFRAMES_BROWSER_PATH` (set by the hook) — no `browser ensure`.
+- Never put `dir="rtl"` on `<html>` (renders a blank video); put `direction: rtl` on text elements. Run `hyperframes lint` before `render`.
+- A 3 s 1080×1920 title renders in ~9 s on CPU.
