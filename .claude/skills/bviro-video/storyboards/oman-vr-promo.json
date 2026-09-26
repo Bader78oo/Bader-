@@ -3,69 +3,66 @@
  "height": 1920,
  "fps": 30,
  "duration": 57,
- "output": "bviro_oman_promo.mp4",
+ "output": "bviro_oman_promo_v2.mp4",
  "voiceover": "vo.mp3",
  "words": "words_final.json",
  "shots": [
   {
    "src": "g41.png",
    "dur": 3.6,
-   "kb": "in",
-   "kb_zoom": 0.1
+   "depth": "push"
   },
   {
    "src": "g43.png",
    "dur": 3.3,
-   "kb": "out",
-   "kb_zoom": 0.1
+   "depth": "push",
+   "tin": "flash"
   },
   {
    "src": "g44.png",
    "dur": 3.2,
-   "kb": "left",
-   "kb_zoom": 0.1
+   "depth": "right"
   },
   {
    "src": "s2.png",
    "dur": 1.3,
-   "kb": "in",
-   "kb_zoom": 0.1
+   "depth": "push",
+   "tin": "flash"
   },
   {
    "src": "g45.png",
    "dur": 1.5,
-   "kb": "up",
-   "kb_zoom": 0.1
+   "depth": "push",
+   "tin": "whip"
   },
   {
    "src": "g46.png",
    "dur": 2.6,
-   "kb": "in",
-   "kb_zoom": 0.1
+   "depth": "push"
   },
   {
    "src": "g47.png",
    "dur": 3.7,
-   "kb": "right",
-   "kb_zoom": 0.1
+   "depth": "left",
+   "tin": "whip"
   },
   {
    "src": "g48.png",
    "dur": 2.6,
-   "kb": "in",
-   "kb_zoom": 0.1
+   "depth": "push"
   },
   {
    "src": "n29.png",
    "dur": 1.8,
-   "kb": "out",
-   "kb_zoom": 0.1
+   "depth": "pull",
+   "tin": "flash"
   },
   {
    "src": "c3.mp4",
    "dur": 1.4,
    "in": 0.6,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260923_184130_3130cacc-2dc4-48e9-8e59-56bf1daf98b9.mp4"
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260923_184130_3130cacc-2dc4-48e9-8e59-56bf1daf98b9.mp4",
+   "tin": "flash"
   },
   {
    "src": "c1.mp4",
@@ -76,72 +73,71 @@
   {
    "src": "g50.png",
    "dur": 2.9,
-   "kb": "in",
-   "kb_zoom": 0.1
+   "depth": "push"
   },
   {
    "src": "g51.png",
    "dur": 1.4,
-   "kb": "left",
-   "kb_zoom": 0.1
+   "depth": "right",
+   "tin": "whip"
   },
   {
    "src": "g42.png",
    "dur": 2.2,
-   "kb": "in",
-   "kb_zoom": 0.1
+   "depth": "left"
   },
   {
    "src": "c4.mp4",
    "dur": 2.1,
    "in": 0.6,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260923_184130_12edab66-019e-40c3-9780-e31d751cd783.mp4"
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260923_184130_12edab66-019e-40c3-9780-e31d751cd783.mp4",
+   "tin": "whip"
   },
   {
    "src": "g52.png",
    "dur": 3.8,
-   "kb": "in",
-   "kb_zoom": 0.1
+   "depth": "push",
+   "tin": "flash"
   },
   {
    "src": "g53.png",
    "dur": 2.5,
-   "kb": "out",
-   "kb_zoom": 0.1
+   "depth": "pull",
+   "tin": "flash"
   },
   {
    "src": "n30.png",
    "dur": 3.4,
-   "kb": "in",
-   "kb_zoom": 0.1
+   "depth": "push"
   },
   {
    "src": "g43.png",
    "dur": 3.3,
-   "kb": "in",
-   "kb_zoom": 0.1
+   "depth": "pull",
+   "tin": "flash"
   },
   {
    "src": "g45.png",
    "dur": 2.7,
-   "kb": "out",
-   "kb_zoom": 0.1
+   "depth": "pull",
+   "tin": "whip"
   },
   {
    "src": "s12.png",
    "dur": 2.6,
-   "kb": "in",
-   "kb_zoom": 0.1
+   "depth": "left"
   },
   {
    "src": "bg_3d_logo.jpg",
    "dur": 3.6,
    "kb": "in",
-   "kb_zoom": 0.1
+   "kb_zoom": 0.1,
+   "tin": "flash"
   }
  ],
  "grade": {
-  "lut": "brand/bviro_look.cube"
+  "lut": "brand/bviro_look.cube",
+  "grain": 6
  },
  "layout": {
   "caption_top": 1000,
@@ -369,5 +365,8 @@
   "pad": false,
   "music": "music57.wav",
   "music_gain_db": -15
+ },
+ "transitions": {
+  "default": "zoom"
  }
 }

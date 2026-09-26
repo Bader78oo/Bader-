@@ -41,6 +41,9 @@ Reply to Bader in Gulf Arabic. Brand data: `brand/brand.json` (colors, tagline, 
    Call `media_upload` for the output **before** starting the command. Then `media_confirm`.
 7. **QA before delivery.** Run `scripts/lipsync_score.py clip.mp4 voice.mp3` on every talking clip (mouth-vs-voice correlation, lag, face drift, camera push-in). Look at frames yourself (contact sheet of 5–9 frames at 240 px, then full-res crops of any caption that looks off — downscaled Arabic can look garbled when it isn't). Check: text never covers the face (keep overlays in y≈700–1030 under a face), no two overlay blocks at once, lip-sync offset 0 ms (cross-correlate clip audio vs talk mp3), loudness ≈ −14 LUFS with voice (≈ −18 pad-only). Deliver via SendUserFile, or the `d2ol7oe51mr4n9.cloudfront.net/...` link with phone download steps.
 
+## Motion without new credits
+Stills move for free: `depth` (2.5D parallax) per shot + `transitions` + `grade.grain` (see `references/templates.md`). Spend credits only on 4–6 hero shots as real video — cheapest image-to-video seen: `seedance_2_0_mini` 4 s 480p no audio = 2 credits (720p = 4).
+
 ## Editing without new credits
 Text, timing, icons, name card, colors, LUT, music: edit the storyboard and re-run `build.py` (`--reuse-overlay` if only shots/audio changed). Only regenerate a clip when the picture itself is wrong — and quote the cost first.
 

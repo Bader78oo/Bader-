@@ -45,3 +45,6 @@ for stills-only reels: Bader presenting at a podium/exhibition booth, Bader with
 - `hook` may be a list: `[{s,e,text,sub,top,style}]`; `style: "loop"` = teal open-loop panel.
 - `end_card.contacts`: `[{icon,text}]` pills under the tagline (e.g. camera `@Bviro.1`, message-circle WhatsApp, phone).
 - `scripts/music.py out.wav --dur D --sections 0,a,b,...` builds a section-aware music bed; set `audio.music` + `music_gain_db` (-15 under voice) and `pad: false`.
+- **Depth parallax (free, CPU):** a still shot with `"depth": "push"|"pull"|"left"|"right"|"rise"|"fall"` (+ optional `depth_amount`) is rendered by `scripts/parallax.py` (Depth Anything V2 Small ONNX) as a 2.5D camera move; `depth_default` applies it to every still. ~20 s per shot; cached as `px_*.mp4`.
+- **Transitions:** `"transitions": {"default": "zoom"}`; per shot `"tin": "zoom"|"whip"|"flash"|"cut"` = the cut INTO that shot (`scripts/transitions.py`). Use flash on section changes and open loops, whip for fast lists.
+- `grade.grain`: film grain strength (6 = subtle). Full-quality renders get big (~110 MB for 57 s); make an Instagram copy at ~3.8 Mb/s (`-b:v 3800k -maxrate 4500k`) — SendUserFile caps at 30 MB.

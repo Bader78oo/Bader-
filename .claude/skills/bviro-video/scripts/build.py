@@ -71,8 +71,18 @@ with open("list.txt", "w") as lst:
         is_still = s["src"].lower().endswith((".png", ".jpg", ".jpeg", ".webp"))
         # zoom > 1 = digital punch-in (center crop): a cheap "second camera angle" on the same clip
         punch = f"crop=iw/{s['zoom']}:ih/{s['zoom']}," if s.get("zoom", 1) > 1 else ""
-        src_args = ["-loop", 1, "-i", s["src"]] if is_still else ["-ss", s["in"], "-i", s["src"]]
-        chain = (still_vf(s) if is_still else "") + punch + vf
+        move = s.get("depth", sb.get("depth_default")) if is_still else None
+        if move:  # 2.5D depth-parallax camera move instead of a flat Ken Burns (scripts/parallax.py)
+            px = f"px_{os.path.splitext(s['src'])[0]}_{move}_{s['dur']}_{s.get('depth_amount', 1)}.mp4"
+            if not os.path.exists(px):
+                subprocess.run([sys.executable, os.path.join(HERE, "parallax.py"), s["src"], px, "--dur", str(s["dur"] + 0.2),
+                                "--move", move, "--amount", str(s.get("depth_amount", 1)), "--size", f"{W}x{H}",
+                                "--fps", str(FPS)], check=True)
+            src_args, chain = ["-i", px], punch + vf
+        elif is_still:
+            src_args, chain = ["-loop", 1, "-i", s["src"]], still_vf(s) + punch + vf
+        else:
+            src_args, chain = ["-ss", s["in"], "-i", s["src"]], punch + vf
         ff(*src_args, "-t", s["dur"], "-an",
            "-vf", f"{chain},tpad=stop_mode=clone:stop_duration=3,trim=duration={s['dur']},setpts=PTS-STARTPTS",
            "-c:v", "libx264", "-preset", "veryfast", "-crf", 14, "-pix_fmt", "yuv420p", f"seg{i}.mp4")
@@ -81,6 +91,13 @@ with open("list.txt", "w") as lst:
 cuts = cuts[:-1]
 ff("-f", "concat", "-safe", 0, "-i", "list.txt", "-c", "copy", "base.mp4")
 print(f"shots total {t:.2f}s (storyboard duration {DUR}s); cuts at {cuts}")
+# animated transitions: sb.transitions = {"default": "zoom"|"whip"|"flash"|"cut"}; a shot's "tin" overrides the cut INTO it
+tr = sb.get("transitions")
+if tr:
+    styles = [[c, sb["shots"][j + 1].get("tin", tr.get("default", "zoom"))] for j, c in enumerate(cuts)]
+    subprocess.run([sys.executable, os.path.join(HERE, "transitions.py"), "base.mp4", "base_t.mp4", "--fps", str(FPS),
+                    "--cuts", json.dumps(styles)], check=True)
+    os.replace("base_t.mp4", "base.mp4")
 if abs(t - DUR) > 0.05:
     print(f"WARNING: shots sum to {t:.2f}s but duration is {DUR}s — last frame will be frozen or cut")
 
@@ -118,6 +135,8 @@ ff(*inputs, "-filter_complex", fc, "-map", "[a]", "-ar", 48000, "-ac", 2, "mix.w
 
 # 5. composite + mux ----------------------------------------------------------------
 vig = "vignette=PI/5," if g.get("vignette", True) else ""
+if g.get("grain"):  # fine moving film grain glues AI stills and real clips together
+    vig += f"noise=c0s={g['grain']}:c0f=t+u,"
 ff("-i", "base.mp4", "-framerate", FPS, "-i", "ov/%04d.png", "-i", "mix.wav",
    "-filter_complex", f"[0:v]{vig}null[b];[b][1:v]overlay=0:0:format=auto,format=yuv420p[v]",
    "-map", "[v]", "-map", "2:a", "-t", DUR, "-c:v", "libx264", "-preset", "slow", "-crf", 17,
