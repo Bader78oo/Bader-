@@ -23,6 +23,8 @@ ap.add_argument("--blur", type=float, default=7); ap.add_argument("--wrap", type
 ap.add_argument("--match", type=float, default=0.35); ap.add_argument("--shadow", type=float, default=0.35)
 ap.add_argument("--push", type=float, default=0.04); ap.add_argument("--key", type=float, default=1.06)
 ap.add_argument("--fps", type=int, default=30)
+ap.add_argument("--erode", type=int, default=2, help="shrink the matte by N px (removes the old wall's halo)")
+ap.add_argument("--decontam", type=float, default=1.0, help="replace edge colours with the subject's inner colours (spill removal)")
 a = ap.parse_args()
 
 W, H = map(int, subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
@@ -56,7 +58,16 @@ while True:
     if len(buf) < size: break
     f = np.frombuffer(buf, np.uint8).reshape(H, W, 4)
     fg = f[..., :3].astype(np.float32); al = f[..., 3].astype(np.float32) / 255
-    al = cv2.GaussianBlur(al, (0, 0), 0.8)                   # soften the matte edge a hair
+    if a.erode > 0:                                         # tighten the matte: drop the ring of old-wall pixels
+        al = cv2.erode(al, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * a.erode + 1, 2 * a.erode + 1)))
+    al = cv2.GaussianBlur(al, (0, 0), 1.0)                   # soften the matte edge a hair
+    if a.decontam > 0:                                      # edge colour decontamination (pull inner colours outward)
+        core = (al > 0.97).astype(np.float32)
+        core = cv2.erode(core, np.ones((5, 5), np.uint8))
+        num = cv2.GaussianBlur(fg * core[..., None], (0, 0), 6); den = cv2.GaussianBlur(core, (0, 0), 6)[..., None]
+        inner = num / np.maximum(den, 1e-3)
+        band = (np.clip((0.97 - al) / 0.97, 0, 1) * (den[..., 0] > 0.02) * a.decontam)[..., None]
+        fg = fg * (1 - band) + inner * band
     bg = bg_at(i)
 
     if shift is None:                                       # subject vs background colour statistics

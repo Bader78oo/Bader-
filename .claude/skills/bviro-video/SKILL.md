@@ -63,3 +63,10 @@ Environment rules (learned 2026-09-26):
 - Rendering uses the preinstalled Playwright headless shell via `HYPERFRAMES_BROWSER_PATH` (set by the hook) — no `browser ensure`.
 - Never put `dir="rtl"` on `<html>` (renders a blank video); put `direction: rtl` on text elements. Run `hyperframes lint` before `render`.
 - A 3 s 1080×1920 title renders in ~9 s on CPU.
+
+## Replace the background of Bader's real video (free)
+1. `ffmpeg -i src.mp4 -vf fps=30 src30.mp4` then `hyperframes remove-background src30.mp4 -o fg.mov --device cpu` (~0.6 s/frame; a plain wall behind him matts cleanly).
+2. Background plate: `gpt_image_2_5` medium **2k** 9:16 (1 credit), "empty, eye-level seated view, understated office, soft daylight, no people".
+3. `python3 scripts/composite.py fg.mov office.png comp.mp4 --key 1.0` — erodes the matte + decontaminates edges (kills the white-wall halo), colour-matches, light-wraps, soft shadow, lens defocus, slow push.
+4. Voice from the phone is quiet: run the voice-polish chain with `acompressor=threshold=-30dB:...:makeup=6,loudnorm=I=-16`; keep the original timing (lip-sync), no tightening.
+5. Edit `comp.mp4` like any clip; cut to B-roll mid-sentence so he stays ≤ 7 s on screen. Example: `storyboards/intro-office.json`.
