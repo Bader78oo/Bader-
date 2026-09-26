@@ -33,6 +33,7 @@ corr from mouth-gap vs loudness is noisy even on real footage — compare agains
 
 ## Gotchas
 - **Seedance Mini**: runs 2 video jobs at a time; first submits often get the "IN THE DARK" preset recommendation — resubmit with `declined_preset_id` 24bae836-2c4a-48e0-89b6-49fcc0b21612. Prompt only the motion and say "clothing stays exactly the same"; ~2–3 min per clip.
+- **Background replace + relight on real footage (2026-09-26 test):** `flux_3_video_edit` (1 credit/s, max 15 s, outputs 704×1248 24 fps, keeps timing/lip-sync; lipsync lag identical to source) gives the most natural result — say "from the very first frame to the last frame" or it may leave the first seconds unedited. `kling_video_edit` failed 4/4 (std and pro, 9.9 s input), no charge.
 - **Concurrency**: Starter caps at 4 concurrent jobs total (images count too) and in practice runs ~2 video jobs at once; extra submits fail with 429 `rate_limit_reached`. Queue them.
 - **Preset interception**: `generate_video_batch` may answer "Preset X was recommended" instead of submitting — resubmit with `declined_preset_id`.
 - **Aspect**: `soul_2` has no 4:5 (uses 3:4). Kling/Wan take 9:16. A 3:4 start image gets cropped to 9:16 — generate 9:16 stills for video.

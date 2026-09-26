@@ -23,6 +23,9 @@ ap.add_argument("--blur", type=float, default=7); ap.add_argument("--wrap", type
 ap.add_argument("--match", type=float, default=0.35); ap.add_argument("--shadow", type=float, default=0.35)
 ap.add_argument("--push", type=float, default=0.04); ap.add_argument("--key", type=float, default=1.06)
 ap.add_argument("--fps", type=int, default=30)
+ap.add_argument("--side", type=float, default=0.0,
+                help="directional relight: + brightens the frame-right side of the subject (window light from the right), - the left")
+ap.add_argument("--warm", type=float, default=0.0, help="warm (+) / cool (-) tint on the subject, in Lab b units")
 ap.add_argument("--erode", type=int, default=2, help="shrink the matte by N px (removes the old wall's halo)")
 ap.add_argument("--decontam", type=float, default=1.0, help="replace edge colours with the subject's inner colours (spill removal)")
 a = ap.parse_args()
@@ -76,7 +79,10 @@ while True:
         shift = (bg_lab[..., 1:].reshape(-1, 2).mean(0) - lab[m][:, 1:].mean(0)) * a.match
         lshift = (bg_lab[..., 0].mean() - lab[m][:, 0].mean()) * a.match * 0.25
     lab = cv2.cvtColor(np.clip(fg * a.key, 0, 255).astype(np.uint8), cv2.COLOR_BGR2LAB).astype(np.float32)
-    lab[..., 1:] += shift; lab[..., 0] += lshift
+    lab[..., 1:] += shift; lab[..., 0] += lshift; lab[..., 2] += a.warm
+    if a.side:                                              # soft directional key: light falls off across the subject
+        ramp = np.linspace(-1, 1, W, dtype=np.float32)[None, :] * a.side
+        lab[..., 0] *= 1 + ramp * 0.5
     fg = cv2.cvtColor(np.clip(lab, 0, 255).astype(np.uint8), cv2.COLOR_LAB2BGR).astype(np.float32)
 
     if a.wrap > 0:                                          # background light wrapping around the edges
