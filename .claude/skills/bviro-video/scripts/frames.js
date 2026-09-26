@@ -19,6 +19,7 @@ const fs = require('fs');
   (sb.captions || []).forEach(c => c.icon && icons.add(c.icon));
   ((sb.checklist || {}).items || []).forEach(c => icons.add(c.icon));
   if (sb.cta && sb.cta.icon) icons.add(sb.cta.icon);
+  ((sb.end_card || {}).contacts || []).forEach(c => icons.add(c.icon));
   await p.evaluate(async names => {
     await Promise.all(names.map(n => new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = 'icons/' + n + '.svg'; })));
   }, [...icons]);

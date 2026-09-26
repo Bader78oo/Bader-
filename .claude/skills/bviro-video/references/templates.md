@@ -39,3 +39,9 @@ Lighting vocabulary: soft window key, violet side light, turquoise rim/back ligh
 ## Soul stills (soul_2, ~1 credit, 9:16)
 Medium shot for talking (hands visible, VR lab behind, violet side light) · close 3/4 portrait (turquoise rim, dark holographic bokeh) ·
 for stills-only reels: Bader presenting at a podium/exhibition booth, Bader with students wearing headsets.
+
+
+## Added 2026-09-26
+- `hook` may be a list: `[{s,e,text,sub,top,style}]`; `style: "loop"` = teal open-loop panel.
+- `end_card.contacts`: `[{icon,text}]` pills under the tagline (e.g. camera `@Bviro.1`, message-circle WhatsApp, phone).
+- `scripts/music.py out.wav --dur D --sections 0,a,b,...` builds a section-aware music bed; set `audio.music` + `music_gain_db` (-15 under voice) and `pad: false`.

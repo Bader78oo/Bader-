@@ -33,7 +33,8 @@ html,body{margin:0;background:transparent;overflow:hidden;font-family:"Cairo",sa
 #stk{right:40px;background:var(--c);color:var(--d);font-weight:900;font-size:30px;padding:8px 20px;border-radius:40px;box-shadow:0 6px 18px rgba(0,0,0,.35);direction:rtl}
 #hook{left:40px;right:40px;text-align:center;direction:rtl}
 #hook .h{display:inline-block;font-size:62px;font-weight:900;line-height:1.2;color:#fff;background:linear-gradient(135deg,var(--v),var(--v2));padding:10px 28px 16px;border-radius:24px;box-shadow:0 12px 36px rgba(127,0,255,.5)}
-#hook .hs{margin-top:14px;font-size:30px;font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.7)}
+#hook .hs{display:inline-block;margin-top:14px;font-size:44px;font-weight:900;color:#fff;background:rgba(20,0,45,.7);padding:4px 24px 10px;border-radius:18px;text-shadow:0 2px 12px rgba(0,0,0,.7)}
+#hook .hs:empty{display:none}
 #cta{left:0;right:0;display:flex;justify-content:center}
 #cta .b{display:flex;align-items:center;gap:14px;direction:rtl;background:var(--c);color:var(--d);font-size:40px;font-weight:900;padding:14px 34px;border-radius:60px;box-shadow:0 10px 30px rgba(1,206,201,.45)}
 #cta .b img{width:40px;height:40px}
@@ -44,8 +45,14 @@ html,body{margin:0;background:transparent;overflow:hidden;font-family:"Cairo",sa
 #end .row{display:flex;align-items:center;gap:26px;direction:ltr}
 #end .row img.e{height:92px}#end .row img.a{height:100px}
 #end .bar{width:4px;height:88px;background:var(--c);border-radius:2px}
-#end .tag{font-size:54px;font-weight:900;color:#fff}
+#end .tag{font-size:54px;font-weight:900;color:#fff;direction:ltr}
 #end .sub{font-size:28px;font-weight:600;color:#9ff3ef}
+#hook.loop .h{background:linear-gradient(135deg,var(--c),#00B9B3);color:var(--d);box-shadow:0 12px 36px rgba(1,206,201,.45)}
+#end .ct{display:flex;flex-direction:column;gap:14px;margin-top:6px}
+#end .ci{display:flex;align-items:center;gap:14px;direction:ltr;background:rgba(255,255,255,.1);border:2px solid rgba(1,206,201,.5);border-radius:40px;padding:8px 26px 8px 12px}
+#end .ci .ib{width:48px;height:48px;border-radius:50%;background:var(--c);display:flex;align-items:center;justify-content:center}
+#end .ci .ib img{width:28px;height:28px}
+#end .ci span{font-size:36px;font-weight:800;color:#fff;letter-spacing:1px}
 </style></head>
 <body>
 <div id="wm" class="abs"><img class="s" src="brand/logo_symbol.png"><img class="e" src="brand/logo_wordmark_en.png"></div>
@@ -58,7 +65,7 @@ html,body{margin:0;background:transparent;overflow:hidden;font-family:"Cairo",sa
 <div id="end" class="abs">
   <img class="sym" src="brand/logo_symbol_white.png">
   <div class="row"><img class="e" src="brand/logo_wordmark_en.png"><div class="bar"></div><img class="a" src="brand/logo_wordmark_ar.png"></div>
-  <div class="tag" id="end_tag"></div><div class="sub" id="end_sub"></div>
+  <div class="tag" id="end_tag"></div><div class="sub" id="end_sub"></div><div class="ct" id="end_ct"></div>
 </div>
 <script>
 const SB = window.SB, W = window.WORDS, L = SB.layout || {};
@@ -69,12 +76,14 @@ document.getElementById('chk').style.top = (L.checklist_top ?? 760) + 'px';
 document.getElementById('stk').style.top = (L.sticker_top ?? 230) + 'px';
 document.getElementById('hook').style.top = (L.hook_top ?? 760) + 'px';
 document.getElementById('cta').style.top = (L.cta_top ?? 1030) + 'px';
-const NC = SB.name_card, CK = SB.checklist, EC = SB.end_card, HK = SB.hook, CT = SB.cta;
-if (HK) { document.getElementById('hook_t').textContent = HK.text; document.getElementById('hook_s').textContent = HK.sub || ''; }
+const NC = SB.name_card, CK = SB.checklist, EC = SB.end_card, CT = SB.cta;
+// hook: one object or a list (hook, open loops, key lines); each may set top and style ("loop" = teal)
+const HKS = Array.isArray(SB.hook) ? SB.hook : (SB.hook ? [SB.hook] : []);
 if (CT) { document.getElementById('cta_t').textContent = CT.text; const ci = document.getElementById('cta_i');
           if (CT.icon) ci.src = 'icons/' + CT.icon + '.svg'; else ci.style.display = 'none'; }
 if (NC) { document.getElementById('nm_n').textContent = NC.name; document.getElementById('nm_r').textContent = NC.role; }
-if (EC) { document.getElementById('end_tag').textContent = EC.tag || ''; document.getElementById('end_sub').textContent = EC.sub || ''; }
+if (EC) { document.getElementById('end_tag').textContent = EC.tag || ''; document.getElementById('end_sub').textContent = EC.sub || '';
+          document.getElementById('end_ct').innerHTML = (EC.contacts || []).map(c => `<div class="ci"><div class="ib"><img src="icons/${c.icon}.svg"></div><span>${c.text}</span></div>`).join(''); }
 const ease = x => 1 - Math.pow(1 - Math.min(Math.max(x, 0), 1), 3);
 const inWin = (o, t) => o && t >= o.s && t < o.e;
 
@@ -117,8 +126,13 @@ function render(t) {
     }).join('');
   } else chk.innerHTML = '';
 
-  const hk = document.getElementById('hook');
-  if (inWin(HK, t)) { const k = ease((t - HK.s) / 0.3); hk.style.opacity = Math.min(k, (HK.e - t) / 0.2); hk.style.transform = `translateY(${(1 - k) * -60}px) scale(${0.9 + 0.1 * k})`; }
+  const hk = document.getElementById('hook'), HK = HKS.find(x => inWin(x, t));
+  if (HK && hk.dataset.cur !== String(HKS.indexOf(HK))) {
+    hk.dataset.cur = HKS.indexOf(HK); hk.className = 'abs' + (HK.style ? ' ' + HK.style : '');
+    hk.style.top = (HK.top ?? L.hook_top ?? 760) + 'px';
+    document.getElementById('hook_t').textContent = HK.text; document.getElementById('hook_s').textContent = HK.sub || '';
+  }
+  if (HK) { const k = ease((t - HK.s) / 0.3); hk.style.opacity = Math.min(k, (HK.e - t) / 0.2); hk.style.transform = `translateY(${(1 - k) * -60}px) scale(${0.9 + 0.1 * k})`; }
   else hk.style.opacity = 0;
 
   const ct = document.getElementById('cta');

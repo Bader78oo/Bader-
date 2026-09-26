@@ -4,6 +4,8 @@
 | Generation | Credits |
 |---|---|
 | `soul_2` still (2k) | 0.12 (shown as "1" in get_cost; balance confirms 0.12) |
+| `gpt_image_2_5` medium 1k (752×1344) / 2k / high 2k | 0.5 / 1 / 2.75 |
+| `nano_banana_pro` 1k or 2k · `nano_banana_2` 1k | 2 · 1.5 |
 | `kling3_0` std, 5 s, sound off, 9:16 | 6.25 |
 | `kling3_0` std, 10 s, sound on | 17.5 |
 | `kling3_0` pro | blocked — needs Plus |

@@ -29,6 +29,7 @@ icons = {"circle-check"} | {c["icon"] for c in sb.get("captions", []) if c.get("
 icons |= {c["icon"] for c in sb.get("checklist", {}).get("items", [])}
 if sb.get("cta", {}).get("icon"):
     icons.add(sb["cta"]["icon"])
+icons |= {c["icon"] for c in sb.get("end_card", {}).get("contacts", [])}
 os.makedirs("icons", exist_ok=True)
 for n in icons:  # vendored set first (works offline); fetch anything else from the CDN
     if not os.path.exists(f"icons/{n}.svg"):
