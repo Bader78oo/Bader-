@@ -71,6 +71,8 @@ with open("list.txt", "w") as lst:
         is_still = s["src"].lower().endswith((".png", ".jpg", ".jpeg", ".webp"))
         # zoom > 1 = digital punch-in (center crop): a cheap "second camera angle" on the same clip
         punch = f"crop=iw/{s['zoom']}:ih/{s['zoom']}," if s.get("zoom", 1) > 1 else ""
+        if s.get("flip"):  # mirror the shot: fixes a wrong-hand handshake / gesture for free
+            punch = "hflip," + punch
         move = s.get("depth", sb.get("depth_default")) if is_still else None
         if move:  # 2.5D depth-parallax camera move instead of a flat Ken Burns (scripts/parallax.py)
             px = f"px_{os.path.splitext(s['src'])[0]}_{move}_{s['dur']}_{s.get('depth_amount', 1)}.mp4"

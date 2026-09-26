@@ -83,7 +83,8 @@
    "dur": 2.9,
    "tin": "flash",
    "in": 0.9,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185021_7e49d168-a513-421d-9f73-9d1a0e77a22a.mp4"
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185021_7e49d168-a513-421d-9f73-9d1a0e77a22a.mp4",
+   "flip": true
   },
   {
    "src": "v76.mp4",
