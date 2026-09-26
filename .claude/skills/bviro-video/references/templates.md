@@ -48,3 +48,6 @@ for stills-only reels: Bader presenting at a podium/exhibition booth, Bader with
 - **Depth parallax (free, CPU):** a still shot with `"depth": "push"|"pull"|"left"|"right"|"rise"|"fall"` (+ optional `depth_amount`) is rendered by `scripts/parallax.py` (Depth Anything V2 Small ONNX) as a 2.5D camera move; `depth_default` applies it to every still. ~20 s per shot; cached as `px_*.mp4`.
 - **Transitions:** `"transitions": {"default": "zoom"}`; per shot `"tin": "zoom"|"whip"|"flash"|"cut"` = the cut INTO that shot (`scripts/transitions.py`). Use flash on section changes and open loops, whip for fast lists.
 - `grade.grain`: film grain strength (6 = subtle). Full-quality renders get big (~110 MB for 57 s); make an Instagram copy at ~3.8 Mb/s (`-b:v 3800k -maxrate 4500k`) — SendUserFile caps at 30 MB.
+- **Sound design:** `audio.sfx` = `[{t, type, gain?, len?}]` rendered by `scripts/sfx.py` (impact, riser ending at t, whoosh, ding, shimmer, pop); `audio.sfx_gain_db` (-5). Recipe: impact on the hook, riser+impact into each open loop, pop on stickers, ding per feature card, shimmer on the brand name and end card.
+- `audio.duck: true` lowers the music under the voice (sidechain) and lets it swell in pauses; use `music_gain_db` ≈ -13 with ducking.
+- Finished example with all of it: `storyboards/realestate-vr.json` (39 s, 4 new GPT-Image stills + reused ones).

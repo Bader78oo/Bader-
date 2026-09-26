@@ -104,7 +104,8 @@ if abs(t - DUR) > 0.05:
 # 4. sound: voice + ambient pad + whoosh per cut + impact on end card + optional music
 au = sb.get("audio", {})
 vo_src = ["-i", sb["voiceover"]] if sb.get("voiceover") else ["-f", "lavfi", "-i", f"anullsrc=r=48000:cl=stereo:d={DUR}"]
-inputs, chains, labels = vo_src, ["[0:a]volume=1.0[vo]"], ["[vo]"]
+duck = bool(au.get("duck") and sb.get("voiceover") and au.get("music"))
+inputs, chains, labels = vo_src, ["[0:a]volume=1.0" + (",asplit=2[vo][vosc]" if duck else "[vo]")], ["[vo]"]
 k = 1  # next ffmpeg input index
 if au.get("pad", True):
     pad_labels = []
@@ -125,7 +126,14 @@ if au.get("impact_at_end", True) and sb.get("end_card"):
     chains.append(f"[{k}:a]afade=t=out:st=0.05:d=1.1,volume=0.5,adelay={d}|{d}[imp]"); labels.append("[imp]"); k += 1
 if au.get("music"):
     inputs += ["-stream_loop", "-1", "-i", au["music"]]
-    chains.append(f"[{k}:a]volume={au.get('music_gain_db', -20)}dB,afade=t=out:st={DUR - 1.5}:d=1.5[mus]"); labels.append("[mus]"); k += 1
+    mus = f"[{k}:a]volume={au.get('music_gain_db', -20)}dB,afade=t=out:st={DUR - 1.5}:d=1.5"
+    # duck: music dips ~6 dB under the voice and swells back in the pauses
+    chains.append(mus + ("[mus0];[mus0][vosc]sidechaincompress=threshold=0.04:ratio=5:attack=15:release=350[mus]" if duck else "[mus]"))
+    labels.append("[mus]"); k += 1
+if au.get("sfx"):  # designed sound effects (scripts/sfx.py): impacts, risers, dings, shimmer, pops
+    subprocess.run([sys.executable, os.path.join(HERE, "sfx.py"), "sfx.wav", "--dur", str(DUR), "--events", json.dumps(au["sfx"])], check=True)
+    inputs += ["-i", "sfx.wav"]
+    chains.append(f"[{k}:a]volume={au.get('sfx_gain_db', -6)}dB[sfx]"); labels.append("[sfx]"); k += 1
 # Instagram-level loudness when there's voice or music; a pad-only bed stays quieter (a drone at -14 LUFS is tiring)
 target = -14 if (sb.get("voiceover") or au.get("music")) else -22
 fc = ";".join(chains) + ";" + "".join(labels) + \

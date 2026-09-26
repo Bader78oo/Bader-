@@ -23,6 +23,7 @@ Reply to Bader in Gulf Arabic. Brand data: `brand/brand.json` (colors, tagline, 
    `python3 scripts/transcribe.py voice.mp3 script.txt` → `words.json` (pass the script to fix brand spelling)
    `python3 scripts/tighten_vo.py voice.mp3 words.json --tempo 1.05 --talk A:<i>-<j> --talk B:<i>-<j>`
    → `vo.mp3`, `words_final.json`, `talk_A.mp3`… and the exact start time of each talk clip.
+   **Voice polish (free, before tightening):** `ffmpeg -i voice.wav -af "highpass=f=75,afftdn=nr=8:nf=-55,equalizer=f=120:t=q:w=1:g=1.5,equalizer=f=280:t=q:w=1.2:g=-2.5,equalizer=f=3200:t=q:w=1.4:g=2.5,highshelf=f=9000:g=2,deesser=i=0.35,acompressor=threshold=-22dB:ratio=3:attack=6:release=90:makeup=3,alimiter=limit=0.95" vo_enh.wav` (clarity, warmth, less mud/sibilance), then run tighten_vo on vo_enh.wav.
    Never speed speech above ~1.1×; shorten the script or accept a longer reel instead.
    **Audio guard (a silent clip once burned 15 credits):** before uploading any audio that drives lip-sync, check `ffmpeg -i x.mp3 -af volumedetect -f null -` (mean must be above −35 dB) and re-transcribe it to confirm the words. When cutting with fades, put `-ss/-t` BEFORE `-i` — with `-ss` after `-i`, `afade=...:st=` uses the original timestamps and silences the whole cut.
 3. **Retouch the start still (free, local)** when Bader wants it: `scripts/retouch.py in.png out.png --slim 0.07 --skin 0.5 --eyes 0.9` (his preference 2026-09-24: slimmer cheeks, light skin smoothing, no crow's feet; centre of face protected). The video model keeps the start frame's face.

@@ -1,0 +1,339 @@
+{
+ "width": 1080,
+ "height": 1920,
+ "fps": 30,
+ "duration": 39,
+ "output": "bviro_realestate.mp4",
+ "voiceover": "vo.mp3",
+ "words": "words_final.json",
+ "shots": [
+  {
+   "src": "r61.png",
+   "dur": 3.2,
+   "depth": "push"
+  },
+  {
+   "src": "g44.png",
+   "dur": 3.6,
+   "depth": "right",
+   "tin": "flash"
+  },
+  {
+   "src": "g47.png",
+   "dur": 2.1,
+   "depth": "left",
+   "tin": "zoom"
+  },
+  {
+   "src": "r64.png",
+   "dur": 1.5,
+   "depth": "push",
+   "tin": "whip"
+  },
+  {
+   "src": "r62.png",
+   "dur": 2.0,
+   "depth": "push",
+   "tin": "whip"
+  },
+  {
+   "src": "g41.png",
+   "dur": 3.4,
+   "depth": "push",
+   "tin": "zoom"
+  },
+  {
+   "src": "g43.png",
+   "dur": 1.6,
+   "depth": "pull",
+   "tin": "flash"
+  },
+  {
+   "src": "r63.png",
+   "dur": 2.2,
+   "depth": "push",
+   "tin": "flash"
+  },
+  {
+   "src": "g48.png",
+   "dur": 2.2,
+   "depth": "left",
+   "tin": "whip"
+  },
+  {
+   "src": "g51.png",
+   "dur": 2.4,
+   "depth": "right",
+   "tin": "whip"
+  },
+  {
+   "src": "g44.png",
+   "dur": 0.9,
+   "depth": "pull",
+   "zoom": 1.3,
+   "tin": "flash"
+  },
+  {
+   "src": "g52.png",
+   "dur": 2.9,
+   "depth": "push",
+   "tin": "flash"
+  },
+  {
+   "src": "r64.png",
+   "dur": 1.3,
+   "depth": "pull",
+   "tin": "zoom"
+  },
+  {
+   "src": "s2.png",
+   "dur": 3.6,
+   "depth": "push",
+   "tin": "flash"
+  },
+  {
+   "src": "r61.png",
+   "dur": 2.5,
+   "depth": "pull",
+   "tin": "zoom"
+  },
+  {
+   "src": "bg_3d_logo.jpg",
+   "dur": 3.6,
+   "kb": "in",
+   "tin": "flash"
+  }
+ ],
+ "transitions": {
+  "default": "zoom"
+ },
+ "grade": {
+  "lut": "brand/bviro_look.cube",
+  "grain": 5
+ },
+ "layout": {
+  "caption_top": 1000,
+  "checklist_top": 1060,
+  "sticker_top": 240
+ },
+ "hook": [
+  {
+   "s": 0.15,
+   "e": 3.15,
+   "text": "مشروعك ما انبنى…",
+   "sub": "وعميلك ساكن فيه!",
+   "top": 1040
+  },
+  {
+   "s": 15.86,
+   "e": 17.4,
+   "text": "بس هذا ما هو كل شي…",
+   "style": "loop",
+   "top": 900
+  },
+  {
+   "s": 24.3,
+   "e": 25.05,
+   "text": "والنتيجة؟",
+   "style": "loop",
+   "top": 900
+  }
+ ],
+ "captions": [
+  {
+   "s": 3.24,
+   "e": 6.8,
+   "from": 6,
+   "to": 11,
+   "icon": "view"
+  },
+  {
+   "s": 6.82,
+   "e": 8.9,
+   "from": 12,
+   "to": 16,
+   "icon": "glasses"
+  },
+  {
+   "s": 8.95,
+   "e": 10.38,
+   "from": 17,
+   "to": 18,
+   "icon": "scan-eye"
+  },
+  {
+   "s": 10.39,
+   "e": 12.45,
+   "from": 19,
+   "to": 23,
+   "icon": "sparkles"
+  },
+  {
+   "s": 12.47,
+   "e": 15.8,
+   "from": 24,
+   "to": 30,
+   "icon": "house"
+  },
+  {
+   "s": 17.46,
+   "e": 19.65,
+   "from": 36,
+   "to": 39,
+   "icon": "building-2"
+  },
+  {
+   "s": 19.68,
+   "e": 21.8,
+   "from": 40,
+   "to": 43,
+   "icon": "globe"
+  },
+  {
+   "s": 21.82,
+   "e": 24.25,
+   "from": 44,
+   "to": 47,
+   "icon": "phone"
+  },
+  {
+   "s": 29.31,
+   "e": 32.9,
+   "from": 57,
+   "to": 61,
+   "icon": "sparkles"
+  },
+  {
+   "s": 32.93,
+   "e": 34.0,
+   "from": 62,
+   "to": 64,
+   "icon": "house"
+  }
+ ],
+ "stickers": [
+  {
+   "s": 3.3,
+   "e": 8.9,
+   "text": "جولة افتراضية 360°"
+  },
+  {
+   "s": 17.5,
+   "e": 24.2,
+   "text": "للمطورين العقاريين"
+  }
+ ],
+ "checklist": {
+  "s": 25.05,
+  "e": 29.28,
+  "style": "info",
+  "items": [
+   {
+    "t": 25.1,
+    "icon": "zap",
+    "text": "قرار شراء أسرع"
+   },
+   {
+    "t": 26.9,
+    "icon": "shield-check",
+    "text": "ثقة أكبر"
+   },
+   {
+    "t": 28.0,
+    "icon": "trending-up",
+    "text": "مبيعات قبل التنفيذ"
+   }
+  ]
+ },
+ "cta": {
+  "s": 34.0,
+  "e": 35.38,
+  "text": "تواصل معنا الآن",
+  "icon": "phone"
+ },
+ "end_card": {
+  "s": 35.4,
+  "tag": "VISUALIZE. UNDERSTAND. SUCCEED.",
+  "sub": "خلّ عميلك يعيش مشروعك قبل ما ينبني",
+  "contacts": [
+   {
+    "icon": "camera",
+    "text": "@Bviro.1"
+   },
+   {
+    "icon": "message-circle",
+    "text": "WhatsApp  9694 6416"
+   },
+   {
+    "icon": "phone",
+    "text": "Call  7772 1144"
+   }
+  ]
+ },
+ "audio": {
+  "pad": false,
+  "music": "music.wav",
+  "music_gain_db": -13,
+  "duck": true,
+  "sfx_gain_db": -5,
+  "sfx": [
+   {
+    "t": 0.05,
+    "type": "impact"
+   },
+   {
+    "t": 3.3,
+    "type": "pop"
+   },
+   {
+    "t": 15.85,
+    "type": "riser",
+    "len": 1.4
+   },
+   {
+    "t": 15.86,
+    "type": "impact",
+    "gain": 0.8
+   },
+   {
+    "t": 17.5,
+    "type": "pop"
+   },
+   {
+    "t": 24.3,
+    "type": "riser",
+    "len": 1.0
+   },
+   {
+    "t": 24.3,
+    "type": "impact",
+    "gain": 0.7
+   },
+   {
+    "t": 25.1,
+    "type": "ding"
+   },
+   {
+    "t": 26.9,
+    "type": "ding"
+   },
+   {
+    "t": 28.0,
+    "type": "ding"
+   },
+   {
+    "t": 29.3,
+    "type": "shimmer"
+   },
+   {
+    "t": 34.0,
+    "type": "whoosh"
+   },
+   {
+    "t": 35.4,
+    "type": "shimmer",
+    "gain": 0.8
+   }
+  ]
+ }
+}
