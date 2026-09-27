@@ -17,7 +17,7 @@ html,body{margin:0;background:transparent;overflow:hidden;font-family:"Cairo",sa
 #cap .ic img{width:44px;height:44px;filter:invert(1)}
 #cap .line{font-weight:900;font-size:50px;line-height:1.25;color:#fff;text-align:center;text-shadow:0 3px 0 rgba(0,0,0,.35),0 0 24px rgba(0,0,0,.55);padding:6px 22px 10px;background:rgba(20,0,45,.55);border-radius:20px;backdrop-filter:blur(3px)}
 #cap .w{display:inline-block;margin:0 5px}
-#cap .w.on{color:var(--c);transform:scale(1.08)}
+#cap .w.on{color:var(--c)}
 #cap .w.off{opacity:0}
 #name{right:36px;display:flex;align-items:stretch;direction:rtl}
 #name .bar{width:8px;background:var(--c);border-radius:4px}
@@ -103,9 +103,12 @@ function render(t) {
     if (p.icon) document.getElementById('capic').src = 'icons/' + p.icon + '.svg';
     // word-synced (from/to index into WORDS) or a fixed line (text) that appears whole
     const ws = p.text ? p.text.split(' ').map(x => [p.s - 1, p.s - 1, x]) : W.slice(p.from, p.to + 1);
+    // kinetic words: each word lifts in, sharpens from a blur and settles as it is spoken
     document.getElementById('capline').innerHTML = ws.map(w => {
       const cls = t < w[0] - 0.02 ? 'off' : (t < w[1] ? 'on' : '');
-      return `<span class="w ${cls}">${w[2]}</span>`;
+      const k = ease((t - w[0] + 0.02) / 0.2);
+      const st = cls === 'off' ? '' : `transform:translateY(${(1 - k) * 26}px) scale(${(cls === 'on' ? 1.08 : 1) * (0.86 + 0.14 * k)});opacity:${k};filter:blur(${(1 - k) * 6}px)`;
+      return `<span class="w ${cls}" style="${st}">${w[2]}</span>`;
     }).join(' ');
     const k = ease((t - p.s) / 0.22);
     ic.style.opacity = k; ic.style.transform = `scale(${0.6 + 0.4 * k}) translateY(${(1 - k) * 30}px)`;
