@@ -3,28 +3,25 @@
  "height": 1920,
  "fps": 30,
  "duration": 57,
- "output": "bviro_oman_promo_v4.mp4",
+ "output": "bviro_oman_promo_v5.mp4",
  "voiceover": "vo.mp3",
  "words": "words_final.json",
  "shots": [
   {
    "src": "w101.mp4",
    "dur": 3.6,
-   "in": 0.2,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_084857_82687787-a52a-4603-ba6b-32845912ba05.mp4"
+   "in": 0.2
   },
   {
    "src": "w102.mp4",
    "dur": 3.3,
    "tin": "flash",
-   "in": 0.3,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_084858_43301ae0-7f1a-4288-96cd-657149218038.mp4"
+   "in": 0.3
   },
   {
    "src": "v72.mp4",
    "dur": 3.2,
-   "in": 0.4,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185022_be332970-11c2-4611-88fe-e6be8fdc1e76.mp4"
+   "in": 0.4
   },
   {
    "src": "s2.png",
@@ -36,34 +33,29 @@
    "src": "w103.mp4",
    "dur": 1.5,
    "tin": "whip",
-   "in": 0.5,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085051_0d8053f1-0bdc-430d-86c7-4a3c625aace0.mp4"
+   "in": 0.5
   },
   {
    "src": "w104.mp4",
    "dur": 2.6,
-   "in": 0.3,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085123_6125091d-84eb-4958-8f9b-2ca6bbd2e96c.mp4"
+   "in": 0.3
   },
   {
    "src": "v73.mp4",
    "dur": 3.7,
    "tin": "whip",
-   "in": 0.3,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185254_743e1446-de72-4e37-ae23-22197cdd2220.mp4"
+   "in": 0.3
   },
   {
    "src": "w105.mp4",
    "dur": 2.6,
-   "in": 0.5,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085321_f2883913-9914-418a-864e-0916ea42acc0.mp4"
+   "in": 0.5
   },
   {
    "src": "w106.mp4",
    "dur": 1.8,
    "tin": "flash",
-   "in": 0.5,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085321_aeb3d828-d4e0-4009-9ee3-d27551ad0204.mp4"
+   "in": 0.5
   },
   {
    "src": "c3.mp4",
@@ -81,21 +73,18 @@
   {
    "src": "w107.mp4",
    "dur": 2.9,
-   "in": 0.5,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085516_d1bb75f8-fee6-44f3-8177-d1c423274530.mp4"
+   "in": 0.5
   },
   {
    "src": "w108.mp4",
    "dur": 1.4,
    "tin": "whip",
-   "in": 0.8,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085607_238b8049-baf5-483c-9ad2-b69de88d98e4.mp4"
+   "in": 0.8
   },
   {
    "src": "w109.mp4",
    "dur": 2.2,
-   "in": 0.5,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085759_64731e66-b4a6-4075-aec9-a1f7f094300b.mp4"
+   "in": 0.5
   },
   {
    "src": "c4.mp4",
@@ -105,39 +94,34 @@
    "tin": "whip"
   },
   {
-   "src": "v75.mp4",
+   "src": "w121.mp4",
    "dur": 3.8,
    "tin": "flash",
-   "in": 0.2,
-   "flip": true,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185021_7e49d168-a513-421d-9f73-9d1a0e77a22a.mp4"
+   "in": 0.1,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_113918_11466931-6718-4718-be71-1870023a1748.mp4"
   },
   {
    "src": "w110.mp4",
    "dur": 2.5,
    "tin": "flash",
-   "in": 0.5,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085834_d3ba6e54-6e4a-41bc-898b-21d88e2ed053.mp4"
+   "in": 0.5
   },
   {
    "src": "w111.mp4",
    "dur": 3.4,
-   "in": 0.3,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_090005_f03b0451-593b-41d7-8a17-bb7ce31a223d.mp4"
+   "in": 0.3
   },
   {
    "src": "w102.mp4",
    "dur": 3.3,
    "tin": "flash",
-   "in": 0.6,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_084858_43301ae0-7f1a-4288-96cd-657149218038.mp4"
+   "in": 0.6
   },
   {
    "src": "w103.mp4",
    "dur": 2.7,
    "tin": "whip",
-   "in": 1.3,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085051_0d8053f1-0bdc-430d-86c7-4a3c625aace0.mp4"
+   "in": 1.3
   },
   {
    "src": "s12.png",
