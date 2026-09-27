@@ -3,25 +3,28 @@
  "height": 1920,
  "fps": 30,
  "duration": 57,
- "output": "bviro_oman_promo_v3.mp4",
+ "output": "bviro_oman_promo_v4.mp4",
  "voiceover": "vo.mp3",
  "words": "words_final.json",
  "shots": [
   {
-   "src": "g41.png",
+   "src": "w101.mp4",
    "dur": 3.6,
-   "depth": "push"
+   "in": 0.2,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_084857_82687787-a52a-4603-ba6b-32845912ba05.mp4"
   },
   {
-   "src": "g43.png",
+   "src": "w102.mp4",
    "dur": 3.3,
-   "depth": "push",
-   "tin": "flash"
+   "tin": "flash",
+   "in": 0.3,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_084858_43301ae0-7f1a-4288-96cd-657149218038.mp4"
   },
   {
-   "src": "g44.png",
+   "src": "v72.mp4",
    "dur": 3.2,
-   "depth": "right"
+   "in": 0.4,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185022_be332970-11c2-4611-88fe-e6be8fdc1e76.mp4"
   },
   {
    "src": "s2.png",
@@ -30,32 +33,37 @@
    "tin": "flash"
   },
   {
-   "src": "g45_fix.png",
+   "src": "w103.mp4",
    "dur": 1.5,
-   "depth": "push",
-   "tin": "whip"
+   "tin": "whip",
+   "in": 0.5,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085051_0d8053f1-0bdc-430d-86c7-4a3c625aace0.mp4"
   },
   {
-   "src": "g46.png",
+   "src": "w104.mp4",
    "dur": 2.6,
-   "depth": "push"
+   "in": 0.3,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085123_6125091d-84eb-4958-8f9b-2ca6bbd2e96c.mp4"
   },
   {
-   "src": "g47.png",
+   "src": "v73.mp4",
    "dur": 3.7,
-   "depth": "left",
-   "tin": "whip"
+   "tin": "whip",
+   "in": 0.3,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185254_743e1446-de72-4e37-ae23-22197cdd2220.mp4"
   },
   {
-   "src": "g48.png",
+   "src": "w105.mp4",
    "dur": 2.6,
-   "depth": "push"
+   "in": 0.5,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085321_f2883913-9914-418a-864e-0916ea42acc0.mp4"
   },
   {
-   "src": "n29.png",
+   "src": "w106.mp4",
    "dur": 1.8,
-   "depth": "pull",
-   "tin": "flash"
+   "tin": "flash",
+   "in": 0.5,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085321_aeb3d828-d4e0-4009-9ee3-d27551ad0204.mp4"
   },
   {
    "src": "c3.mp4",
@@ -71,20 +79,23 @@
    "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260923_184131_8997eaf1-9de8-4e93-8e2c-197f93901934.mp4"
   },
   {
-   "src": "g50.png",
+   "src": "w107.mp4",
    "dur": 2.9,
-   "depth": "push"
+   "in": 0.5,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085516_d1bb75f8-fee6-44f3-8177-d1c423274530.mp4"
   },
   {
-   "src": "g51.png",
+   "src": "w108.mp4",
    "dur": 1.4,
-   "depth": "right",
-   "tin": "whip"
+   "tin": "whip",
+   "in": 0.8,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085607_238b8049-baf5-483c-9ad2-b69de88d98e4.mp4"
   },
   {
-   "src": "g42.png",
+   "src": "w109.mp4",
    "dur": 2.2,
-   "depth": "left"
+   "in": 0.5,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085759_64731e66-b4a6-4075-aec9-a1f7f094300b.mp4"
   },
   {
    "src": "c4.mp4",
@@ -94,33 +105,39 @@
    "tin": "whip"
   },
   {
-   "src": "g52.png",
+   "src": "v75.mp4",
    "dur": 3.8,
-   "depth": "push",
-   "tin": "flash"
+   "tin": "flash",
+   "in": 0.2,
+   "flip": true,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185021_7e49d168-a513-421d-9f73-9d1a0e77a22a.mp4"
   },
   {
-   "src": "g53.png",
+   "src": "w110.mp4",
    "dur": 2.5,
-   "depth": "pull",
-   "tin": "flash"
+   "tin": "flash",
+   "in": 0.5,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085834_d3ba6e54-6e4a-41bc-898b-21d88e2ed053.mp4"
   },
   {
-   "src": "n30.png",
+   "src": "w111.mp4",
    "dur": 3.4,
-   "depth": "push"
+   "in": 0.3,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_090005_f03b0451-593b-41d7-8a17-bb7ce31a223d.mp4"
   },
   {
-   "src": "g43.png",
+   "src": "w102.mp4",
    "dur": 3.3,
-   "depth": "pull",
-   "tin": "flash"
+   "tin": "flash",
+   "in": 0.6,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_084858_43301ae0-7f1a-4288-96cd-657149218038.mp4"
   },
   {
-   "src": "g45_fix.png",
+   "src": "w103.mp4",
    "dur": 2.7,
-   "depth": "pull",
-   "tin": "whip"
+   "tin": "whip",
+   "in": 1.3,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_085051_0d8053f1-0bdc-430d-86c7-4a3c625aace0.mp4"
   },
   {
    "src": "s12.png",
@@ -364,7 +381,100 @@
  "audio": {
   "pad": false,
   "music": "music57.wav",
-  "music_gain_db": -15
+  "music_gain_db": -13,
+  "duck": true,
+  "sfx_gain_db": -5,
+  "sfx": [
+   {
+    "t": 0.05,
+    "type": "impact"
+   },
+   {
+    "t": 3.6,
+    "type": "whoosh",
+    "gain": 0.7
+   },
+   {
+    "t": 10.1,
+    "type": "impact",
+    "gain": 0.5
+   },
+   {
+    "t": 10.2,
+    "type": "pop"
+   },
+   {
+    "t": 21.85,
+    "type": "riser",
+    "len": 1.4
+   },
+   {
+    "t": 21.85,
+    "type": "impact",
+    "gain": 0.8
+   },
+   {
+    "t": 23.6,
+    "type": "impact",
+    "gain": 0.5
+   },
+   {
+    "t": 23.7,
+    "type": "pop"
+   },
+   {
+    "t": 26.5,
+    "type": "pop"
+   },
+   {
+    "t": 30.8,
+    "type": "pop"
+   },
+   {
+    "t": 35.1,
+    "type": "riser",
+    "len": 1.4
+   },
+   {
+    "t": 35.1,
+    "type": "impact",
+    "gain": 0.8
+   },
+   {
+    "t": 41.5,
+    "type": "ding"
+   },
+   {
+    "t": 43.2,
+    "type": "ding"
+   },
+   {
+    "t": 44.4,
+    "type": "ding"
+   },
+   {
+    "t": 45.45,
+    "type": "ding"
+   },
+   {
+    "t": 46.75,
+    "type": "ding"
+   },
+   {
+    "t": 48.1,
+    "type": "whoosh",
+    "gain": 0.7
+   },
+   {
+    "t": 51.6,
+    "type": "shimmer"
+   },
+   {
+    "t": 53.4,
+    "type": "shimmer",
+    "gain": 0.8
+   }
+  ]
  },
  "transitions": {
   "default": "zoom"
