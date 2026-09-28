@@ -3,106 +3,112 @@
  "height": 1920,
  "fps": 30,
  "duration": 39,
- "output": "bviro_realestate_v4.mp4",
+ "output": "bviro_realestate_v5.mp4",
  "voiceover": "vo.mp3",
  "words": "words_final.json",
  "shots": [
   {
-   "src": "v71.mp4",
+   "src": "x153.mp4",
    "dur": 3.2,
-   "in": 0.3
+   "in": 0.8,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260928_095848_5d8068d4-2517-4ab1-a558-dae2bd54e860.mp4"
   },
   {
-   "src": "v72.mp4",
+   "src": "k132.png",
    "dur": 3.6,
    "tin": "flash",
-   "in": 0.2
+   "depth": "push"
   },
   {
-   "src": "v73.mp4",
+   "src": "x152.mp4",
    "dur": 2.1,
    "tin": "zoom",
-   "in": 0.5
+   "in": 0.2,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260928_095613_4bc68b68-7672-4901-8a15-6e32db242d9f.mp4"
   },
   {
    "src": "v76.mp4",
    "dur": 1.5,
    "tin": "whip",
-   "in": 0.3
+   "in": 0.3,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185544_7f81f8c9-606b-4df6-a351-d628db42a1c0.mp4"
   },
   {
    "src": "r62.png",
    "dur": 2.0,
-   "depth": "push",
-   "tin": "whip"
+   "tin": "whip",
+   "depth": "push"
   },
   {
-   "src": "g41.png",
+   "src": "k134.png",
    "dur": 3.4,
-   "depth": "push",
-   "tin": "zoom"
+   "tin": "zoom",
+   "depth": "push"
   },
   {
-   "src": "g43.png",
+   "src": "k135.png",
    "dur": 1.6,
-   "depth": "pull",
-   "tin": "flash"
+   "tin": "flash",
+   "depth": "pull"
   },
   {
    "src": "v74.mp4",
    "dur": 2.2,
    "tin": "flash",
-   "in": 0.8
+   "in": 0.8,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185453_fb5b0c59-7891-46fd-a74a-dec09cb9b91f.mp4"
   },
   {
-   "src": "g48.png",
+   "src": "k136.png",
    "dur": 2.2,
-   "depth": "left",
-   "tin": "whip"
+   "tin": "whip",
+   "depth": "right"
   },
   {
-   "src": "g51.png",
+   "src": "k137.png",
    "dur": 2.4,
-   "depth": "right",
-   "tin": "whip"
+   "tin": "whip",
+   "depth": "left"
   },
   {
-   "src": "g44.png",
+   "src": "k138.png",
    "dur": 0.9,
-   "depth": "pull",
-   "zoom": 1.3,
-   "tin": "flash"
+   "tin": "flash",
+   "depth": "push"
   },
   {
-   "src": "w121.mp4",
+   "src": "x151.mp4",
    "dur": 2.9,
    "tin": "flash",
-   "in": 0.1,
-   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260927_113918_11466931-6718-4718-be71-1870023a1748.mp4"
+   "in": 0.2,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260928_095612_df8a56a2-1f73-45b4-85bb-322de0a9b3d8.mp4"
   },
   {
    "src": "v76.mp4",
    "dur": 1.3,
    "tin": "zoom",
-   "in": 2.5
+   "in": 2.5,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260926_185544_7f81f8c9-606b-4df6-a351-d628db42a1c0.mp4"
   },
   {
-   "src": "s2.png",
+   "src": "x154.mp4",
    "dur": 3.6,
-   "depth": "push",
-   "tin": "flash"
+   "tin": "flash",
+   "in": 0.3,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260928_095928_aaf8ce44-14ca-4b27-81e0-2c64ec224e15.mp4"
   },
   {
-   "src": "v71.mp4",
+   "src": "x153.mp4",
    "dur": 2.5,
    "tin": "zoom",
-   "in": 1.4
+   "in": 0.0,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260928_095848_5d8068d4-2517-4ab1-a558-dae2bd54e860.mp4"
   },
   {
    "src": "bg_3d_logo.jpg",
    "dur": 3.6,
-   "kb": "in",
-   "tin": "flash"
+   "tin": "flash",
+   "kb": "in"
   }
  ],
  "transitions": {
@@ -123,7 +129,7 @@
    "e": 3.15,
    "text": "مشروعك ما انبنى…",
    "sub": "وعميلك ساكن فيه!",
-   "top": 1040
+   "top": 1330
   },
   {
    "s": 15.86,

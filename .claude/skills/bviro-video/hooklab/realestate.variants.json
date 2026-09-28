@@ -1,0 +1,1 @@
+[{"name": "A_wide"}, {"name": "B_faces", "first_shot": {"in": 1.0}}, {"name": "C_faces_cut", "open_shots": [{"src": "x153.mp4", "in": 1.0, "dur": 1.8}, {"src": "x152.mp4", "in": 0.2, "dur": 1.4, "tin": "zoom"}]}]

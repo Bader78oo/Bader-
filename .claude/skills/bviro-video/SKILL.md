@@ -79,4 +79,6 @@ Environment rules (learned 2026-09-26):
   `compare.mp4`. Variants: `first_shot` (swap), `open_shots` (two-shot opening), `hook` (text), `sfx_add`.
   Example: `hooklab/oman-promo.variants.json` — face-first opening scored 98 vs 88 for the original (2026-09-28).
 - NeuroViral (MIT) could add a second opinion, but running external code needs Bader's permission in this environment.
+- Never reuse a shot across two published reels (Bader, 2026-09-28): keep a per-reel shot list and generate fresh stills/clips.
+- Check the hook text at full size against faces (the scorer does not know where faces are): move `hook.top` below them.
 - After posting, ask Bader for Instagram "3-second views / skip rate" and note which hook formula won in `references/hooks.md`.
