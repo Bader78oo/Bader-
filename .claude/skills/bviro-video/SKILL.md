@@ -70,3 +70,13 @@ Environment rules (learned 2026-09-26):
 3. `python3 scripts/composite.py fg.mov office.png comp.mp4 --key 1.0` — erodes the matte + decontaminates edges (kills the white-wall halo), colour-matches, light-wraps, soft shadow, lens defocus, slow push.
 4. Voice from the phone is quiet: run the voice-polish chain with `acompressor=threshold=-30dB:...:makeup=6,loudnorm=I=-16`; keep the original timing (lip-sync), no tightening.
 5. Edit `comp.mp4` like any clip; cut to B-roll mid-sentence so he stays ≤ 7 s on screen. Example: `storyboards/intro-office.json`.
+
+## Hook lab (first 3 seconds)
+- Library + checklist: `references/hooks.md` (10 formulas × 5 sectors, opening-shot recipes).
+- Score any reel: `python3 scripts/hook_score.py reel.mp4 --sb sb.json` → 0–100 + fixes (motion from frame 1, text ≤ 7 words
+  by 0.5 s, sound hit at 0, face in the opening via OpenCV YuNet, a change before 3 s, visual punch). Free, local, our own code.
+- Compare openings: `python3 scripts/hook_lab.py sb.json variants.json --secs 4` → `hooklab/<name>/hook.mp4`, `scores.md`,
+  `compare.mp4`. Variants: `first_shot` (swap), `open_shots` (two-shot opening), `hook` (text), `sfx_add`.
+  Example: `hooklab/oman-promo.variants.json` — face-first opening scored 98 vs 88 for the original (2026-09-28).
+- NeuroViral (MIT) could add a second opinion, but running external code needs Bader's permission in this environment.
+- After posting, ask Bader for Instagram "3-second views / skip rate" and note which hook formula won in `references/hooks.md`.

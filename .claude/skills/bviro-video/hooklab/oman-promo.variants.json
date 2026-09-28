@@ -1,0 +1,6 @@
+[
+ {"name": "A_current"},
+ {"name": "B_face_cut", "open_shots": [{"src": "w101.mp4", "in": 0.2, "dur": 1.8}, {"src": "v73.mp4", "in": 0.6, "dur": 1.8, "tin": "zoom"}]},
+ {"name": "C_villa_transform", "first_shot": {"src": "v72.mp4", "in": 0.3}},
+ {"name": "D_face_first", "open_shots": [{"src": "v73.mp4", "in": 0.4, "dur": 1.5}, {"src": "w101.mp4", "in": 1.0, "dur": 2.1, "tin": "whip"}]}
+]
