@@ -82,3 +82,11 @@ Environment rules (learned 2026-09-26):
 - Never reuse a shot across two published reels (Bader, 2026-09-28): keep a per-reel shot list and generate fresh stills/clips.
 - Check the hook text at full size against faces (the scorer does not know where faces are): move `hook.top` below them.
 - After posting, ask Bader for Instagram "3-second views / skip rate" and note which hook formula won in `references/hooks.md`.
+
+## Teasers with real footage + HyperFrames scenes (2026-09-30)
+- Bader's phone clips: `ffmpeg -i x.mov -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30"` (rotation is applied automatically); landscape clips → two 9:16 crops (person / screen).
+- Landscape photos without credits: centred on a blurred, darkened copy of themselves (1440×2560), then `kb`.
+- Motion-graphic scenes (partner logos, "coming soon") are HyperFrames renders dropped in as shots: templates `hyperframes/partners-card`, `hyperframes/coming-soon`. Never animate letterSpacing on Arabic (breaks letter joins; lint flags it).
+- Partner/government logos: only the files Bader sends, unchanged.
+- Uploads now go to `upload.higgsfield.ai` (allowlisted for new sessions from 2026-09-30); if blocked, generate from text instead.
+- Generated backgrounds invent English slogans on banners/signage — keep them out of frame (zoom) or cover with the hook text.

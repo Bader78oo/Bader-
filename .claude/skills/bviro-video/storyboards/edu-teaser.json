@@ -1,0 +1,201 @@
+{
+ "width": 1080,
+ "height": 1920,
+ "fps": 30,
+ "duration": 20,
+ "output": "bviro_teaser_edu.mp4",
+ "shots": [
+  {
+   "src": "r4.mp4",
+   "dur": 0.8,
+   "in": 1.8
+  },
+  {
+   "src": "fall.mp4",
+   "dur": 3.2,
+   "in": 0.3,
+   "tin": "zoom",
+   "zoom": 1.2,
+   "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3B8Sec82jWQZ94Dn0fIzrIJYBlQ/hf_20260930_103634_d10471c1-cf1f-4c2f-8bea-51f11830cc58.mp4"
+  },
+  {
+   "src": "r2.mp4",
+   "dur": 1.0,
+   "in": 0.8,
+   "tin": "flash"
+  },
+  {
+   "src": "r1.mp4",
+   "dur": 1.0,
+   "in": 2.0,
+   "tin": "whip"
+  },
+  {
+   "src": "r3a.mp4",
+   "dur": 1.0,
+   "in": 1.0,
+   "tin": "zoom"
+  },
+  {
+   "src": "r2.mp4",
+   "dur": 1.0,
+   "in": 3.5,
+   "tin": "whip"
+  },
+  {
+   "src": "r3b.mp4",
+   "dur": 1.0,
+   "in": 2.0,
+   "tin": "zoom"
+  },
+  {
+   "src": "p1_916.png",
+   "dur": 1.6,
+   "kb": "in",
+   "kb_zoom": 0.08,
+   "tin": "flash"
+  },
+  {
+   "src": "hf1.mp4",
+   "dur": 4.0,
+   "in": 0.0,
+   "tin": "flash"
+  },
+  {
+   "src": "p2_916.png",
+   "dur": 1.2,
+   "kb": "in",
+   "kb_zoom": 0.08,
+   "tin": "whip"
+  },
+  {
+   "src": "r1.mp4",
+   "dur": 0.7,
+   "in": 7.0,
+   "tin": "zoom"
+  },
+  {
+   "src": "hf2.mp4",
+   "dur": 3.5,
+   "in": 0.0,
+   "tin": "cut"
+  }
+ ],
+ "transitions": {
+  "default": "zoom"
+ },
+ "grade": {
+  "lut": "brand/bviro_look.cube",
+  "grain": 4
+ },
+ "layout": {
+  "caption_top": 1250,
+  "sticker_top": 240
+ },
+ "hook": [
+  {
+   "s": 0.15,
+   "e": 3.95,
+   "text": "شي كبير قادم…",
+   "top": 300
+  }
+ ],
+ "captions": [
+  {
+   "s": 4.05,
+   "e": 6.0,
+   "text": "التعليم الأكاديمي…",
+   "icon": "graduation-cap"
+  },
+  {
+   "s": 6.0,
+   "e": 8.95,
+   "text": "بشكل ما شفته قبل",
+   "icon": "glasses"
+  },
+  {
+   "s": 9.05,
+   "e": 10.55,
+   "text": "فريق واحد… رؤية واحدة",
+   "icon": "users"
+  },
+  {
+   "s": 14.65,
+   "e": 16.45,
+   "text": "تجربة تعليمية غامرة",
+   "icon": "sparkles"
+  }
+ ],
+ "stickers": [
+  {
+   "s": 4.1,
+   "e": 8.9,
+   "text": "قريبًا"
+  }
+ ],
+ "audio": {
+  "pad": false,
+  "whoosh_on_cuts": true,
+  "impact_at_end": false,
+  "music": "music.wav",
+  "music_gain_db": -7,
+  "sfx_gain_db": -3,
+  "sfx": [
+   {
+    "t": 0.8,
+    "type": "whoosh"
+   },
+   {
+    "t": 4.0,
+    "type": "riser",
+    "len": 3.0
+   },
+   {
+    "t": 4.0,
+    "type": "impact",
+    "gain": 1.3
+   },
+   {
+    "t": 4.1,
+    "type": "pop"
+   },
+   {
+    "t": 11.05,
+    "type": "ding"
+   },
+   {
+    "t": 11.6,
+    "type": "ding"
+   },
+   {
+    "t": 12.15,
+    "type": "ding"
+   },
+   {
+    "t": 12.95,
+    "type": "impact",
+    "gain": 0.4
+   },
+   {
+    "t": 16.5,
+    "type": "riser",
+    "len": 1.4
+   },
+   {
+    "t": 16.5,
+    "type": "impact",
+    "gain": 1.0
+   },
+   {
+    "t": 17.6,
+    "type": "impact",
+    "gain": 1.2
+   },
+   {
+    "t": 18.4,
+    "type": "shimmer"
+   }
+  ]
+ },
+ "_note": "Edu teaser 2026-09-30. r1-r4/r3a/r3b = Bader's phone clips (not in repo); fall.mp4 = seedance clip of a generated headset still; hf1/hf2 = hyperframes/partners-card and coming-soon renders; p1/p2_916 = meeting photos on blurred fill."
+}

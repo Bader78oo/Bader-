@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#05000d}
+#root{width:100%;height:100%;position:relative;font-family:Cairo;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 45%,#4a00a0 0%,#1a0038 50%,#05000d 100%)}
+.t{position:absolute;left:0;right:0;text-align:center;direction:rtl;font-weight:900;color:#fff;white-space:nowrap}
+#t1{top:600px;font-size:150px}
+#t2{top:790px;font-size:210px;color:#01CEC9;text-shadow:0 0 40px rgba(1,206,201,.6)}
+#t3{top:1110px;font-size:52px;font-weight:800}
+#flash{position:absolute;inset:0;background:#fff}
+#logo{position:absolute;top:1330px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:24px;direction:ltr}
+#logo .s{height:110px} #logo .e{height:70px} #logo .a{height:78px} #logo .bar{width:4px;height:84px;background:#01CEC9;border-radius:2px}
+#h{top:1520px;font-size:40px;font-weight:800;color:#bfefff;direction:ltr}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="3.5" data-width="1080" data-height="1920">
+  <div id="t1" class="t clip" data-start="0" data-duration="3.5" data-track-index="0">ترقّبوا…</div>
+  <div id="t2" class="t clip" data-start="0" data-duration="3.5" data-track-index="1">قريبًا</div>
+  <div id="t3" class="t clip" data-start="0" data-duration="3.5" data-track-index="2">عمل مبتكر في مجال التعليم الأكاديمي</div>
+  <div id="logo" class="clip" data-start="0" data-duration="3.5" data-track-index="3"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"><div class="bar"></div><img class="a" src="logo_wordmark_ar.png"></div>
+  <div id="h" class="t clip" data-start="0" data-duration="3.5" data-track-index="4">@Bviro.1</div>
+  <div id="flash" class="clip" data-start="0" data-duration="3.5" data-track-index="5"></div>
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+tl.to("#flash", { opacity: 0, duration: 0.35, ease: "power2.out" }, 0)
+  .from("#t1", { opacity: 0, scale: 1.5, filter: "blur(16px)", duration: 0.6, ease: "power3.out" }, 0.1)
+  .from("#t2", { scale: 3.2, opacity: 0, duration: 0.35, ease: "power4.in" }, 0.75)
+  .to("#root", { x: 14, duration: 0.05, yoyo: true, repeat: 5, ease: "none" }, 1.1)
+  .from("#t3", { y: 40, opacity: 0, duration: 0.45, ease: "power3.out" }, 1.4)
+  .from("#logo", { y: 60, opacity: 0, scale: 0.8, duration: 0.5, ease: "back.out(2)" }, 1.9)
+  .from("#h", { opacity: 0, duration: 0.4 }, 2.3)
+  .to("#t2", { scale: 1.05, duration: 1.8, ease: "sine.inOut" }, 1.4);
+window.__timelines["main"] = tl;
+tl.seek(0);
+</script>
+</body>
+</html>

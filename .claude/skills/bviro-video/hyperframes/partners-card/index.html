@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#12002a}
+#root{width:100%;height:100%;position:relative;font-family:Cairo;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 42%,#5a00be 0%,#2B0157 48%,#0b001a 100%)}
+.t{position:absolute;left:0;right:0;text-align:center;direction:rtl;font-weight:900;color:#fff}
+#title{top:330px;font-size:84px}
+#title span{color:#01CEC9}
+.card{position:absolute;left:150px;width:780px;height:250px;border-radius:34px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 18px 50px rgba(0,0,0,.45),0 0 0 3px rgba(1,206,201,.55)}
+.w{background:#fff}
+#c1{top:540px} #c2{top:830px} #c3{top:1120px}
+#c1 img{height:190px} #c3 img{height:215px}
+#c2{background:linear-gradient(135deg,#7F00FF,#51168C);gap:26px;direction:ltr}
+#c2 .s{height:120px} #c2 .e{height:74px} #c2 .a{height:84px} #c2 .bar{width:4px;height:90px;background:#01CEC9;border-radius:2px}
+#sup{top:1460px;font-size:58px}
+#sup span{color:#01CEC9}
+#line{position:absolute;top:470px;left:390px;width:300px;height:6px;border-radius:3px;background:#01CEC9;transform-origin:center}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1080" data-height="1920">
+  <div id="title" class="t clip" data-start="0" data-duration="4" data-track-index="0">بشراكة <span>مع</span></div>
+  <div id="line" class="clip" data-start="0" data-duration="4" data-track-index="1"></div>
+  <div id="c1" class="card w clip" data-start="0" data-duration="4" data-track-index="2"><img src="logo_utas_c.png"></div>
+  <div id="c2" class="card clip" data-start="0" data-duration="4" data-track-index="3"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"><div class="bar"></div><img class="a" src="logo_wordmark_ar.png"></div>
+  <div id="c3" class="card w clip" data-start="0" data-duration="4" data-track-index="4"><img src="logo_moheri_c.png"></div>
+  <div id="sup" class="t clip" data-start="0" data-duration="4" data-track-index="5">بإشراف <span>دكاترة متخصصين</span></div>
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+tl.from("#title", { y: -80, opacity: 0, duration: 0.45, ease: "back.out(2)" }, 0.05)
+  .from("#line", { scaleX: 0, duration: 0.4, ease: "expo.out" }, 0.3)
+  .from(".card", { scale: 0.55, opacity: 0, y: 90, rotation: -4, duration: 0.5, stagger: 0.55, ease: "back.out(1.8)" }, 0.45)
+  .from("#sup", { opacity: 0, scale: 1.6, filter: "blur(14px)", duration: 0.45, ease: "power3.out" }, 2.35)
+  .to(".card", { y: "-=14", duration: 1.6, ease: "sine.inOut", stagger: 0.12 }, 2.1)
+  .to("#root", { scale: 1.035, duration: 4, ease: "none" }, 0);
+window.__timelines["main"] = tl;
+tl.seek(0);
+</script>
+</body>
+</html>
