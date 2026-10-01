@@ -92,3 +92,6 @@ Environment rules (learned 2026-09-26):
 - Generated backgrounds invent English slogans on banners/signage — keep them out of frame (zoom) or cover with the hook text.
 - Action hooks: keep a generated fall/drop ≤ 1.5 s — speed-ramp it (`setpts=PTS/2.6`) and cut on the impact.
 - Teaser music: `scripts/trailer_music.py out.wav --dur 20 --hit <hook impact> --lift <logos> --build <pre-end> --final <end slam>` (heartbeat/ticks → braam → 130 BPM drive → snare build → slam); mix at about −4 dB under the sfx. Plain `music.py` beds were judged not attention-grabbing.
+- Generated voice (no recording): Higgsfield `text2speech_v2` variant `elevenlabs`, preset "Arthur" (`30fc8796-ceb6-4a66-b3a7-4a145ef7f346`) — clear Arabic (Gulf/MSA, not Omani), ≈0.75 credits per 30 s; write numbers as words. `seed_audio` mangles Arabic — don't use. Microsoft's Omani voices (ar-OM-Abdullah/Aysha) need an Azure key + allowlisted host.
+- Seedance may return `ip_detected` on some stills (no charge) — use a free `depth` move on the still instead of retrying.
+- Lucide icons come from jsdelivr; when it is blocked, copy the SVGs into the work dir's `icons/` (e.g. from the `lucide-static` npm tarball).
