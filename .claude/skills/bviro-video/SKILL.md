@@ -85,8 +85,10 @@ Environment rules (learned 2026-09-26):
 
 ## Teasers with real footage + HyperFrames scenes (2026-09-30)
 - Bader's phone clips: `ffmpeg -i x.mov -vf "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30"` (rotation is applied automatically); landscape clips → two 9:16 crops (person / screen).
-- Landscape photos without credits: centred on a blurred, darkened copy of themselves (1440×2560), then `kb`.
+- Photos must fill the 9:16 frame (Bader rejected the blurred-fill look): full-bleed crop on the subject, then `depth` push/pull or `kb` so every photo moves.
 - Motion-graphic scenes (partner logos, "coming soon") are HyperFrames renders dropped in as shots: templates `hyperframes/partners-card`, `hyperframes/coming-soon`. Never animate letterSpacing on Arabic (breaks letter joins; lint flags it).
 - Partner/government logos: only the files Bader sends, unchanged.
 - Uploads now go to `upload.higgsfield.ai` (allowlisted for new sessions from 2026-09-30); if blocked, generate from text instead.
 - Generated backgrounds invent English slogans on banners/signage — keep them out of frame (zoom) or cover with the hook text.
+- Action hooks: keep a generated fall/drop ≤ 1.5 s — speed-ramp it (`setpts=PTS/2.6`) and cut on the impact.
+- Teaser music: `scripts/trailer_music.py out.wav --dur 20 --hit <hook impact> --lift <logos> --build <pre-end> --final <end slam>` (heartbeat/ticks → braam → 130 BPM drive → snare build → slam); mix at about −4 dB under the sfx. Plain `music.py` beds were judged not attention-grabbing.
