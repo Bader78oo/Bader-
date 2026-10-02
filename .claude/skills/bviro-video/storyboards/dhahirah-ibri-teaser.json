@@ -3,7 +3,7 @@
  "height": 1920,
  "fps": 30,
  "duration": 35,
- "output": "bviro_dhahirah_ibri_teaser_v3.mp4",
+ "output": "bviro_dhahirah_ibri_teaser_v4.mp4",
  "voiceover": "audio_v3_bed.wav",
  "shots": [
   {
@@ -162,12 +162,6 @@
    "e": 19.45,
    "text": "كل تفصيل… محسوب",
    "icon": "circle-check"
-  },
-  {
-   "s": 19.65,
-   "e": 22.3,
-   "text": "فيه روح عُمان",
-   "icon": "coffee"
   }
  ],
  "audio": {
