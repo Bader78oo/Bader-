@@ -26,7 +26,7 @@
  ],
  "stickers": [{"s": 19.6, "e": 24.0, "text": "1,299 دولار"}],
  "end_card": {"s": 24.5, "tag": "VISUALIZE. UNDERSTAND. SUCCEED.", "sub": "نجيب لكم المستقبل لعُمان",
-  "contacts": [{"icon": "camera", "text": "@Bviro.1"}, {"icon": "message-circle", "text": "WhatsApp  9694 6416"}, {"icon": "phone", "text": "Call  7772 1144"}]},
+  "contacts": [{"icon": "camera", "text": "@Bviro.1"}, {"icon": "message-circle", "text": "WhatsApp  96946416"}, {"icon": "phone", "text": "Call  77721144"}]},
  "audio": {"pad": false, "whoosh_on_cuts": true, "impact_at_end": false, "music": "music.wav", "music_gain_db": -9, "duck": true, "sfx_gain_db": -5,
   "sfx": [{"t": 0.05, "type": "impact"}, {"t": 4.85, "type": "pop"}, {"t": 7.6, "type": "ding"}, {"t": 11.15, "type": "ding"},
           {"t": 15.15, "type": "pop"}, {"t": 17.85, "type": "pop"}, {"t": 19.65, "type": "ding"},
