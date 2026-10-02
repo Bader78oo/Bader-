@@ -1,0 +1,175 @@
+{
+ "width": 1080,
+ "height": 1920,
+ "fps": 30,
+ "duration": 30,
+ "output": "precise_A_base.mp4",
+ "voiceover": "bed_0.wav",
+ "shots": [
+  {
+   "src": "v17.mp4",
+   "dur": 1.0,
+   "in": 1.2,
+   "zoom": 1.1
+  },
+  {
+   "src": "v14.mp4",
+   "dur": 1.4,
+   "in": 0.5,
+   "tin": "zoom",
+   "zoom": 1.2
+  },
+  {
+   "src": "v19_blur.mp4",
+   "dur": 0.6,
+   "in": 1.0,
+   "tin": "flash"
+  },
+  {
+   "src": "v15.mp4",
+   "dur": 1.6,
+   "in": 0.5,
+   "tin": "whip"
+  },
+  {
+   "src": "v13.mp4",
+   "dur": 1.4,
+   "in": 2.2,
+   "tin": "zoom"
+  },
+  {
+   "src": "v17.mp4",
+   "dur": 1.3,
+   "in": 2.6,
+   "tin": "flash"
+  },
+  {
+   "src": "v16.mp4",
+   "dur": 1.5,
+   "in": 1.0,
+   "tin": "whip"
+  },
+  {
+   "src": "v14.mp4",
+   "dur": 1.4,
+   "in": 2.6,
+   "tin": "zoom",
+   "zoom": 1.2
+  },
+  {
+   "src": "v18.mp4",
+   "dur": 1.8,
+   "in": 0.0,
+   "tin": "whip"
+  },
+  {
+   "src": "v15.mp4",
+   "dur": 2.0,
+   "in": 2.2,
+   "tin": "flash"
+  },
+  {
+   "src": "v18.mp4",
+   "dur": 2.4,
+   "in": 1.8,
+   "tin": "zoom"
+  },
+  {
+   "src": "v16.mp4",
+   "dur": 2.6,
+   "in": 0.4,
+   "tin": "whip",
+   "zoom": 1.1
+  },
+  {
+   "src": "black.mp4",
+   "dur": 1.0,
+   "in": 0.0,
+   "tin": "cut"
+  },
+  {
+   "src": "v19.mp4",
+   "dur": 4.0,
+   "in": 0.0,
+   "tin": "cut",
+   "zoom": 1.05
+  },
+  {
+   "src": "reveal.mp4",
+   "dur": 6.0,
+   "in": 0.0,
+   "tin": "flash"
+  }
+ ],
+ "transitions": {
+  "default": "zoom"
+ },
+ "grade": {
+  "lut": "brand/bviro_look.cube",
+  "grain": 4
+ },
+ "layout": {
+  "caption_top": 1320,
+  "sticker_top": 240
+ },
+ "hook": [
+  {
+   "s": 0.1,
+   "e": 2.95,
+   "text": "باقي 3 أيام… وكل سانتي محسوب",
+   "top": 300
+  },
+  {
+   "s": 12.0,
+   "e": 14.0,
+   "text": "والأهم… في الأخير 👀",
+   "top": 300,
+   "style": "loop"
+  }
+ ],
+ "captions": [
+  {
+   "s": 3.05,
+   "e": 4.55,
+   "text": "تصميم",
+   "icon": "pencil-ruler"
+  },
+  {
+   "s": 4.6,
+   "e": 5.95,
+   "text": "تركيب",
+   "icon": "ruler"
+  },
+  {
+   "s": 6.0,
+   "e": 7.25,
+   "text": "تثبيت",
+   "icon": "hammer"
+  },
+  {
+   "s": 7.3,
+   "e": 8.75,
+   "text": "فريق واحد",
+   "icon": "users"
+  },
+  {
+   "s": 8.8,
+   "e": 10.15,
+   "text": "كل ثانية… لها قيمة",
+   "icon": "timer"
+  },
+  {
+   "s": 10.2,
+   "e": 11.95,
+   "text": "تشطيب",
+   "icon": "paintbrush"
+  }
+ ],
+ "audio": {
+  "pad": false,
+  "whoosh_on_cuts": false,
+  "impact_at_end": false,
+  "duck": false,
+  "sfx": []
+ }
+}

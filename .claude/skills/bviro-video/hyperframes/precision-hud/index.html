@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+@font-face{font-family:Cairo;font-weight:600;src:url(fonts/Cairo-600.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{width:100%;height:100%;position:relative;font-family:Cairo;overflow:hidden}
+.c{position:absolute;width:70px;height:70px;border-color:rgba(1,206,201,.85);border-style:solid}
+#c1{left:60px;top:200px;border-width:5px 0 0 5px} #c2{right:60px;top:200px;border-width:5px 5px 0 0}
+#c3{left:60px;bottom:330px;border-width:0 0 5px 5px} #c4{right:60px;bottom:330px;border-width:0 5px 5px 0}
+#chip{position:absolute;right:70px;top:120px;display:flex;align-items:center;gap:14px;direction:rtl;
+  background:rgba(10,0,30,.62);border:2px solid rgba(1,206,201,.8);border-radius:18px;padding:8px 20px}
+#chip .l{font-weight:600;font-size:30px;color:#cfc4ea}
+#chip .d{font-weight:800;font-size:40px;color:#01CEC9;direction:ltr;font-variant-numeric:tabular-nums}
+#big{position:absolute;left:0;right:0;top:760px;text-align:center}
+#big .k{font-weight:600;font-size:46px;color:#fff;direction:rtl;text-shadow:0 4px 18px rgba(0,0,0,.6)}
+#big .d{font-weight:800;font-size:170px;color:#01CEC9;direction:ltr;font-variant-numeric:tabular-nums;line-height:1.1;
+  text-shadow:0 0 30px rgba(1,206,201,.55),0 6px 24px rgba(0,0,0,.7)}
+#meas{position:absolute;left:150px;top:980px;width:780px;height:60px}
+#meas .ln{position:absolute;left:0;right:0;top:28px;height:4px;background:#01CEC9;transform-origin:left center}
+#meas .tl,#meas .tr{position:absolute;top:8px;width:4px;height:44px;background:#01CEC9}
+#meas .tl{left:0} #meas .tr{right:0}
+#meas .lab{position:absolute;left:0;right:0;top:-64px;text-align:center;font-weight:800;font-size:46px;color:#fff;direction:ltr;text-shadow:0 3px 12px rgba(0,0,0,.7)}
+#xh{position:absolute;left:470px;top:880px;width:140px;height:140px;border:4px solid rgba(255,255,255,.9);border-radius:50%}
+#xh:before,#xh:after{content:"";position:absolute;background:rgba(255,255,255,.9)}
+#xh:before{left:66px;top:-30px;width:4px;height:196px} #xh:after{top:66px;left:-30px;height:4px;width:196px}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="30" data-width="1080" data-height="1920">
+  <div id="frame" class="clip" data-start="0" data-duration="30" data-track-index="0">
+    <div class="c" id="c1"></div><div class="c" id="c2"></div><div class="c" id="c3"></div><div class="c" id="c4"></div>
+  </div>
+  <div id="chip" class="clip" data-start="0" data-duration="30" data-track-index="1"><span class="l">الافتتاح بعد</span><span class="d" id="cd">72:00:00</span></div>
+  <div id="meas" class="clip" data-start="0" data-duration="30" data-track-index="2"><div class="ln"></div><div class="tl"></div><div class="tr"></div><div class="lab">±1 mm</div></div>
+  <div id="xh" class="clip" data-start="0" data-duration="30" data-track-index="3"></div>
+  <div id="big" class="clip" data-start="0" data-duration="30" data-track-index="4"><div class="k">العدّ التنازلي للافتتاح</div><div class="d" id="bd">72:00:00</div></div>
+</div>
+<script>
+const fmt=s=>{s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return [h,m,x].map(v=>String(v).padStart(2,"0")).join(":")};
+const tl = gsap.timeline({ paused: true });
+const st={v:72*3600}, big={v:72*3600};
+tl.set(["#frame","#chip","#meas","#xh","#big"],{opacity:0},0)
+  .to(["#frame","#chip"],{opacity:1,duration:0.3},3.0)
+  .to(st,{v:72*3600-11,duration:11,ease:"none",onUpdate:()=>{document.getElementById("cd").textContent=fmt(st.v)}},3.0)
+  .to("#chip",{opacity:0,duration:0.25},13.9)
+  // precision beat on the hand shot (8.8-10.2)
+  .to("#meas",{opacity:1,duration:0.1},8.85).from("#meas .ln",{scaleX:0,duration:0.45,ease:"expo.out"},8.85)
+  .from("#meas .lab",{opacity:0,y:20,duration:0.3},9.2).to("#meas",{opacity:0,duration:0.2},10.05)
+  .to("#xh",{opacity:1,duration:0.1},6.0).from("#xh",{scale:1.8,rotation:-45,duration:0.4,ease:"expo.out"},6.0).to("#xh",{opacity:0,duration:0.2},7.1)
+  // big countdown racing to zero 14.1-19.0
+  .to("#big",{opacity:1,duration:0.25},14.1).from("#big .d",{scale:0.6,duration:0.4,ease:"back.out(2)"},14.1)
+  .to(big,{v:0,duration:4.6,ease:"power2.in",onUpdate:()=>{document.getElementById("bd").textContent=fmt(big.v)}},14.3)
+  .to("#big .d",{scale:1.15,duration:0.15,yoyo:true,repeat:1},18.9)
+  .to(["#big","#frame"],{opacity:0,duration:0.05},19.0);
+window.__timelines["main"] = tl;
+tl.seek(0);
+</script>
+</body>
+</html>
