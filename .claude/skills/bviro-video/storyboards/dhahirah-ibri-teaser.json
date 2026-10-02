@@ -1,42 +1,197 @@
 {
- "width": 1080, "height": 1920, "fps": 30, "duration": 35,
- "output": "bviro_dhahirah_ibri_teaser.mp4",
- "voiceover": "vo.wav",
+ "width": 1080,
+ "height": 1920,
+ "fps": 30,
+ "duration": 35,
+ "output": "bviro_dhahirah_ibri_teaser_v3.mp4",
+ "voiceover": "audio_v3_bed.wav",
  "shots": [
-  {"src": "v1.mp4", "dur": 1.7, "in": 0.5, "zoom": 1.1},
-  {"src": "p_cnc.png", "dur": 1.55, "depth": "push", "depth_amount": 1.25, "tin": "flash"},
-  {"src": "v9.mp4", "dur": 1.4, "in": 0.5, "tin": "whip"},
-  {"src": "v10.mp4", "dur": 1.0, "in": 0.1, "tin": "zoom"},
-  {"src": "p_shop.png", "dur": 1.45, "depth": "push", "depth_amount": 1.2, "tin": "flash"},
-  {"src": "v11.mp4", "dur": 2.3, "in": 2.6, "tin": "whip"},
-  {"src": "v1.mp4", "dur": 1.6, "in": 4.6, "tin": "zoom", "zoom": 1.1},
-  {"src": "v3.mp4", "dur": 1.8, "in": 0.0, "tin": "flash"},
-  {"src": "v7.mp4", "dur": 1.0, "in": 1.2, "tin": "whip"},
-  {"src": "v6.mp4", "dur": 1.2, "in": 1.5, "tin": "zoom"},
-  {"src": "v2.mp4", "dur": 1.3, "in": 2.4, "tin": "whip"},
-  {"src": "v12.mp4", "dur": 3.3, "in": 1.5, "tin": "zoom"},
-  {"src": "v5_slow.mp4", "dur": 2.8, "in": 0.5, "tin": "flash"},
-  {"src": "v4.mp4", "dur": 2.8, "in": 0.0, "tin": "whip"},
-  {"src": "v4.mp4", "dur": 2.1, "in": 5.8, "tin": "zoom", "zoom": 1.15},
-  {"src": "reveal.mp4", "dur": 7.7, "in": 0.0, "tin": "cut"}
+  {
+   "src": "v1.mp4",
+   "dur": 1.7,
+   "in": 0.5,
+   "zoom": 1.1
+  },
+  {
+   "src": "p_cnc.png",
+   "dur": 1.55,
+   "depth": "push",
+   "depth_amount": 1.25,
+   "tin": "flash"
+  },
+  {
+   "src": "v9.mp4",
+   "dur": 1.4,
+   "in": 0.5,
+   "tin": "whip"
+  },
+  {
+   "src": "v10.mp4",
+   "dur": 1.0,
+   "in": 0.1,
+   "tin": "zoom"
+  },
+  {
+   "src": "p_shop.png",
+   "dur": 1.45,
+   "depth": "push",
+   "depth_amount": 1.2,
+   "tin": "flash"
+  },
+  {
+   "src": "v11.mp4",
+   "dur": 2.3,
+   "in": 2.6,
+   "tin": "whip"
+  },
+  {
+   "src": "v1.mp4",
+   "dur": 1.6,
+   "in": 4.6,
+   "tin": "zoom",
+   "zoom": 1.1
+  },
+  {
+   "src": "v3.mp4",
+   "dur": 1.8,
+   "in": 0.0,
+   "tin": "flash"
+  },
+  {
+   "src": "v7.mp4",
+   "dur": 1.0,
+   "in": 1.2,
+   "tin": "whip"
+  },
+  {
+   "src": "v6.mp4",
+   "dur": 1.2,
+   "in": 1.5,
+   "tin": "zoom"
+  },
+  {
+   "src": "v2.mp4",
+   "dur": 1.3,
+   "in": 2.4,
+   "tin": "whip"
+  },
+  {
+   "src": "v12.mp4",
+   "dur": 3.3,
+   "in": 1.5,
+   "tin": "zoom"
+  },
+  {
+   "src": "v5_slow.mp4",
+   "dur": 2.8,
+   "in": 0.5,
+   "tin": "flash"
+  },
+  {
+   "src": "v4.mp4",
+   "dur": 2.8,
+   "in": 0.0,
+   "tin": "whip"
+  },
+  {
+   "src": "v4.mp4",
+   "dur": 2.1,
+   "in": 5.8,
+   "tin": "zoom",
+   "zoom": 1.15
+  },
+  {
+   "src": "reveal.mp4",
+   "dur": 7.7,
+   "in": 0.0,
+   "tin": "cut"
+  }
  ],
- "transitions": {"default": "zoom"},
- "grade": {"lut": "brand/bviro_look.cube", "grain": 4},
- "layout": {"caption_top": 1320, "sticker_top": 240},
+ "transitions": {
+  "default": "zoom"
+ },
+ "grade": {
+  "lut": "brand/bviro_look.cube",
+  "grain": 4
+ },
+ "layout": {
+  "caption_top": 1320,
+  "sticker_top": 240
+ },
  "hook": [
-  {"s": 0.15, "e": 3.1, "text": "من الفكرة…", "top": 330},
-  {"s": 22.4, "e": 24.95, "text": "ترقّبوا…", "top": 330},
-  {"s": 25.0, "e": 27.25, "text": "محافظة الظاهرة… كما لم تروها من قبل", "top": 330}
+  {
+   "s": 0.15,
+   "e": 3.1,
+   "text": "من الفكرة…",
+   "top": 330
+  },
+  {
+   "s": 22.4,
+   "e": 24.95,
+   "text": "ترقّبوا…",
+   "top": 330
+  },
+  {
+   "s": 25.0,
+   "e": 27.25,
+   "text": "محافظة الظاهرة… كما لم تروها من قبل",
+   "top": 330
+  }
  ],
  "captions": [
-  {"s": 3.3, "e": 6.0, "text": "…إلى الورشة", "icon": "hammer"},
-  {"s": 6.1, "e": 10.9, "text": "دقّة… وحِرفة", "icon": "sparkles"},
-  {"s": 11.05, "e": 14.0, "text": "…إلى أرض المعرض", "icon": "map-pin"},
-  {"s": 14.1, "e": 19.45, "text": "كل تفصيل… محسوب", "icon": "circle-check"},
-  {"s": 19.65, "e": 22.3, "text": "فيه روح عُمان", "icon": "coffee"}
+  {
+   "s": 3.3,
+   "e": 6.0,
+   "text": "…إلى الورشة",
+   "icon": "hammer"
+  },
+  {
+   "s": 6.1,
+   "e": 10.9,
+   "text": "دقّة… وحِرفة",
+   "icon": "sparkles"
+  },
+  {
+   "s": 11.05,
+   "e": 14.0,
+   "text": "…إلى أرض المعرض",
+   "icon": "map-pin"
+  },
+  {
+   "s": 14.1,
+   "e": 19.45,
+   "text": "كل تفصيل… محسوب",
+   "icon": "circle-check"
+  },
+  {
+   "s": 19.65,
+   "e": 22.3,
+   "text": "فيه روح عُمان",
+   "icon": "coffee"
+  }
  ],
- "audio": {"pad": false, "whoosh_on_cuts": true, "impact_at_end": false, "music": "music.wav", "music_gain_db": -6, "duck": true, "sfx_gain_db": -5,
-  "sfx": [{"t": 0.05, "type": "impact"}, {"t": 3.3, "type": "pop"}, {"t": 11.05, "type": "pop"}, {"t": 14.1, "type": "ding"},
-          {"t": 19.65, "type": "shimmer", "gain": 0.6}, {"t": 26.3, "type": "riser", "len": 1.0}, {"t": 27.3, "type": "impact", "gain": 1.0},
-          {"t": 28.4, "type": "shimmer"}, {"t": 30.3, "type": "whoosh"}, {"t": 30.9, "type": "ding"}]}
+ "audio": {
+  "pad": false,
+  "whoosh_on_cuts": false,
+  "impact_at_end": false,
+  "duck": false,
+  "sfx_gain_db": -12,
+  "sfx": [
+   {
+    "t": 27.3,
+    "type": "impact",
+    "gain": 0.7
+   },
+   {
+    "t": 28.4,
+    "type": "shimmer",
+    "gain": 0.7
+   },
+   {
+    "t": 30.3,
+    "type": "whoosh",
+    "gain": 0.6
+   }
+  ]
+ }
 }
