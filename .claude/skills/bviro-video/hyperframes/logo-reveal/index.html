@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+@font-face{font-family:Cairo;font-weight:600;src:url(fonts/Cairo-600.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#fff}
+#root{width:100%;height:100%;position:relative;font-family:Cairo;overflow:hidden;background:#fff}
+#a{position:absolute;inset:0}
+#gov{position:absolute;left:110px;top:560px;width:860px}
+#rule{position:absolute;left:340px;top:930px;width:400px;height:5px;border-radius:3px;background:#0b6b72;transform-origin:center}
+#presents{position:absolute;left:0;right:0;top:965px;text-align:center;direction:rtl;font-weight:600;font-size:46px;color:#6f6a63}
+#ibriw{position:absolute;left:90px;top:1080px;width:900px;height:224px;overflow:hidden}
+#ibri{width:900px;display:block}
+#sweep{position:absolute;top:-40px;left:-300px;width:180px;height:320px;transform:skewX(-20deg);
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.95),rgba(255,255,255,0))}
+#flash{position:absolute;inset:0;background:#fff}
+#b{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,#5a00be 0%,#2B0157 50%,#0b001a 100%)}
+.t{position:absolute;left:0;right:0;text-align:center;direction:rtl;color:#fff;white-space:nowrap}
+#l1{top:520px;font-size:66px;font-weight:800}
+#l2{top:610px;font-size:124px;font-weight:900;color:#01CEC9}
+#l3{top:830px;font-size:54px;font-weight:800;color:#e7dcff}
+#l4{top:960px;font-size:92px;font-weight:900}
+#l5{top:1095px;font-size:44px;font-weight:600;color:#cfc4ea}
+#by{position:absolute;left:0;right:0;top:1330px;display:flex;flex-direction:column;align-items:center;gap:22px}
+#by .k{font-size:40px;font-weight:600;color:#bfb3df;direction:rtl}
+#by .row{display:flex;align-items:center;gap:24px;direction:ltr}
+#by .s{height:110px} #by .e{height:66px} #by .ar{height:74px} #by .bar{width:4px;height:80px;background:#01CEC9;border-radius:2px}
+#by .h{font-size:44px;font-weight:800;color:#fff;direction:ltr}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="7.7" data-width="1080" data-height="1920">
+  <div id="a" class="clip" data-start="0" data-duration="7.7" data-track-index="0">
+    <img id="gov" src="gov.png">
+    <div id="rule"></div>
+    <div id="presents">تقدّم</div>
+    <div id="ibriw"><img id="ibri" src="ibri.png"><div id="sweep"></div></div>
+  </div>
+  <div id="b" class="clip" data-start="0" data-duration="7.7" data-track-index="1">
+    <div id="l1" class="t">ترقّبونا في</div>
+    <div id="l2" class="t">أكتوبر العمران</div>
+    <div id="l3" class="t">معرض البيت والبناء</div>
+    <div id="l4" class="t">5 – 8 أكتوبر 2026</div>
+    <div id="l5" class="t">مركز عُمان للمؤتمرات والمعارض</div>
+    <div id="by"><div class="k">تنفيذ</div>
+      <div class="row"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"><div class="bar"></div><img class="ar" src="logo_wordmark_ar.png"></div>
+      <div class="h">@Bviro.1</div></div>
+  </div>
+  <div id="flash" class="clip" data-start="0" data-duration="7.7" data-track-index="2"></div>
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+tl.set("#b", { clipPath: "inset(100% 0 0 0)" }, 0)
+  .to("#flash", { opacity: 0, duration: 0.5, ease: "power2.out" }, 0)
+  .from("#gov", { scale: 1.18, opacity: 0, filter: "blur(16px)", duration: 0.6, ease: "expo.out" }, 0.0)
+  .from("#rule", { scaleX: 0, duration: 0.45, ease: "expo.out" }, 0.3)
+  .from("#presents", { opacity: 0, y: 20, duration: 0.35, ease: "power2.out" }, 0.3)
+  .from("#ibri", { scale: 1.45, opacity: 0, filter: "blur(20px)", duration: 0.5, ease: "expo.out" }, 0.4)
+  .to("#sweep", { left: 1100, duration: 0.9, ease: "power2.inOut" }, 1.0)
+  .to("#a", { scale: 1.05, duration: 3.1, ease: "none" }, 0)
+  .to("#b", { clipPath: "inset(0% 0 0 0)", duration: 0.55, ease: "expo.inOut" }, 3.0)
+  .from("#l1", { y: 40, opacity: 0, duration: 0.35, ease: "power3.out" }, 3.4)
+  .from("#l2", { scale: 1.5, opacity: 0, filter: "blur(14px)", duration: 0.45, ease: "expo.out" }, 3.5)
+  .from("#l3", { y: 30, opacity: 0, duration: 0.35, ease: "power3.out" }, 3.75)
+  .from("#l4", { scale: 0.6, opacity: 0, duration: 0.45, ease: "back.out(2)" }, 3.9)
+  .from("#l5", { opacity: 0, duration: 0.4 }, 4.15)
+  .from("#by", { y: 60, opacity: 0, duration: 0.5, ease: "power3.out" }, 4.35)
+  .to("#b", { scale: 1.03, duration: 4.7, ease: "none" }, 3.0);
+window.__timelines["main"] = tl;
+tl.seek(0);
+</script>
+</body>
+</html>
