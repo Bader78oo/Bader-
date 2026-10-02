@@ -3,7 +3,7 @@
  "height": 1920,
  "fps": 30,
  "duration": 35,
- "output": "bviro_dhahirah_ibri_teaser_v4.mp4",
+ "output": "bviro_dhahirah_ibri_teaser_v5.mp4",
  "voiceover": "audio_v3_bed.wav",
  "shots": [
   {
@@ -171,16 +171,6 @@
   "duck": false,
   "sfx_gain_db": -12,
   "sfx": [
-   {
-    "t": 27.3,
-    "type": "impact",
-    "gain": 0.7
-   },
-   {
-    "t": 28.4,
-    "type": "shimmer",
-    "gain": 0.7
-   },
    {
     "t": 30.3,
     "type": "whoosh",

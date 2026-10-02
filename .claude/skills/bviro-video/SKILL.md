@@ -96,3 +96,4 @@ Environment rules (learned 2026-09-26):
 - Seedance may return `ip_detected` on some stills (no charge) — use a free `depth` move on the still instead of retrying.
 - Lucide icons come from jsdelivr; when it is blocked, copy the SVGs into the work dir's `icons/` (e.g. from the `lucide-static` npm tarball).
 - Mix rule (Bader, 2026-10-02): the voice must sit clearly above the music — speech ≈ −18 dBFS RMS, music bed ≈ −24 in intros and ducked ~11 dB under the voice. `trailer_music.py` at −6 dB buried the voice and its dark braam style was rejected; for teasers use `scripts/suspense_music.py` (calm pad/piano/pulse → soft boom at the reveal), or a licensed track Bader sends / Instagram's library.
+- Key names in TTS (e.g. «إطلالة عبري»): generate them as a separate fully-vowelled line (`إِطْلَالَةُ عِبْرِي`) and keep music/sfx out from under them (duck −20 dB, no impact/shimmer on the word); check with faster-whisper on the final mix.
