@@ -3,8 +3,8 @@
  "height": 1920,
  "fps": 30,
  "duration": 30,
- "output": "half_base.mp4",
- "voiceover": "bed_A.wav",
+ "output": "half_casual_base.mp4",
+ "voiceover": "bed_casual.wav",
  "shots": [
   {
    "src": "v21.mp4",
@@ -111,26 +111,26 @@
  "captions": [
   {
    "s": 5.3,
-   "e": 8.75,
-   "text": "سقفٌ منحني… بالمليمتر",
+   "e": 9.4,
+   "text": "سقف منحني… بالمليمتر",
    "icon": "ruler"
   },
   {
    "s": 10.05,
    "e": 12.9,
-   "text": "نقيس… نفكّر… نعيد",
+   "text": "نقيس… نفكّر… ونعيد",
    "icon": "pencil-ruler"
   },
   {
    "s": 13.4,
    "e": 15.0,
-   "text": "والحل… دايم موجود",
+   "text": "والحل؟ دايم موجود",
    "icon": "hammer"
   },
   {
-   "s": 21.6,
+   "s": 21.3,
    "e": 24.4,
-   "text": "باقي يومين",
+   "text": "باقي يومين بس",
    "icon": "timer"
   }
  ],
