@@ -1,0 +1,144 @@
+{
+ "width": 1080,
+ "height": 1920,
+ "fps": 30,
+ "duration": 30,
+ "output": "half_base.mp4",
+ "voiceover": "bed_A.wav",
+ "shots": [
+  {
+   "src": "v21.mp4",
+   "dur": 1.5,
+   "in": 1.6,
+   "zoom": 1.1
+  },
+  {
+   "src": "v24.mp4",
+   "dur": 1.5,
+   "in": 5.5,
+   "tin": "zoom",
+   "zoom": 1.35
+  },
+  {
+   "src": "drone_s.mp4",
+   "dur": 2.2,
+   "in": 0.0,
+   "tin": "whip"
+  },
+  {
+   "src": "fx_v20.mp4",
+   "dur": 2.7,
+   "in": 0.0,
+   "tin": "flash"
+  },
+  {
+   "src": "v21_freeze.mp4",
+   "dur": 3.1,
+   "in": 0.0,
+   "tin": "zoom"
+  },
+  {
+   "src": "v14.mp4",
+   "dur": 1.2,
+   "in": 2.4,
+   "tin": "zoom",
+   "zoom": 1.2
+  },
+  {
+   "src": "v17.mp4",
+   "dur": 1.0,
+   "in": 2.6,
+   "tin": "flash"
+  },
+  {
+   "src": "v22.mp4",
+   "dur": 1.8,
+   "in": 2.5,
+   "tin": "whip"
+  },
+  {
+   "src": "split.mp4",
+   "dur": 2.4,
+   "in": 0.0,
+   "tin": "zoom"
+  },
+  {
+   "src": "v24.mp4",
+   "dur": 2.0,
+   "in": 5.0,
+   "tin": "flash",
+   "zoom": 1.1
+  },
+  {
+   "src": "v18.mp4",
+   "dur": 2.2,
+   "in": 0.5,
+   "tin": "whip"
+  },
+  {
+   "src": "v19.mp4",
+   "dur": 2.9,
+   "in": 0.5,
+   "tin": "zoom",
+   "zoom": 1.05
+  },
+  {
+   "src": "reveal.mp4",
+   "dur": 5.5,
+   "in": 0.0,
+   "tin": "flash"
+  }
+ ],
+ "transitions": {
+  "default": "zoom"
+ },
+ "grade": {
+  "lut": "brand/bviro_look.cube",
+  "grain": 4
+ },
+ "layout": {
+  "caption_top": 1320,
+  "sticker_top": 240
+ },
+ "hook": [
+  {
+   "s": 0.1,
+   "e": 2.95,
+   "text": "50٪… والنص الثاني أصعب",
+   "top": 300
+  }
+ ],
+ "captions": [
+  {
+   "s": 5.3,
+   "e": 8.75,
+   "text": "سقفٌ منحني… بالمليمتر",
+   "icon": "ruler"
+  },
+  {
+   "s": 10.05,
+   "e": 12.9,
+   "text": "نقيس… نفكّر… نعيد",
+   "icon": "pencil-ruler"
+  },
+  {
+   "s": 13.4,
+   "e": 15.0,
+   "text": "والحل… دايم موجود",
+   "icon": "hammer"
+  },
+  {
+   "s": 21.6,
+   "e": 24.4,
+   "text": "باقي يومين",
+   "icon": "timer"
+  }
+ ],
+ "audio": {
+  "pad": false,
+  "whoosh_on_cuts": false,
+  "impact_at_end": false,
+  "duck": false,
+  "sfx": []
+ }
+}

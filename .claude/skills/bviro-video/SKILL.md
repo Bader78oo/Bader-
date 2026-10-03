@@ -103,3 +103,4 @@ Environment rules (learned 2026-09-26):
 - Phone numbers are written without spaces everywhere (captions, end cards): WhatsApp 96946416, Call 77721144.
 - Recolour a structure (e.g. booth → Bviro purple, rest grey, neon edge trace, optional light-sweep reveal): `scripts/sam_recolor.py in.mp4 out.mp4 --ss --dur --pts "x,y;..." [--neg ...] [--scan]` — SAM 2 small ONNX on CPU (~1 s/frame), points tracked by optical flow. Works on large, clearly separated surfaces; flickers on busy wide shots (check a preview first).
 - Uploads to Higgsfield work again (2026-10-03): `media_upload` + curl PUT (with `If-None-Match: *`) + `media_confirm`; then `seedance_2_0_mini` with role `start_image` for a real-frame drone/crane shot (4 credits). Use only the first ~2 s if it starts inventing signage text.
+- Never name a build.py output base.mp4 / mix.wav / seg*.mp4 — those are its temp files.

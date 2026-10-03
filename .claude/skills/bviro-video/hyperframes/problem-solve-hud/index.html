@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+@font-face{font-family:Cairo;font-weight:600;src:url(fonts/Cairo-600.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{width:100%;height:100%;position:relative;font-family:Cairo;overflow:hidden}
+.chip{position:absolute;direction:rtl;background:rgba(18,0,42,.72);border:2px solid #01CEC9;border-radius:18px;padding:6px 22px;color:#fff;font-weight:800;font-size:40px;white-space:nowrap}
+.prog{position:absolute;left:140px;width:800px;top:1480px}
+.prog .lab{direction:rtl;display:flex;justify-content:space-between;color:#fff;font-weight:800;font-size:42px;text-shadow:0 3px 12px rgba(0,0,0,.7)}
+.prog .lab .p{color:#01CEC9;font-size:64px;direction:ltr}
+.prog .bar{height:26px;border-radius:13px;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.5);overflow:hidden;margin-top:6px;direction:rtl}
+.prog .fill{height:100%;width:0%;background:linear-gradient(90deg,#7F00FF,#01CEC9);border-radius:13px;margin-right:0;float:right}
+#grid{position:absolute;inset:0;background-image:linear-gradient(rgba(1,206,201,.16) 2px,transparent 2px),linear-gradient(90deg,rgba(1,206,201,.16) 2px,transparent 2px);background-size:120px 120px}
+#ring{position:absolute;left:170px;top:370px;width:560px;height:560px;border:6px dashed #FFD400;border-radius:50%}
+.emo{position:absolute;font-size:150px;line-height:1}
+#q{left:560px;top:190px} #th{left:300px;top:1050px;font-size:120px}
+#prob{left:0;right:0;top:1560px;text-align:center;margin:0 auto;width:max-content}
+#ok{position:absolute;left:0;right:0;top:760px;text-align:center}
+#ok .b{display:inline-block;direction:rtl;background:#00B26B;color:#fff;font-weight:900;font-size:84px;padding:10px 46px;border-radius:26px;border:5px solid #fff;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+#meas{position:absolute;left:150px;top:980px;width:780px;height:60px}
+#meas .ln{position:absolute;left:0;right:0;top:28px;height:4px;background:#01CEC9;transform-origin:left center}
+#meas .tl,#meas .tr{position:absolute;top:8px;width:4px;height:44px;background:#01CEC9}
+#meas .tl{left:0} #meas .tr{right:0}
+#meas .lab{position:absolute;left:0;right:0;top:-64px;text-align:center;font-weight:800;font-size:46px;color:#fff;direction:ltr;text-shadow:0 3px 12px rgba(0,0,0,.7)}
+.sp{position:absolute;right:30px}
+#s1{top:40px} #s2{top:680px} #s3{top:1320px}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="30" data-width="1080" data-height="1920">
+  <div id="p1" class="prog clip" data-start="0" data-duration="30" data-track-index="0"><div class="lab"><span>نسبة الإنجاز</span><span class="p" id="p1n">0%</span></div><div class="bar"><div class="fill" id="p1f"></div></div></div>
+  <div id="grid" class="clip" data-start="0" data-duration="30" data-track-index="1"></div>
+  <div id="top" class="chip clip" data-start="0" data-duration="30" data-track-index="2" style="left:60px;top:150px">منظور علوي ⬇</div>
+  <div id="ring" class="clip" data-start="0" data-duration="30" data-track-index="3"></div>
+  <div id="q" class="emo clip" data-start="0" data-duration="30" data-track-index="4">❓</div>
+  <div id="th" class="emo clip" data-start="0" data-duration="30" data-track-index="5">🤔</div>
+  <div id="prob" class="chip clip" data-start="0" data-duration="30" data-track-index="6" style="border-color:#FFD400">المشكلة: القطعة ما تركب</div>
+  <div id="meas" class="clip" data-start="0" data-duration="30" data-track-index="7"><div class="ln"></div><div class="tl"></div><div class="tr"></div><div class="lab">±1 mm</div></div>
+  <div id="ok" class="clip" data-start="0" data-duration="30" data-track-index="8"><span class="b">✅ انحلّت</span></div>
+  <div id="s1" class="chip sp clip" data-start="0" data-duration="30" data-track-index="9">السقالة</div>
+  <div id="s2" class="chip sp clip" data-start="0" data-duration="30" data-track-index="10">الفريق</div>
+  <div id="s3" class="chip sp clip" data-start="0" data-duration="30" data-track-index="11">السلّم</div>
+  <div id="p2" class="prog clip" data-start="0" data-duration="30" data-track-index="12"><div class="lab"><span>النص الثاني… بدأ 🔥</span><span class="p" id="p2n">50%</span></div><div class="bar"><div class="fill" id="p2f" style="width:50%"></div></div></div>
+  <div id="days" class="chip clip" data-start="0" data-duration="30" data-track-index="13" style="right:60px;top:150px;font-size:46px">⏱ باقي يومين</div>
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+const all=["#p1","#grid","#top","#ring","#q","#th","#prob","#meas","#ok","#s1","#s2","#s3","#p2","#days"];
+tl.set(all,{opacity:0},0);
+const H0=window.HOOK||"A";
+// hook A: progress bar fills to 50% (0.3-1.6)
+const pr={v:0};
+if(H0==="A"){
+ tl.to("#p1",{opacity:1,duration:0.2},0.25)
+   .to(pr,{v:50,duration:1.2,ease:"power2.out",onUpdate:()=>{document.getElementById("p1n").textContent=Math.round(pr.v)+"%";document.getElementById("p1f").style.width=pr.v+"%"}},0.35)
+   .to("#p1",{scale:1.06,duration:0.12,yoyo:true,repeat:1},1.55).to("#p1",{opacity:0,duration:0.2},2.85);
+}
+// drone 3.0-5.2: blueprint grid + top-view tag
+tl.to("#grid",{opacity:1,duration:0.4},3.1).to("#grid",{opacity:0,duration:0.4},4.7)
+  .to("#top",{opacity:1,duration:0.2},3.2).from("#top",{x:-60,duration:0.35,ease:"expo.out"},3.2).to("#top",{opacity:0,duration:0.2},5.0)
+// freeze 8.8-10.0: ring, ? and thinking, problem label
+  .to("#ring",{opacity:1,duration:0.1},8.85).from("#ring",{scale:1.6,rotation:-90,duration:0.4,ease:"expo.out"},8.85)
+  .to("#q",{opacity:1,duration:0.1},9.0).from("#q",{scale:0,duration:0.35,ease:"back.out(3)"},9.0)
+  .to("#th",{opacity:1,duration:0.1},9.2).from("#th",{scale:0,duration:0.35,ease:"back.out(3)"},9.2)
+  .to("#prob",{opacity:1,duration:0.1},9.05).from("#prob",{y:40,duration:0.3,ease:"power3.out"},9.05)
+  .to(["#ring","#q","#th","#prob"],{opacity:0,duration:0.15},10.0)
+// precision on the hand 11.0-12.2
+  .to("#meas",{opacity:1,duration:0.1},11.05).from("#meas .ln",{scaleX:0,duration:0.45,ease:"expo.out"},11.05)
+  .from("#meas .lab",{opacity:0,y:20,duration:0.3},11.4).to("#meas",{opacity:0,duration:0.15},12.1)
+// solved 12.95-13.9
+  .to("#ok",{opacity:1,duration:0.05},12.95).from("#ok .b",{scale:2.2,rotation:-12,duration:0.35,ease:"back.out(2)"},12.95).to("#ok",{opacity:0,duration:0.2},13.8)
+// split 15.0-17.4 labels
+  .to(["#s1","#s2","#s3"],{opacity:1,duration:0.2,stagger:0.15},15.15).to(["#s1","#s2","#s3"],{opacity:0,duration:0.2},17.2)
+// second half 17.4-19.4
+  .to("#p2",{opacity:1,duration:0.2},17.5).from("#p2 .fill",{width:"0%",duration:0.6,ease:"power2.out"},17.5).to("#p2",{opacity:0,duration:0.2},19.2)
+// days left 19.4-21.6
+  .to("#days",{opacity:1,duration:0.2},19.5).from("#days",{scale:1.5,duration:0.3,ease:"back.out(2)"},19.5).to("#days",{opacity:0,duration:0.2},21.4);
+window.__timelines["main"] = tl;
+tl.seek(0);
+</script>
+</body>
+</html>
