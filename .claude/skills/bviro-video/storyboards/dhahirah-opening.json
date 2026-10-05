@@ -1,0 +1,104 @@
+{
+ "width": 1080,
+ "height": 1920,
+ "fps": 30,
+ "duration": 30,
+ "output": "opening_base.mp4",
+ "voiceover": "bed.wav",
+ "shots": [
+  {
+   "src": "v30.mp4",
+   "dur": 1.95,
+   "in": 0.0,
+   "zoom": 1.12
+  },
+  {
+   "src": "v32.mp4",
+   "dur": 2.55,
+   "in": 1.6,
+   "tin": "flash"
+  },
+  {
+   "src": "v33.mp4",
+   "dur": 5.0,
+   "in": 0.4,
+   "tin": "zoom"
+  },
+  {
+   "src": "v31s.mp4",
+   "dur": 4.0,
+   "in": 2.0,
+   "tin": "flash"
+  },
+  {
+   "src": "v34s.mp4",
+   "dur": 3.5,
+   "in": 0.6,
+   "tin": "whip"
+  },
+  {
+   "src": "v36.mp4",
+   "dur": 3.5,
+   "in": 1.0,
+   "tin": "zoom"
+  },
+  {
+   "src": "v35s.mp4",
+   "dur": 3.5,
+   "in": 0.8,
+   "tin": "whip"
+  },
+  {
+   "src": "endcard.mp4",
+   "dur": 6.0,
+   "in": 0.0,
+   "tin": "flash"
+  }
+ ],
+ "transitions": {
+  "default": "zoom"
+ },
+ "grade": {
+  "lut": "brand/bviro_look.cube",
+  "grain": 3
+ },
+ "layout": {
+  "caption_top": 1250,
+  "sticker_top": 240
+ },
+ "hook": [
+  {
+   "s": 0.1,
+   "e": 1.95,
+   "text": "تذكرون هالشعار؟ 👀",
+   "top": 300
+  }
+ ],
+ "captions": [
+  {
+   "s": 2.1,
+   "e": 4.4,
+   "text": "حتى الضيافة… فيها هوية الظاهرة",
+   "icon": "sparkles"
+  },
+  {
+   "s": 4.6,
+   "e": 9.4,
+   "text": "افتتاح أكتوبر العمران 2026",
+   "icon": "landmark"
+  },
+  {
+   "s": 9.6,
+   "e": 13.4,
+   "text": "ركن محافظة الظاهرة… إطلالة عبري ✨",
+   "icon": "sparkles"
+  }
+ ],
+ "audio": {
+  "pad": false,
+  "whoosh_on_cuts": false,
+  "impact_at_end": false,
+  "duck": false,
+  "sfx": []
+ }
+}

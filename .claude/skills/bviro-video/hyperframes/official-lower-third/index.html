@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ar"><head><meta charset="UTF-8"/><meta name="viewport" content="width=1080, height=1920"/>
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+@font-face{font-family:Cairo;font-weight:600;src:url(fonts/Cairo-600.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{width:100%;height:100%;position:relative;font-family:Cairo;overflow:hidden}
+#lt{position:absolute;right:50px;left:50px;top:1430px;direction:rtl}
+#lt .tag{display:inline-block;background:linear-gradient(90deg,#c99a3c,#f1d68a);color:#1b1306;font-weight:900;font-size:38px;padding:6px 26px;border-radius:12px 12px 0 0}
+#lt .box{background:rgba(14,10,4,.82);border-right:8px solid #c99a3c;padding:22px 30px;border-radius:0 0 16px 16px}
+#lt .l1{color:#fff;font-weight:900;font-size:52px;line-height:1.35}
+#lt .l2{color:#f1d68a;font-weight:800;font-size:40px;margin-top:4px}
+#lt .l3{color:#e7dcc4;font-weight:600;font-size:36px;margin-top:6px}
+</style></head><body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="10.5" data-width="1080" data-height="1920">
+ <div id="lt" class="clip" data-start="0" data-duration="10.5" data-track-index="0">
+  <div class="tag">زيارة رسمية</div>
+  <div class="box"><div class="l1">سعادة طاهر الجنيبي</div><div class="l2">محافظ الظاهرة</div><div class="l3">وعدد من أصحاب السعادة والمسؤولين</div></div>
+ </div>
+</div>
+<script>
+const tl=gsap.timeline({paused:true});
+tl.from("#lt .tag",{x:120,opacity:0,duration:0.45,ease:"power3.out"},0.3)
+  .from("#lt .box",{scaleX:0,transformOrigin:"right center",duration:0.55,ease:"expo.out"},0.4)
+  .from(["#lt .l1","#lt .l2","#lt .l3"],{opacity:0,y:20,duration:0.4,stagger:0.18},0.8)
+  .to("#lt",{opacity:0,y:30,duration:0.4},9.9);
+window.__timelines["main"]=tl; tl.seek(0);
+</script></body></html>

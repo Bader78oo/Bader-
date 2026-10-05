@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ar"><head><meta charset="UTF-8"/><meta name="viewport" content="width=1080, height=1920"/>
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+@font-face{font-family:Cairo;font-weight:600;src:url(fonts/Cairo-600.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0d0a05}
+#root{width:100%;height:100%;position:relative;font-family:Cairo;overflow:hidden;background:radial-gradient(ellipse at 50% 42%,#3a2b10 0%,#17110a 55%,#070503 100%)}
+.t{position:absolute;left:0;right:0;text-align:center;direction:rtl;white-space:nowrap}
+#thx{top:300px;font-size:92px;font-weight:900;background:linear-gradient(90deg,#b8862b,#f6e3a1,#c99a3c);-webkit-background-clip:text;color:transparent}
+#heart{top:420px;font-size:50px;font-weight:600;color:#e9dcc0}
+#card{position:absolute;left:110px;top:560px;width:860px;height:640px;background:#fff;border-radius:36px;box-shadow:0 20px 60px rgba(0,0,0,.6),0 0 0 4px #c99a3c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:40px}
+#card .g{width:740px} #card .i{width:700px} #card .ln{width:420px;height:4px;background:#c99a3c;border-radius:2px}
+#ev{top:1270px;font-size:54px;font-weight:800;color:#f6e3a1}
+#dt{top:1350px;font-size:42px;font-weight:600;color:#d8cbb0}
+#by{position:absolute;left:0;right:0;top:1520px;display:flex;flex-direction:column;align-items:center;gap:16px}
+#by .k{font-size:36px;font-weight:600;color:#bfae8a;direction:rtl}
+#by .row{display:flex;align-items:center;gap:22px;direction:ltr}
+#by .s{height:96px} #by .e{height:58px} #by .ar{height:64px} #by .bar{width:4px;height:70px;background:#c99a3c;border-radius:2px}
+#shine{position:absolute;top:0;left:-400px;width:260px;height:1920px;transform:skewX(-18deg);background:linear-gradient(90deg,rgba(255,236,180,0),rgba(255,236,180,.22),rgba(255,236,180,0))}
+</style></head><body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1080" data-height="1920">
+ <div id="thx" class="t clip" data-start="0" data-duration="6" data-track-index="0">شكرًا لكل من زارنا</div>
+ <div id="heart" class="t clip" data-start="0" data-duration="6" data-track-index="1">💜 تشرّفنا بحضوركم</div>
+ <div id="card" class="clip" data-start="0" data-duration="6" data-track-index="2"><img class="g" src="gov.png"><div class="ln"></div><img class="i" src="ibri.png"></div>
+ <div id="ev" class="t clip" data-start="0" data-duration="6" data-track-index="3">أكتوبر العمران 2026</div>
+ <div id="dt" class="t clip" data-start="0" data-duration="6" data-track-index="4">مركز عُمان للمؤتمرات والمعارض</div>
+ <div id="by" class="clip" data-start="0" data-duration="6" data-track-index="5"><div class="k">تنفيذ الركن</div><div class="row"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"><div class="bar"></div><img class="ar" src="logo_wordmark_ar.png"></div></div>
+ <div id="shine" class="clip" data-start="0" data-duration="6" data-track-index="6"></div>
+</div>
+<script>
+const tl=gsap.timeline({paused:true});
+tl.from("#thx",{y:-60,opacity:0,duration:0.6,ease:"power3.out"},0.1)
+  .from("#heart",{opacity:0,duration:0.5},0.5)
+  .from("#card",{scale:0.85,opacity:0,duration:0.7,ease:"back.out(1.6)"},0.4)
+  .from("#card .ln",{scaleX:0,duration:0.5,ease:"expo.out"},0.9)
+  .from(["#ev","#dt"],{opacity:0,y:30,duration:0.5,stagger:0.15},1.1)
+  .from("#by",{opacity:0,y:40,duration:0.5},1.5)
+  .to("#shine",{left:1300,duration:1.4,ease:"power2.inOut"},1.6)
+  .to("#root",{scale:1.03,duration:6,ease:"none"},0);
+window.__timelines["main"]=tl; tl.seek(0);
+</script></body></html>
