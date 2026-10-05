@@ -3,7 +3,7 @@
  "height": 1920,
  "fps": 30,
  "duration": 30,
- "output": "opening_base.mp4",
+ "output": "opening_base2.mp4",
  "voiceover": "bed.wav",
  "shots": [
   {
@@ -75,12 +75,6 @@
   }
  ],
  "captions": [
-  {
-   "s": 2.1,
-   "e": 4.4,
-   "text": "حتى الضيافة… فيها هوية الظاهرة",
-   "icon": "sparkles"
-  },
   {
    "s": 4.6,
    "e": 9.4,
