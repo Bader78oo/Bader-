@@ -1,23 +1,37 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { Box, Images, Rotate3d } from 'lucide-react';
-import type { TourManifest } from '@/lib/tours/manifest';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Box, Images, Map, Rotate3d, X } from 'lucide-react';
+import type { TourManifest, TourPanorama } from '@/lib/tours/manifest';
+import { SiteExplorer } from './site-explorer';
 import '@photo-sphere-viewer/core/index.css';
 import '@photo-sphere-viewer/markers-plugin/index.css';
 import '@photo-sphere-viewer/virtual-tour-plugin/index.css';
 
-type Mode = 'tour' | 'model' | 'stills';
+type Mode = 'site' | 'tour' | 'model' | 'stills';
 
 function sceneName(manifest: TourManifest, id: string) {
   const pano = manifest.panoramas.find((p) => p.id === id);
   if (!pano) return id;
   if (pano.kind === 'aerial') return 'منظر جوي';
+  if (pano.kind === 'amenity') {
+    return manifest.site?.amenities.find((a) => a.pano === id)?.name.ar ?? id;
+  }
   const index = manifest.panoramas.filter((p) => p.kind === 'interior').indexOf(pano) + 1;
   return manifest.levels > 1 ? `الطابق ${(pano.level ?? 0) + 1} - مشهد ${index}` : `مشهد ${index}`;
 }
 
-function PanoramaTour({ manifest, baseUrl }: { manifest: TourManifest; baseUrl: string }) {
+function PanoramaTour({
+  manifest,
+  panoramas,
+  startId,
+  baseUrl
+}: {
+  manifest: TourManifest;
+  panoramas: TourPanorama[];
+  startId?: string;
+  baseUrl: string;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,7 +46,7 @@ function PanoramaTour({ manifest, baseUrl }: { manifest: TourManifest; baseUrl: 
       ]);
       if (cancelled || !containerRef.current) return;
 
-      const nodes = manifest.panoramas.map((p) => ({
+      const nodes = panoramas.map((p) => ({
         id: p.id,
         panorama: `${baseUrl}/${p.file}`,
         name: sceneName(manifest, p.id),
@@ -44,12 +58,13 @@ function PanoramaTour({ manifest, baseUrl }: { manifest: TourManifest; baseUrl: 
         }))
       }));
 
-      const start = manifest.panoramas.find((p) => p.kind !== 'aerial') ?? manifest.panoramas[0];
+      const start =
+        panoramas.find((p) => p.id === startId) ?? panoramas.find((p) => p.kind !== 'aerial') ?? panoramas[0];
       viewer = new Viewer({
         container: containerRef.current,
         // Wide field of view, facing the way into the rest of the property
         defaultZoomLvl: 0,
-        defaultYaw: start?.links[0]?.yaw ?? 0,
+        defaultYaw: start?.heading ?? start?.links[0]?.yaw ?? 0,
         defaultPitch: -0.1,
         loadingTxt: 'جارٍ التحميل...',
         navbar: ['zoom', 'move', 'caption', 'fullscreen'],
@@ -72,7 +87,7 @@ function PanoramaTour({ manifest, baseUrl }: { manifest: TourManifest; baseUrl: 
       cancelled = true;
       viewer?.destroy();
     };
-  }, [manifest, baseUrl]);
+  }, [manifest, panoramas, startId, baseUrl]);
 
   return <div ref={containerRef} className="h-full w-full" />;
 }
@@ -117,9 +132,18 @@ function Stills({ manifest, baseUrl }: { manifest: TourManifest; baseUrl: string
 }
 
 export function TourViewer({ manifest, baseUrl }: { manifest: TourManifest; baseUrl: string }) {
-  const [mode, setMode] = useState<Mode>('tour');
+  const site = manifest.site?.amenities.length ? manifest.site : null;
+  const [mode, setMode] = useState<Mode>(site ? 'site' : 'tour');
+  // Amenity 360 opened from the site view, shown as an overlay
+  const [amenityPano, setAmenityPano] = useState<string | null>(null);
+  const tourPanoramas = useMemo(() => manifest.panoramas.filter((p) => p.kind !== 'amenity'), [manifest]);
+  const overlayPanoramas = useMemo(
+    () => manifest.panoramas.filter((p) => p.id === amenityPano),
+    [manifest, amenityPano]
+  );
   const tabs: { mode: Mode; label: string; icon: typeof Box; show: boolean }[] = [
-    { mode: 'tour', label: 'جولة 360°', icon: Rotate3d, show: manifest.panoramas.length > 0 },
+    { mode: 'site', label: 'المشروع', icon: Map, show: !!site },
+    { mode: 'tour', label: 'جولة 360°', icon: Rotate3d, show: tourPanoramas.length > 0 },
     { mode: 'model', label: 'نموذج ثلاثي الأبعاد', icon: Box, show: true },
     { mode: 'stills', label: 'صور خارجية', icon: Images, show: manifest.stills.length > 0 }
   ];
@@ -134,7 +158,10 @@ export function TourViewer({ manifest, baseUrl }: { manifest: TourManifest; base
             .map(({ mode: m, label, icon: Icon }) => (
               <button
                 key={m}
-                onClick={() => setMode(m)}
+                onClick={() => {
+                  setMode(m);
+                  setAmenityPano(null);
+                }}
                 className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition-colors ${
                   mode === m ? 'bg-orange-500 text-white' : 'text-gray-300 hover:text-white'
                 }`}
@@ -146,9 +173,22 @@ export function TourViewer({ manifest, baseUrl }: { manifest: TourManifest; base
         </nav>
       </header>
       <main dir="ltr" className="relative min-h-0 flex-1">
-        {mode === 'tour' && <PanoramaTour manifest={manifest} baseUrl={baseUrl} />}
+        {mode === 'site' && site && <SiteExplorer site={site} baseUrl={baseUrl} onOpen360={setAmenityPano} />}
+        {mode === 'tour' && <PanoramaTour manifest={manifest} panoramas={tourPanoramas} baseUrl={baseUrl} />}
         {mode === 'model' && <ModelView manifest={manifest} baseUrl={baseUrl} />}
         {mode === 'stills' && <Stills manifest={manifest} baseUrl={baseUrl} />}
+        {amenityPano && (
+          <div className="absolute inset-0 z-20 bg-black">
+            <PanoramaTour manifest={manifest} panoramas={overlayPanoramas} baseUrl={baseUrl} />
+            <button
+              onClick={() => setAmenityPano(null)}
+              aria-label="إغلاق"
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/90 p-2 text-gray-900 shadow-lg hover:bg-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );

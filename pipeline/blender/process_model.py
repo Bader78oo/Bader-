@@ -5,7 +5,9 @@ Output directory:
     model.glb         compressed model for the in-browser 3D viewer
     panos/<id>.jpg    equirectangular 360 renders from auto-placed viewpoints
     stills/<id>.jpg   exterior hero shots
-    manifest.json     viewpoints, links between them (for hotspots) and metadata
+    site/             overview still, and per amenity (pool, gym, ...) a hero still and
+                      fly-in / fly-out clips from the overview
+    manifest.json     viewpoints, links between them (for hotspots), amenities and metadata
 
 Run with Blender in background mode:
     blender -b -P pipeline/blender/process_model.py -- --input villa.fbx --output out/villa
@@ -27,6 +29,9 @@ import time
 import bpy
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import amenities  # noqa: E402
 
 EYE_HEIGHT = 1.6
 H_DIRS = [Vector((math.cos(a), math.sin(a), 0.0)) for a in (i * math.pi / 4 for i in range(8))]
@@ -52,6 +57,15 @@ def parse_args():
     p.add_argument("--no-stills", action="store_true")
     p.add_argument("--no-aerial", action="store_true")
     p.add_argument("--no-interior-lights", action="store_true", help="don't add fill lights at viewpoints")
+    p.add_argument("--no-amenities", action="store_true", help="skip amenity detection, stills and clips")
+    p.add_argument("--no-ground", action="store_true", help="don't add a ground plane around the model")
+    p.add_argument("--clip-seconds", type=float, default=3.0, help="length of each fly-in clip")
+    p.add_argument("--fps", type=int, default=24)
+    p.add_argument("--clip-width", type=int, default=1280, help="clip width (16:9)")
+    p.add_argument("--clip-samples", type=int, default=32)
+    p.add_argument("--clip-engine", choices=["cycles", "eevee"], default="cycles",
+                   help="eevee is much faster on a GPU but needs one (no headless CPU support)")
+    p.add_argument("--keep-frames", action="store_true", help="keep the clip frame images")
     return p.parse_args(argv)
 
 
@@ -201,14 +215,15 @@ def interior_candidates(bvh, hits):
         if hit_distance(bvh, floor_pt, up, EYE_HEIGHT - 0.05) is not None:
             continue
         # A ceiling above, at a plausible storey height
-        ceiling = hit_distance(bvh, eye, up, 6.0)
-        if ceiling is None or ceiling < 0.3:
+        loc, normal, _i, ceiling = bvh.ray_cast(eye, up, 6.0)
+        if loc is None or ceiling < 0.3 or normal.dot(up) > 0:
             continue
-        # Enclosed by walls in every direction, with some clearance around the eye
+        # Enclosed by walls in every direction, with some clearance around the eye. Hitting the
+        # back of a face means the point is inside a solid (e.g. a tower modelled as a block).
         enclosed = True
         for d in H_DIRS:
-            dist = hit_distance(bvh, eye, d, 40.0)
-            if dist is None or dist < 0.6:
+            loc, normal, _i, dist = bvh.ray_cast(eye, d, 40.0)
+            if loc is None or dist < 0.6 or normal.dot(d) > 0:
                 enclosed = False
                 break
         if enclosed:
@@ -305,16 +320,34 @@ def setup_world():
     if hasattr(sky, "sun_elevation"):
         sky.sun_elevation = math.radians(45)
         sky.sun_rotation = math.radians(135)
-    bg.inputs["Strength"].default_value = 0.35
+    if hasattr(sky, "sun_disc"):
+        sky.sun_disc = False  # the AutoSun lamp provides direct light; both would double it
+    bg.inputs["Strength"].default_value = 0.15
     nt.links.new(sky.outputs[0], bg.inputs[0])
     nt.links.new(bg.outputs[0], out.inputs[0])
 
     sun_data = bpy.data.lights.new("AutoSun", "SUN")
     sun_data.energy = 3.0
+    sun_data.color = (1.0, 0.96, 0.9)
     sun_data.angle = math.radians(1.5)
     sun = bpy.data.objects.new("AutoSun", sun_data)
     sun.rotation_euler = (math.radians(45), 0, math.radians(135))
     scene.collection.objects.link(sun)
+
+
+def add_ground(z, color=(0.62, 0.55, 0.44)):
+    """A large ground disc so wide and aerial shots don't show the empty void below the
+    horizon around the model. Neutral desert tone; added after the web export."""
+    mat = bpy.data.materials.new("AutoGround")
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (*color, 1.0)
+    bsdf.inputs["Roughness"].default_value = 0.95
+    bpy.ops.mesh.primitive_circle_add(vertices=64, radius=5000, fill_type="NGON", location=(0, 0, z))
+    ground = bpy.context.active_object
+    ground.name = "AutoGround"
+    ground.data.materials.append(mat)
+    return ground
 
 
 def add_fill_light(name, location, energy):
@@ -335,7 +368,7 @@ def setup_render(args):
     scene.render.image_settings.quality = 90
     scene.view_settings.view_transform = "AgX"
     scene.view_settings.look = "AgX - Medium High Contrast"
-    scene.view_settings.exposure = -0.5
+    scene.view_settings.exposure = 0.0
     scene.render.resolution_percentage = 100
 
     device = "CPU"
@@ -454,6 +487,71 @@ def export_web_model(objs, path):
     return draco
 
 
+def render_site(args, bvh, objs, lo, hi, cam, panoramas):
+    """Overview still plus, per detected amenity, a hero still, a 360 and fly-in/out clips."""
+    found = amenities.detect(objs)
+    log(f"amenities: {', '.join(a['id'] for a in found) or 'none found'}")
+    if not found:
+        return None
+    os.makedirs(os.path.join(args.output, "site"), exist_ok=True)
+    scene = bpy.context.scene
+    still_w, still_h = args.still_width, args.still_width * 9 // 16
+    clip_w, clip_h = args.clip_width, args.clip_width * 9 // 16
+    frames = max(2, round(args.clip_seconds * args.fps))
+    center = (lo + hi) / 2
+
+    overview = amenities.overview_camera(lo, hi)
+    log("rendering site overview")
+    amenities.render_view(cam, overview, os.path.join(args.output, "site/overview.jpg"), still_w, still_h)
+
+    entries = []
+    for a in found:
+        # A tower is viewed from outside even if its footprint contains a lobby
+        a["indoor"] = a["type"] != "tower" and amenities.is_indoor(bvh, a["lo"], a["hi"])
+        hero = amenities.hero_camera(bvh, a, center)
+        # Indoor amenities: the clip flies to an outside view of the building, and the viewer
+        # cross-fades from there to the interior still
+        approach = amenities.hero_camera(bvh, {**a, "indoor": False}, center) if a["indoor"] else hero
+        log(f"amenity {a['id']} ({'indoor' if a['indoor'] else 'outdoor'}): rendering still and 360")
+        scene.render.engine = "CYCLES"
+        scene.cycles.samples = args.samples
+        still = f"site/{a['id']}.jpg"
+        amenities.render_view(cam, hero, os.path.join(args.output, still), still_w, still_h)
+
+        pano_id = f"amenity-{a['id']}"
+        eye = amenities.pano_point(bvh, a, hero[0], hero[1])
+        render_pano(cam, eye, os.path.join(args.output, f"panos/{pano_id}.jpg"), args.pano_width)
+        # Open the 360 facing the amenity
+        heading, _pitch = yaw_pitch(eye, (a["lo"] + a["hi"]) / 2)
+        panoramas.append({"id": pano_id, "file": f"panos/{pano_id}.jpg", "kind": "amenity", "level": None,
+                          "position": [round(c, 3) for c in eye], "heading": heading, "links": []})
+
+        log(f"amenity {a['id']}: rendering {frames}-frame fly-in")
+        amenities.set_engine(args.clip_engine, args.clip_samples)
+        frames_dir = os.path.join(args.output, f"site/frames-{a['id']}")
+        path = amenities.fly_path(bvh, overview, approach, hi.z)
+        amenities.render_clip(cam, path, frames_dir, frames, clip_w, clip_h)
+        clip_in, clip_out = f"site/{a['id']}-in.mp4", f"site/{a['id']}-out.mp4"
+        amenities.encode_clip(frames_dir, os.path.join(args.output, clip_in), args.fps, clip_w, clip_h)
+        amenities.encode_clip(frames_dir, os.path.join(args.output, clip_out), args.fps, clip_w, clip_h, reverse=True)
+        amenities.keep_frames_dir(frames_dir, args.keep_frames)
+
+        entries.append({
+            "id": a["id"],
+            "type": a["type"],
+            "name": a["name"],
+            "indoor": a["indoor"],
+            "still": still,
+            "pano": pano_id,
+            "clipIn": clip_in,
+            "clipOut": clip_out,
+        })
+    scene.render.engine = "CYCLES"
+    scene.cycles.samples = args.samples
+    return {"overview": {"still": "site/overview.jpg"}, "amenities": entries,
+            "clip": {"fps": args.fps, "seconds": args.clip_seconds, "width": clip_w, "height": clip_h}}
+
+
 def main():
     args = parse_args()
     t0 = time.time()
@@ -490,6 +588,8 @@ def main():
     chosen = choose_viewpoints(bvh, cands, args.max_views, args.coverage) if cands else []
     log(f"{len(cands)} interior candidates -> {len(chosen)} viewpoints")
 
+    if not args.no_ground:
+        add_ground(full_lo.z - 0.02)
     setup_world()
     has_lights = any(o.type == "LIGHT" and not o.name.startswith("Auto") for o in bpy.context.scene.objects)
     setup_render(args)
@@ -552,6 +652,10 @@ def main():
             render_still(cam, loc, target, os.path.join(args.output, f"stills/{name}.jpg"), args.still_width)
             stills.append({"id": name, "file": f"stills/{name}.jpg"})
 
+    site = None
+    if not args.no_amenities:
+        site = render_site(args, bvh, objs, lo, hi, cam, panoramas)
+
     manifest = {
         "version": 1,
         "source": os.path.basename(args.input),
@@ -562,6 +666,7 @@ def main():
         "levels": len(floors),
         "panoramas": panoramas,
         "stills": stills,
+        "site": site,
         "processingSeconds": round(time.time() - t0, 1),
     }
     with open(os.path.join(args.output, "manifest.json"), "w") as f:

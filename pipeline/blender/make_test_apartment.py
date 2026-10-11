@@ -39,7 +39,7 @@ def box(name, x0, y0, z0, x1, y1, z1, mat):
     obj = bpy.context.active_object
     obj.name = name
     obj.scale = (abs(x1 - x0), abs(y1 - y0), abs(z1 - z0))
-    bpy.ops.object.transform_apply(scale=True)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     obj.data.materials.append(mat)
     return obj
 
