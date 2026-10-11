@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "source": "test_apartment.glb",
+  "units": "m",
+  "unitScale": 1.0,
+  "bounds": {
+    "min": [
+      -0.075,
+      -0.075,
+      -0.1
+    ],
+    "max": [
+      12.075,
+      8.075,
+      3.1
+    ]
+  },
+  "model": {
+    "file": "model.glb",
+    "draco": false
+  },
+  "levels": 1,
+  "panoramas": [
+    {
+      "id": "p1",
+      "file": "panos/p1.jpg",
+      "kind": "interior",
+      "level": 0,
+      "position": [
+        3.675,
+        6.175,
+        1.6
+      ],
+      "links": [
+        {
+          "to": "p2",
+          "yaw": 2.7828,
+          "pitch": -0.3481,
+          "distance": 6.4
+        },
+        {
+          "to": "p3",
+          "yaw": 1.5708,
+          "pitch": -0.4769,
+          "distance": 4.03
+        }
+      ]
+    },
+    {
+      "id": "p2",
+      "file": "panos/p2.jpg",
+      "kind": "interior",
+      "level": 0,
+      "position": [
+        8.675,
+        2.175,
+        1.6
+      ],
+      "links": [
+        {
+          "to": "p1",
+          "yaw": -1.5708,
+          "pitch": -0.4169,
+          "distance": 6.4
+        }
+      ]
+    },
+    {
+      "id": "p3",
+      "file": "panos/p3.jpg",
+      "kind": "interior",
+      "level": 0,
+      "position": [
+        7.675,
+        6.675,
+        1.6
+      ],
+      "links": [
+        {
+          "to": "p1",
+          "yaw": -2.0344,
+          "pitch": -0.9459,
+          "distance": 4.03
+        }
+      ]
+    },
+    {
+      "id": "aerial",
+      "file": "panos/aerial.jpg",
+      "kind": "aerial",
+      "level": null,
+      "position": [
+        6.0,
+        4.0,
+        13.1
+      ],
+      "links": []
+    }
+  ],
+  "stills": [
+    {
+      "id": "exterior_1",
+      "file": "stills/exterior_1.jpg"
+    },
+    {
+      "id": "exterior_2",
+      "file": "stills/exterior_2.jpg"
+    },
+    {
+      "id": "exterior_3",
+      "file": "stills/exterior_3.jpg"
+    },
+    {
+      "id": "exterior_4",
+      "file": "stills/exterior_4.jpg"
+    }
+  ],
+  "processingSeconds": 398.4
+}
