@@ -1,0 +1,405 @@
+{
+  "version": 1,
+  "source": "test_complex.glb",
+  "units": "m",
+  "unitScale": 1.0,
+  "bounds": {
+    "min": [
+      -0.3,
+      -60.0,
+      -1.6
+    ],
+    "max": [
+      120.3,
+      90.3,
+      40.9
+    ]
+  },
+  "model": {
+    "file": "model.glb",
+    "draco": false
+  },
+  "levels": 1,
+  "panoramas": [
+    {
+      "id": "p1",
+      "file": "panos/p1.jpg",
+      "kind": "interior",
+      "level": 0,
+      "position": [
+        21.411,
+        69.44,
+        1.65
+      ],
+      "links": []
+    },
+    {
+      "id": "p2",
+      "file": "panos/p2.jpg",
+      "kind": "interior",
+      "level": 0,
+      "position": [
+        109.353,
+        10.079,
+        1.7
+      ],
+      "links": []
+    },
+    {
+      "id": "aerial",
+      "file": "panos/aerial.jpg",
+      "kind": "aerial",
+      "level": null,
+      "position": [
+        60.0,
+        15.15,
+        85.99
+      ],
+      "links": []
+    },
+    {
+      "id": "amenity-tower-a",
+      "file": "panos/amenity-tower-a.jpg",
+      "kind": "amenity",
+      "level": null,
+      "position": [
+        25.05,
+        62.95,
+        41.1
+      ],
+      "links": [],
+      "heading": -0.7854
+    },
+    {
+      "id": "amenity-tower-b",
+      "file": "panos/amenity-tower-b.jpg",
+      "kind": "amenity",
+      "level": null,
+      "position": [
+        60.274,
+        65.095,
+        40.05
+      ],
+      "links": [],
+      "heading": -0.3927
+    },
+    {
+      "id": "amenity-tower-c",
+      "file": "panos/amenity-tower-c.jpg",
+      "kind": "amenity",
+      "level": null,
+      "position": [
+        90.95,
+        62.95,
+        29.7
+      ],
+      "links": [],
+      "heading": 0.7854
+    },
+    {
+      "id": "amenity-lobby",
+      "file": "panos/amenity-lobby.jpg",
+      "kind": "amenity",
+      "level": null,
+      "position": [
+        19.0,
+        69.0,
+        1.65
+      ],
+      "links": [],
+      "heading": 0.0
+    },
+    {
+      "id": "amenity-pool",
+      "file": "panos/amenity-pool.jpg",
+      "kind": "amenity",
+      "level": null,
+      "position": [
+        54.0,
+        24.229,
+        1.65
+      ],
+      "links": [],
+      "heading": 0.0
+    },
+    {
+      "id": "amenity-gym",
+      "file": "panos/amenity-gym.jpg",
+      "kind": "amenity",
+      "level": null,
+      "position": [
+        109.5,
+        11.0,
+        1.7
+      ],
+      "links": [],
+      "heading": 0.0
+    },
+    {
+      "id": "amenity-court",
+      "file": "panos/amenity-court.jpg",
+      "kind": "amenity",
+      "level": null,
+      "position": [
+        78.699,
+        27.562,
+        1.63
+      ],
+      "links": [],
+      "heading": 1.1781
+    },
+    {
+      "id": "amenity-playground",
+      "file": "panos/amenity-playground.jpg",
+      "kind": "amenity",
+      "level": null,
+      "position": [
+        25.625,
+        28.256,
+        4.25
+      ],
+      "links": [],
+      "heading": -1.1781
+    },
+    {
+      "id": "amenity-bbq",
+      "file": "panos/amenity-bbq.jpg",
+      "kind": "amenity",
+      "level": null,
+      "position": [
+        21.207,
+        16.207,
+        1.68
+      ],
+      "links": [],
+      "heading": -2.3562
+    },
+    {
+      "id": "amenity-garden",
+      "file": "panos/amenity-garden.jpg",
+      "kind": "amenity",
+      "level": null,
+      "position": [
+        71.493,
+        29.089,
+        1.55
+      ],
+      "links": [],
+      "heading": -2.7489
+    },
+    {
+      "id": "amenity-mosque",
+      "file": "panos/amenity-mosque.jpg",
+      "kind": "amenity",
+      "level": null,
+      "position": [
+        74.72,
+        9.95,
+        7.6
+      ],
+      "links": [],
+      "heading": 1.5708
+    },
+    {
+      "id": "amenity-parking",
+      "file": "panos/amenity-parking.jpg",
+      "kind": "amenity",
+      "level": null,
+      "position": [
+        85.846,
+        39.846,
+        1.63
+      ],
+      "links": [],
+      "heading": 0.7854
+    }
+  ],
+  "stills": [
+    {
+      "id": "exterior_1",
+      "file": "stills/exterior_1.jpg"
+    },
+    {
+      "id": "exterior_2",
+      "file": "stills/exterior_2.jpg"
+    },
+    {
+      "id": "exterior_3",
+      "file": "stills/exterior_3.jpg"
+    },
+    {
+      "id": "exterior_4",
+      "file": "stills/exterior_4.jpg"
+    }
+  ],
+  "site": {
+    "overview": {
+      "still": "site/overview.jpg"
+    },
+    "amenities": [
+      {
+        "id": "tower-a",
+        "type": "tower",
+        "name": {
+          "en": "Tower A",
+          "ar": "\u0627\u0644\u0628\u0631\u062c A"
+        },
+        "indoor": false,
+        "still": "site/tower-a.jpg",
+        "pano": "amenity-tower-a",
+        "clipIn": "site/tower-a-in.mp4",
+        "clipOut": "site/tower-a-out.mp4"
+      },
+      {
+        "id": "tower-b",
+        "type": "tower",
+        "name": {
+          "en": "Tower B",
+          "ar": "\u0627\u0644\u0628\u0631\u062c B"
+        },
+        "indoor": false,
+        "still": "site/tower-b.jpg",
+        "pano": "amenity-tower-b",
+        "clipIn": "site/tower-b-in.mp4",
+        "clipOut": "site/tower-b-out.mp4"
+      },
+      {
+        "id": "tower-c",
+        "type": "tower",
+        "name": {
+          "en": "Tower C",
+          "ar": "\u0627\u0644\u0628\u0631\u062c C"
+        },
+        "indoor": false,
+        "still": "site/tower-c.jpg",
+        "pano": "amenity-tower-c",
+        "clipIn": "site/tower-c-in.mp4",
+        "clipOut": "site/tower-c-out.mp4"
+      },
+      {
+        "id": "lobby",
+        "type": "lobby",
+        "name": {
+          "en": "Lobby",
+          "ar": "\u0627\u0644\u0627\u0633\u062a\u0642\u0628\u0627\u0644"
+        },
+        "indoor": true,
+        "still": "site/lobby.jpg",
+        "pano": "amenity-lobby",
+        "clipIn": "site/lobby-in.mp4",
+        "clipOut": "site/lobby-out.mp4"
+      },
+      {
+        "id": "pool",
+        "type": "pool",
+        "name": {
+          "en": "Swimming pool",
+          "ar": "\u0627\u0644\u0645\u0633\u0628\u062d"
+        },
+        "indoor": false,
+        "still": "site/pool.jpg",
+        "pano": "amenity-pool",
+        "clipIn": "site/pool-in.mp4",
+        "clipOut": "site/pool-out.mp4"
+      },
+      {
+        "id": "gym",
+        "type": "gym",
+        "name": {
+          "en": "Gym",
+          "ar": "\u0627\u0644\u0646\u0627\u062f\u064a \u0627\u0644\u0631\u064a\u0627\u0636\u064a"
+        },
+        "indoor": true,
+        "still": "site/gym.jpg",
+        "pano": "amenity-gym",
+        "clipIn": "site/gym-in.mp4",
+        "clipOut": "site/gym-out.mp4"
+      },
+      {
+        "id": "court",
+        "type": "court",
+        "name": {
+          "en": "Sports court",
+          "ar": "\u0627\u0644\u0645\u0644\u0639\u0628"
+        },
+        "indoor": false,
+        "still": "site/court.jpg",
+        "pano": "amenity-court",
+        "clipIn": "site/court-in.mp4",
+        "clipOut": "site/court-out.mp4"
+      },
+      {
+        "id": "playground",
+        "type": "playground",
+        "name": {
+          "en": "Kids' play area",
+          "ar": "\u0623\u0644\u0639\u0627\u0628 \u0627\u0644\u0623\u0637\u0641\u0627\u0644"
+        },
+        "indoor": false,
+        "still": "site/playground.jpg",
+        "pano": "amenity-playground",
+        "clipIn": "site/playground-in.mp4",
+        "clipOut": "site/playground-out.mp4"
+      },
+      {
+        "id": "bbq",
+        "type": "bbq",
+        "name": {
+          "en": "BBQ area",
+          "ar": "\u0645\u0646\u0637\u0642\u0629 \u0627\u0644\u0634\u0648\u0627\u0621"
+        },
+        "indoor": false,
+        "still": "site/bbq.jpg",
+        "pano": "amenity-bbq",
+        "clipIn": "site/bbq-in.mp4",
+        "clipOut": "site/bbq-out.mp4"
+      },
+      {
+        "id": "garden",
+        "type": "garden",
+        "name": {
+          "en": "Garden",
+          "ar": "\u0627\u0644\u062d\u062f\u064a\u0642\u0629"
+        },
+        "indoor": false,
+        "still": "site/garden.jpg",
+        "pano": "amenity-garden",
+        "clipIn": "site/garden-in.mp4",
+        "clipOut": "site/garden-out.mp4"
+      },
+      {
+        "id": "mosque",
+        "type": "mosque",
+        "name": {
+          "en": "Mosque",
+          "ar": "\u0627\u0644\u0645\u0633\u062c\u062f"
+        },
+        "indoor": false,
+        "still": "site/mosque.jpg",
+        "pano": "amenity-mosque",
+        "clipIn": "site/mosque-in.mp4",
+        "clipOut": "site/mosque-out.mp4"
+      },
+      {
+        "id": "parking",
+        "type": "parking",
+        "name": {
+          "en": "Parking",
+          "ar": "\u0627\u0644\u0645\u0648\u0627\u0642\u0641"
+        },
+        "indoor": false,
+        "still": "site/parking.jpg",
+        "pano": "amenity-parking",
+        "clipIn": "site/parking-in.mp4",
+        "clipOut": "site/parking-out.mp4"
+      }
+    ],
+    "clip": {
+      "fps": 24,
+      "seconds": 2.5,
+      "width": 480,
+      "height": 270
+    }
+  },
+  "processingSeconds": 1959.9
+}
