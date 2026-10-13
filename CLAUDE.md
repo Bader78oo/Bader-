@@ -8,6 +8,22 @@ This repo is based on [nextjs/saas-starter](https://github.com/nextjs/saas-start
 template with email/password auth, Stripe subscriptions, and a team-based dashboard. It's intended
 as the base to build a real product on top of, not a finished app.
 
+The product being built on it: a platform for real-estate developers (Oman first, then the Gulf).
+A developer uploads their project's 3D model and gets back, automatically, an interactive marketing
+tour: amenity navigation with camera fly-in clips (overview → pool, gym, towers, ...), 360°
+panoramas, room-to-room interior tours and an orbitable 3D model. The owner speaks Arabic; the
+viewer UI is Arabic-first (RTL).
+
+- `pipeline/blender/` — Blender (Python, headless) processing: `process_model.py` is the entry
+  point, `amenities.py` detects amenities from object names and renders stills/360s/clips. Test
+  models: `make_test_apartment.py`, `make_test_complex.py`. Full details in `pipeline/README.md`.
+- `app/tour/[id]/` — the viewer page (`/tour/<id>`), reading `public/tours/<id>/manifest.json`
+  written by the pipeline. `public/tours/demo` (apartment) and `public/tours/compound-demo`
+  (compound with 12 amenities) are rendered examples.
+- Rendering is meant to run on the owner's Windows PC (RTX 5080, Cycles/OptiX). Blender and Unity
+  can be driven through MCP servers when the session runs on that PC (see `.mcp.json` and
+  `docs/desktop-setup-ar.md`).
+
 ## Commands
 
 Package manager is pnpm (there's a `pnpm-lock.yaml`; no other lockfile should be added).
