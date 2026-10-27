@@ -270,14 +270,18 @@
   }
   function terracottaPot(r = 0.42, h = 0.4) {
     const k = new Kit(), clayD = '#9a5430', rim = '#c67a4c', soil = '#4a3320', soilD = '#3a2715';
-    const body = new T.Mesh(new T.CylinderGeometry(r, r * 0.72, h, 24), new T.MeshStandardMaterial({ map: clayTexture(), roughness: 0.92 }));
+    // open-ended: a closed top would cap the pot with a solid clay "lid", sealing the soil out of
+    // sight instead of showing it from above.
+    const body = new T.Mesh(new T.CylinderGeometry(r, r * 0.72, h, 24, 1, true), new T.MeshStandardMaterial({ map: clayTexture(), roughness: 0.92, side: T.DoubleSide }));
     body.position.y = h / 2;
     k.add(GEO.cyl(r * 1.05, r * 1.0, 0.06, 20), rim, [0, h + 0.02, 0]);
     k.add(GEO.cyl(r * 0.97, r * 0.97, 0.022, 20), clayD, [0, h * 0.36, 0]);
     k.add(GEO.cyl(r * 0.86, r * 0.86, 0.022, 20), clayD, [0, h * 0.72, 0]);
     k.add(GEO.cyl(r * 1.15, r * 1.15, 0.03, 20), clayD, [0, -0.015, 0]);
-    // visible soil filling the pot, just under the rim — every pot shows real earth, planted or not
+    // real soil, visible from directly above, filling the pot almost to the rim
     k.add(GEO.cyl(r * 0.93, r * 0.9, 0.05, 20), [soilD, soil], [0, h - 0.025, 0], [0, 0, 0], [1, 1, 1], true);
+    // a dark floor inside, so the now-open-ended body doesn't look hollow from a low angle
+    k.add(GEO.cyl(r * 0.68, r * 0.68, 0.02, 20), soilD, [0, 0.05, 0], [0, 0, 0], [1, 1, 1], true);
     const group = k.build();
     group.add(body);
     return group;
@@ -860,8 +864,9 @@
   // the child picks one up by clicking it, then clicks a pot to use it there.
   function buildToolsTable(w) {
     // placed straight ahead, closer than the pot ring, so the child always sees it first and can
-    // reach every tool without turning
-    const g = new T.Group(); const [x, z] = polar(0, 2.1); g.position.set(x, 0, z); g.rotation.y = rad(-0 + 90);
+    // reach every tool without turning; rotation 0 keeps its long side (the row of tools) crosswise
+    // to the child, not running lengthwise away from them.
+    const g = new T.Group(); const [x, z] = polar(0, 2.1); g.position.set(x, 0, z); g.rotation.y = 0;
     const k = new Kit(), wood = '#8a5a34', top = '#dcd3c0';
     k.add(GEO.box(1.6, 0.06, 0.6), top, [0, 0.78, 0]);
     for (const [sx, sz] of [[-0.7, -0.25], [0.7, -0.25], [-0.7, 0.25], [0.7, 0.25]]) k.add(GEO.cyl(0.03, 0.03, 0.78, 8), wood, [sx, 0.39, sz]);
@@ -899,9 +904,11 @@
       el.object3D.position.copy(wp);
       clickable(el, onClick, { hover: 1.08 });
     };
-    mkHit(worldOf([0.665, 1.0, 0.22]), 0.14, 0.4, () => equip('trowel', '🪏 الْمِجْرَفَةُ'));
-    bowlPos.forEach(lp => mkHit(worldOf([lp[0], lp[1] + 0.05, lp[2]]), 0.13, 0.2, () => equip('seed', '🌱 بَذْرَةٌ')));
-    mkHit(worldOf([canPos[0], canPos[1] + 0.12, canPos[2]]), 0.16, 0.3, () => equip('water', '💧 إِبْرِيقُ الْمَاءِ'));
+    // kept small and clear of each other — overlapping hit zones made the gaze/laser cursor flicker
+    // between tools and feel uncoordinated when aiming at the crowded table.
+    mkHit(worldOf([0.72, 1.0, 0.22]), 0.1, 0.4, () => equip('trowel', '🪏 الْمِجْرَفَةُ'));
+    bowlPos.forEach(lp => mkHit(worldOf([lp[0], lp[1] + 0.05, lp[2]]), 0.1, 0.2, () => equip('seed', '🌱 بَذْرَةٌ')));
+    mkHit(worldOf([canPos[0], canPos[1] + 0.12, canPos[2]]), 0.13, 0.3, () => equip('water', '💧 إِبْرِيقُ الْمَاءِ'));
   }
   function buildFalaj(w) {
     // one single, straight stone channel with one tidy footbridge — a clean, organized shape
