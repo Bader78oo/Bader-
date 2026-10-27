@@ -380,3 +380,26 @@ user's next round of feedback (two more real-device videos):
 Verified end to end via Playwright: tool glows appear/disappear exactly when expected, the stage-3
 re-water pause triggers and clears correctly, harvest's fly-to-basket animation runs, the falcon's
 removal leaves no dead code path, zero console errors.
+
+**More detail and real tool-use animations**, from the next round of feedback (a close-up photo and a
+video of the still fairly plain basket/pot/tool interactions):
+
+- The basket got a proper woven texture (reusing the clay-texture technique) instead of flat vertex
+  colors, plus a rim band and smoother geometry (16→28 radial segments). Harvested fruit no longer
+  disappears after the fly-in animation — each one settles into a visible spot inside the basket and
+  stays there, so the pile grows with every harvest.
+- Every empty pot now shows a dashed circular "plant here" marker with a crosshair on the soil,
+  visible only until it's dug — a direct visual answer to "where do I plant."
+- Using the trowel now spawns a real trowel model that dips down and scoops at the pot instead of
+  just a sound and a particle puff. Using the watering can (both the first time and for the mid-growth
+  re-water) spawns the can tipped over the pot with real blue water drops falling and fading into the
+  soil.
+- The trowel was factored out of the tools table into its own reusable `trowelModel()` (the watering
+  can already was one) so both animations could spawn independent copies at the pot without disturbing
+  the one sitting on the table.
+
+Verified via Playwright by tracking the scene graph's child count through each action (mesh added
+mid-animation, cleaned back up afterward — not pixel-diffing screenshots, since getting the headless
+camera angle to exactly frame a specific pot had been unreliable in earlier rounds): dig, water and
+harvest all add and correctly clean up their temporary meshes, the harvested fruit persists as
+expected, zero console errors throughout.

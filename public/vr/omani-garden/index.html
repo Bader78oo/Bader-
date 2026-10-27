@@ -850,6 +850,13 @@
     // falaj channels (right side)
     buildFalaj(w);
   }
+  // a trowel — origin at the handle's lower end, so it can be placed on the table or animated at a pot
+  function trowelModel() {
+    const k = new Kit();
+    seg(k, '#8a5a34', [0, 0, 0], [0.23, 0.35, 0], 0.016, 0.016);
+    k.ell('#7a7a7a', [0.27, 0.35, 0], [0.045, 0.1, 0.03], [0.3, 0, 0.3]);
+    return k.build();
+  }
   // an orange watering can, per the reference photos
   function wateringCan() {
     const k = new Kit(), body = '#e2812b', bodyD = '#c46a1f', metal = '#7a5a3a';
@@ -891,10 +898,7 @@
       const b = bk.build(); b.position.set(...lp); g.add(b);
       bowlPos.push(lp);
     }
-    const tk = new Kit();
-    seg(tk, '#8a5a34', [0.55, 0.85, 0.22], [0.78, 1.2, 0.22], 0.016, 0.016);
-    tk.ell('#7a7a7a', [0.82, 1.2, 0.22], [0.045, 0.1, 0.03], [0.3, 0, 0.3]);
-    g.add(tk.build());
+    const trowel = trowelModel(); trowel.position.set(0.55, 0.85, 0.22); g.add(trowel);
     const canPos = [0.3, 0.81, -0.26];
     const can = wateringCan(); can.position.set(...canPos); can.rotation.y = Math.PI * 0.15; g.add(can);
     w.add(g);
@@ -944,12 +948,30 @@
     el.object3D.position.set(x, 0.2, z); el.object3D.rotation.y = g.rotation.y;
     clickable(el, () => onProp('falaj'), { hover: 1.0 });
   }
+  let basketTex = null;
+  function basketTexture() {
+    if (basketTex) return basketTex;
+    const W = 256, H = 256, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#caa368'); g.addColorStop(1, '#8a5a2a');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    x.strokeStyle = 'rgba(80,48,18,.55)'; x.lineWidth = 3;
+    for (let y = 6; y < H; y += 11) { x.beginPath(); for (let xx = 0; xx <= W; xx += 8) x.lineTo(xx, y + Math.sin(xx * 0.3 + y) * 2.5); x.stroke(); }
+    x.strokeStyle = 'rgba(255,224,180,.22)'; x.lineWidth = 2;
+    for (let xx = 4; xx < W + 40; xx += 13) { x.beginPath(); x.moveTo(xx, 0); x.lineTo(xx - 40, H); x.stroke(); }
+    basketTex = texFrom(c); basketTex.wrapS = T.RepeatWrapping; basketTex.wrapT = T.RepeatWrapping; basketTex.repeat.set(5, 2);
+    return basketTex;
+  }
   function basketModel() {
-    const k = new Kit(), wick = '#b5793f', wickD = '#9a6530';
-    k.add(GEO.cyl(0.34, 0.26, 0.4, 16, 1, true), [wickD, wick], [0, 0.2, 0]);
-    k.add(GEO.cyl(0.36, 0.36, 0.04, 16), wickD, [0, 0.0, 0]);
-    for (const s of [-1, 1]) k.add(GEO.cyl(0.015, 0.015, 0.3, 6), wickD, [s * 0.3, 0.42, 0], [0, 0, s * 0.5]);
-    return k.build();
+    const k = new Kit(), wickD = '#9a6530', rim = '#c08a4a';
+    const body = new T.Mesh(new T.CylinderGeometry(0.34, 0.26, 0.4, 28, 1, true), new T.MeshStandardMaterial({ map: basketTexture(), roughness: 0.95, side: T.DoubleSide }));
+    body.position.y = 0.2;
+    k.add(GEO.cyl(0.36, 0.36, 0.04, 28), wickD, [0, 0.0, 0]);
+    k.add(GEO.cyl(0.35, 0.335, 0.035, 28), rim, [0, 0.4, 0]);
+    for (const s of [-1, 1]) k.add(GEO.cyl(0.015, 0.015, 0.3, 8), wickD, [s * 0.3, 0.42, 0], [0, 0, s * 0.5]);
+    const group = k.build();
+    group.add(body);
+    return group;
   }
   // right beside where the child stands (not out at the pots or the tools table), so every
   // harvested fruit has somewhere close and obvious to land.
@@ -1043,13 +1065,30 @@
   let plantedCount = 0, summaryOffered = false;
   function growModel(p, stage) { return p.kind === 'tree' ? potTree(p, stage) : bushPlant(p, stage); }
   function stageDuration(p) { return p.kind === 'tree' ? 9 : 6; } // seconds per growth stage; trees take longer to ripen
+  let plantSpotTex = null;
+  function plantSpotMark() {
+    if (!plantSpotTex) {
+      const c = document.createElement('canvas'); c.width = c.height = 128;
+      const x = c.getContext('2d');
+      x.strokeStyle = 'rgba(255,255,255,.9)'; x.lineWidth = 6; x.setLineDash([11, 9]);
+      x.beginPath(); x.arc(64, 64, 40, 0, Math.PI * 2); x.stroke();
+      x.setLineDash([]); x.lineWidth = 4;
+      x.beginPath(); x.moveTo(64, 32); x.lineTo(64, 96); x.moveTo(32, 64); x.lineTo(96, 64); x.stroke();
+      plantSpotTex = texFrom(c);
+    }
+    const m = new T.Mesh(new T.PlaneGeometry(0.46, 0.46), new T.MeshBasicMaterial({ map: plantSpotTex, transparent: true, depthWrite: false }));
+    m.rotation.x = -Math.PI / 2; m.position.y = 0.012;
+    return m;
+  }
   function potVisual(p) {
     const st = plant.get(p.id);
     if (st.stage >= 1) return growModel(p, st.stage);
     const k = new Kit();
     if (st.step >= 2) k.ell('#5a3b22', [0, 0.012, 0], [0.045, 0.014, 0.045]); // a seed resting on the soil
     else if (st.step >= 1) k.add(GEO.tor(0.12, 0.018, Math.PI * 2), '#2e1e10', [0, 0.008, 0], [Math.PI / 2, 0, 0], [1, 1, 1], true); // a small dug hole in the soil
-    return k.build();
+    const group = k.build();
+    if (st.step === 0) group.add(plantSpotMark()); // marks exactly where to dig, before anything happens
+    return group;
   }
   function buildPots() {
     for (const p of POTS) {
@@ -1176,6 +1215,38 @@
   function startPlant() { closePanel(); mode = 'plant'; plantHud(); }
   function hop(el) { const y0 = el.object3D.position.y; tween(0.4, k => { el.object3D.position.y = y0 + Math.sin(k * Math.PI) * 0.12; }, () => { el.object3D.position.y = y0; }); }
   function potWorldPos(p) { const v = new T.Vector3(); potEls.get(p.id).object3D.getWorldPosition(v); v.y += 0.5; return v; }
+  function potGroundPos(p) { const v = new T.Vector3(); potEls.get(p.id).object3D.getWorldPosition(v); return v; }
+  // a real trowel appears over the pot and scoops at the soil, instead of the dig just being an
+  // instant sound and a puff of particles.
+  function animateDig(p) {
+    const tool = trowelModel();
+    const pos = potGroundPos(p).clone(); pos.y = 0.95;
+    tool.position.copy(pos); tool.rotation.set(0.5, 0, 0.9);
+    scene.object3D.add(tool);
+    tween(0.75, k => {
+      const dig = Math.sin(Math.min(1, k * 1.6) * Math.PI);
+      tool.position.y = pos.y - dig * 0.5;
+      tool.rotation.x = 0.5 + dig * 0.5;
+    }, () => scene.object3D.remove(tool));
+  }
+  // the watering can tips over the pot and real drops fall and splash into the soil, instead of
+  // watering being an instant sound effect.
+  function animateWater(p) {
+    const can = wateringCan();
+    const base = potGroundPos(p).clone();
+    const canPos = base.clone().add(new T.Vector3(0.17, 0.78, 0));
+    can.position.copy(canPos); can.rotation.z = -1.15;
+    scene.object3D.add(can);
+    const spoutTip = canPos.clone().add(new T.Vector3(0.17, -0.08, 0));
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => {
+        const d = new T.Mesh(new T.SphereGeometry(0.017, 6, 6), new T.MeshStandardMaterial({ color: '#4fb3e0', transparent: true, opacity: 0.9 }));
+        d.position.copy(spoutTip); scene.object3D.add(d);
+        tween(0.4, k => { d.position.y = spoutTip.y - k * k * 0.55; d.material.opacity = 0.9 * (1 - k * 0.6); }, () => scene.object3D.remove(d));
+      }, i * 110);
+    }
+    tween(1.0, () => {}, () => scene.object3D.remove(can));
+  }
   function setToolHud(label) {
     if (toolMesh) { toolMesh.parent.remove(toolMesh); toolMesh.material.map.dispose(); toolMesh = null; }
     if (!label) return;
@@ -1211,7 +1282,7 @@
     if (st.step === 0) {
       if (heldTool !== 'trowel') { sfx.bad(); shake(el); return; }
       heldTool = null; setToolHud(null);
-      st.step = 1; sfx.pop(); hop(el); burst(potWorldPos(p)); refreshPotVisual(p);
+      st.step = 1; sfx.pop(); hop(el); animateDig(p); burst(potWorldPos(p)); refreshPotVisual(p);
       if (mode === 'plant') plantHud();
     } else if (st.step === 1) {
       if (heldTool !== 'seed') { sfx.bad(); shake(el); return; }
@@ -1224,7 +1295,7 @@
       if (heldTool !== 'water') { sfx.bad(); shake(el); return; }
       heldTool = null; setToolHud(null);
       st.step = 3; st.stage = 1; st.nextAt = clockT + stageDuration(p); st.readyAt = clockT + 5 * stageDuration(p);
-      sfx.good(); setMood('cheer'); hop(el); burst(potWorldPos(p)); refreshPotVisual(p);
+      sfx.good(); setMood('cheer'); hop(el); animateWater(p); burst(potWorldPos(p)); refreshPotVisual(p);
       say(pick(['right1', 'right2', 'right3']));
       plantedCount++;
       if (mode === 'plant') {
@@ -1274,21 +1345,26 @@
     if (heldTool !== 'water') { sfx.bad(); shake(potEls.get(p.id)); return; }
     heldTool = null; setToolHud(null);
     st.needsWater = false; st.readyAt = clockT + (6 - st.stage) * stageDuration(p); st.nextAt = clockT + stageDuration(p);
-    sfx.good(); setMood('cheer'); hop(potEls.get(p.id)); burst(potWorldPos(p));
+    sfx.good(); setMood('cheer'); hop(potEls.get(p.id)); animateWater(p); burst(potWorldPos(p));
     say(pick(['right1', 'right2', 'right3']));
     pulse(potEls.get(p.id), false); updatePotLabel(p, st); updateToolHighlights();
   }
   // a small colored dot flies from the pot to the basket beside the child, so harvesting reads as
   // "collect the fruit" rather than just a panel popping up.
+  // the fruit doesn't vanish once it lands — it stays and piles up in the basket, so every harvest
+  // stays visible as proof of what's been picked.
+  let basketFillCount = 0;
   function flyToBasket(p) {
-    const m = new T.Mesh(new T.SphereGeometry(0.05, 10, 8), new T.MeshStandardMaterial({ color: p.fruit }));
+    const m = new T.Mesh(new T.SphereGeometry(0.055, 10, 8), new T.MeshStandardMaterial({ color: p.fruit, roughness: 0.55 }));
     const from = potWorldPos(p); m.position.copy(from); scene.object3D.add(m);
+    const a = basketFillCount * 1.9 + rnd() * 0.6, r = 0.09 + rnd() * 0.1;
+    const to = new T.Vector3(basketPos.x + Math.cos(a) * r, 0.1 + Math.min(basketFillCount, 6) * 0.03, basketPos.z + Math.sin(a) * r);
+    basketFillCount++;
     tween(0.65, k => {
       const k2 = k * k * (3 - 2 * k);
-      m.position.lerpVectors(from, basketPos, k2);
+      m.position.lerpVectors(from, to, k2);
       m.position.y += Math.sin(k * Math.PI) * 0.4;
-      m.scale.setScalar(1 - k * 0.3);
-    }, () => { scene.object3D.remove(m); burst(basketPos.clone().add(new T.Vector3(0, 0.1, 0))); });
+    }, () => burst(to.clone().add(new T.Vector3(0, 0.12, 0))));
   }
   function harvest(p) {
     if (harvested.has(p.id)) return;
