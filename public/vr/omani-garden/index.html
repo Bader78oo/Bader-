@@ -863,10 +863,11 @@
   // the tools table: a trowel, 4 seed bowls and a watering can, each individually equippable —
   // the child picks one up by clicking it, then clicks a pot to use it there.
   function buildToolsTable(w) {
-    // placed straight ahead, closer than the pot ring, so the child always sees it first and can
-    // reach every tool without turning; rotation 0 keeps its long side (the row of tools) crosswise
-    // to the child, not running lengthwise away from them.
-    const g = new T.Group(); const [x, z] = polar(0, 2.1); g.position.set(x, 0, z); g.rotation.y = 0;
+    // placed straight ahead, beyond the pot ring (3.3) — any closer and it collides with the
+    // welcome/mission panels, which always open ~2.2m in front of wherever the child is facing,
+    // and would clip straight through it. Rotation 0 keeps its long side (the row of tools)
+    // crosswise to the child, not running lengthwise away from them.
+    const g = new T.Group(); const [x, z] = polar(0, 3.8); g.position.set(x, 0, z); g.rotation.y = 0;
     const k = new Kit(), wood = '#8a5a34', top = '#dcd3c0';
     k.add(GEO.box(1.6, 0.06, 0.6), top, [0, 0.78, 0]);
     for (const [sx, sz] of [[-0.7, -0.25], [0.7, -0.25], [-0.7, 0.25], [0.7, 0.25]]) k.add(GEO.cyl(0.03, 0.03, 0.78, 8), wood, [sx, 0.39, sz]);
