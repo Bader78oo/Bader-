@@ -2,7 +2,7 @@
 // science lesson. Every spoken line has a key. audio/manifest.json maps keys to recordings;
 // lines without a recording fall back to the browser's Arabic speech synthesis.
 window.LESSON = {
-  character: { name: 'سَالِم' },
+  character: { name: 'سَالِم', title: 'الْمُرْشِدُ الزِّرَاعِيُّ' },
 
   // One pot per crop. angle: position in the front arc (degrees, 0 = straight ahead).
   // Every pot starts empty — the child digs, plants and waters it themself before it grows.
@@ -21,7 +21,7 @@ window.LESSON = {
   stages: ['بَذْرَةٌ', 'إِنْبَاتٌ', 'شَتْلَةٌ', 'نَبَاتٌ صَغِيرٌ', 'إِزْهَارٌ', 'ثِمَارٌ نَاضِجَةٌ'],
 
   lines: {
-    hello: 'هلا والله فيكم يا أبطال! حيّاكم الله في المشتل العماني. اليوم بنتعلم نزرع ونعتني بالنباتات لين تكبر!',
+    hello: 'هلا والله فيكم يا أبطال! أنا سالم، المرشد الزراعي بمزرعة عبري بمحافظة الظاهرة، تحت إشراف وزارة الثروة الزراعية والسمكية وموارد المياه. اليوم بنتعلم نزرع ونعتني بالنباتات لين تكبر!',
     m1: 'هذي طاولة الأدوات! خذ المجرفة واحفر في أول أصيص، ثم ازرع بذرة واسقها بالماء.',
     praise1: 'ما شاء الله عليك!',
     praise2: 'زين زين! كمّل.',

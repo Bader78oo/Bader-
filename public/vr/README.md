@@ -398,8 +398,31 @@ video of the still fairly plain basket/pot/tool interactions):
   can already was one) so both animations could spawn independent copies at the pot without disturbing
   the one sitting on the table.
 
+**Official branding, seed labels, a farm identity for the welcome, and a Salem/table collision
+fix** — a further round of polish requested with the ministry's own logo lockup (government of
+Oman emblem + the ministry name, alongside a project logo):
+
+- Added that logo (extracted from the supplied PDF, trimmed, background made transparent) as a
+  camera-fixed overlay in the upper right, visible both on screen and inside the headset, never
+  blocking the main view.
+- Salem now has a proper title ("الْمُرْشِدُ الزِّرَاعِيُّ") and the welcome screen names the farm by
+  name — "مزرعة عبري" in محافظة الظاهرة — supervised by the Ministry of Agricultural Wealth,
+  Fisheries and Water Resources. Salem's own `hello` line was reworded (and re-recorded) to
+  introduce himself with that same context instead of the generic "Omani nursery" framing.
+- Each seed bowl now has a small name card hovering over it (icon + crop name), so the child isn't
+  guessing which bowl is which before picking one up.
+- Fixed a real placement bug: `salemBeside()` only ever positioned Salem relative to whichever
+  panel was open, with no awareness of the tools table's own location — depending on the panel's
+  width and the child's facing direction, Salem could end up standing on top of or inside the
+  table. Fixed by tracking the table's world position and repelling Salem's target spot away from
+  it whenever it would land too close.
+
 Verified via Playwright by tracking the scene graph's child count through each action (mesh added
 mid-animation, cleaned back up afterward — not pixel-diffing screenshots, since getting the headless
 camera angle to exactly frame a specific pot had been unreliable in earlier rounds): dig, water and
 harvest all add and correctly clean up their temporary meshes, the harvested fruit persists as
 expected, zero console errors throughout.
+
+Verified this pass with screenshots: the logo renders cleanly with no white box, the welcome panel
+and Salem's spoken line both carry the new farm/ministry framing, every bowl shows its crop name, and
+Salem stands clearly beside the table rather than inside it. Full regression suite still clean.
