@@ -9,6 +9,12 @@ so lessons work without a CDN). Each lesson is a single static `index.html`.
 | 2 | [`lesson-02-young-animals/`](lesson-02-young-animals/) — صغير الإنسان وصغير الحيوان | Science, Grade 1 — young humans and young animals |
 | 3 | [`lesson-03-sunken-ship/`](lesson-03-sunken-ship/) — سفينة مسقط الغارقة | Science, Grade 1 — a sunken ship as a marine habitat |
 
+Standalone experiences (not tied to a numbered Grade-1 lesson):
+
+| Experience | Theme |
+|---|---|
+| [`omani-garden/`](omani-garden/) — ازرع واحصد الثمرة | A small Omani nursery: plant and care for 4 crops (tomato, strawberry, Omani lemon, apple) through 6 growth stages, with Salem |
+
 ## Running
 
 Files in `public/` are served by Next.js as static assets:
@@ -240,3 +246,44 @@ the full run. One real bug caught this way: the habitat activity's panel entity 
 the shared `panel` variable after being torn down, so opening the next panel (the quiz intro) called
 `.remove()` on an already-detached element and crashed — fixed by clearing `panel` when the habitat
 activity closes.
+
+## ازرع واحصد الثمرة (OmaniGarden) — a standalone experience
+
+Not a numbered Grade-1 lesson: a self-contained nursery experience, requested as a web-VR
+reimplementation of a Unity/Blender prototype spec (`vr-plans/omani-garden-brief.md` has the full
+translation table and the corrections made after reviewing the user's reference video/photos).
+Built on the same engine as the lessons (Kit models, Salem, canvas UI, hub.js, voice pipeline), but
+reusing **lesson 1's exploration mechanic** rather than lesson 2/3's walking: the child never moves
+at all, only turns in place (`snap-turn` / on-screen ↩️/↪️ buttons) and reaches every pot with a
+long-range raycaster, exactly like lesson 1's habitat zones.
+
+Setting: a walled Omani courtyard nursery — mud-brick crenellated walls with an arched gate, date
+palms, a stone-bordered falaj channel, a tools table with four colour-coded seed bowls, a trowel and
+a rake, and an arc of four large terracotta pots, each starting at a different growth stage (matching
+the reference video, which showed pots already at mixed stages rather than all starting from seed).
+
+Flow: welcome → **Mission 1: explore** (touch each pot to hear what it is and see its current stage;
+goal: discover all 4) → **Mission 2: care** (6 rounds; for each round's pot, pick the correct one of
+water 💧 / sun ☀️ / soil 🌱 — right answers advance that pot's growth stage) → any pot that reaches
+stage 6 ("ثمار ناضجة") becomes harvestable — touching it moves its fruit into the wicker basket → "what
+did I learn?" summary, which calls out that trees (lemon, apple) take longer to fruit than vegetables
+(tomato, strawberry) — by design the 6 care rounds are weighted so only the two vegetables actually
+reach harvest, the two trees only advance partway, making that point visible rather than just stated.
+
+Two new model builders were added for this lesson's own content: `bushPlant()` (soil + stem + leaves,
+gaining flowers at stage 5 and fruit at stage 6) and `potTree()` (trunk + sampled canopy leaves, same
+flower/fruit gating) — both driven purely by a stage number, so growing a plant is just rebuilding its
+model at a new stage rather than animating anything. `buildSalem`/`kummaTexture`/`dishdashaTexture`,
+the canvas-card UI, the voice pipeline and `hub.js` (companion + journal) are all copied verbatim from
+the lessons, unchanged, so Salem and the companion stay the same character across the whole site; a
+one-way portal links back to lesson 1.
+
+One real bug caught during testing: the ground was initially built from a low-subdivision
+`CircleGeometry` (16 radial segments, no ring subdivisions), which — like the same mistake lesson 1's
+own code had already been fixed for — produces a few huge wedge triangles from the centre to the
+edge that pass under the camera and z-fight badly on some GPUs; the whole scene except Salem appeared
+to vanish behind a corrupted tan horizon. Fixed by switching to a finely tessellated `PlaneGeometry`,
+matching lesson 1's existing fix. Verified end to end with the `?test` hooks and Playwright
+screenshots: all 4 pots discovered, all 6 care rounds answered correctly in sequence advancing the
+right pots' stages, both ripe pots harvested into the basket, summary panel reached — zero console
+errors in the final run.
