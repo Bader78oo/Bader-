@@ -10,7 +10,7 @@ window.LESSON = {
   pots: [
     { id: 'tomato', kind: 'bush', angle: -60, accent: '#d6172b', icon: '🍅', name: 'الطَّمَاطِمُ', stage0: 4,
       fruit: '#d63a2a', flower: '#f4e14a', about: 'الطَّمَاطِمُ نَبَاتٌ يَنْمُو سَرِيعًا، وَثِمَارُهُ حَمْرَاءُ عِنْدَ النُّضْجِ.' },
-    { id: 'strawberry', kind: 'bush', angle: -20, accent: '#c8186a', icon: '🍓', name: 'الْفَرَاوْلَةُ', stage0: 2,
+    { id: 'strawberry', kind: 'bush', angle: -20, accent: '#c8186a', icon: '🍓', name: 'الْفَرَاوْلَةُ', stage0: 4,
       fruit: '#e8355f', flower: '#ffffff', about: 'الْفَرَاوْلَةُ نَبَاتٌ قَصِيرٌ، وَثِمَارُهُ حَمْرَاءُ صَغِيرَةٌ لَذِيذَةٌ.' },
     { id: 'lemon', kind: 'tree', angle: 20, accent: '#e9c13a', icon: '🍋', name: 'اللَّيْمُونُ الْعُمَانِيُّ', stage0: 1,
       fruit: '#e9c13a', flower: '#ffffff', about: 'اللَّيْمُونُ الْعُمَانِيُّ شَجَرَةٌ مَشْهُورَةٌ فِي عُمَانَ، وَثِمَارُهُ تُجَفَّفُ وَتُسْتَخْدَمُ فِي الطَّبْخِ.' },

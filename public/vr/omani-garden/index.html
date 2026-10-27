@@ -75,7 +75,8 @@
 </div>
 
 <a-scene id="scene" loading-screen="enabled: false" renderer="antialias: true; foveationLevel: 1; highRefreshRate: true"
-         cursor="rayOrigin: mouse" raycaster="objects: .clickable; far: 80" background="color: #cdeefc">
+         cursor="rayOrigin: mouse" raycaster="objects: .clickable; far: 80" background="color: #cdeefc"
+         fog="type: linear; color: #cdeefc; near: 15; far: 33">
   <a-entity light="type: hemisphere; color: #e6f5ff; groundColor: #a08a62; intensity: 1.25"></a-entity>
   <a-entity light="type: directional; color: #fff0d2; intensity: 1.55" position="-6 12 8"></a-entity>
   <a-entity light="type: directional; color: #cfe6ff; intensity: 0.35" position="8 5 -6"></a-entity>
@@ -176,42 +177,108 @@
   // Plants: a generic bushy herb (tomato/strawberry) and a small potted tree
   // (lemon/apple), each built at any of the 6 growth stages.
   // =====================================================================
+  // a thin flat blade, splayed out from a base point at angle `a` and tilted down by `droop` —
+  // the same trick the palm fronds use; flat shading keeps each blade's edge crisp instead of
+  // reading as a round blob.
+  function leafBlade(k, color, base, a, len, width, droop) {
+    k.ell(color, [base[0] + Math.cos(a) * len * 0.18, base[1], base[2] + Math.sin(a) * len * 0.18],
+      [width, 0.014, len], [droop, a, 0, 'YXZ'], true);
+  }
   function bushPlant(p, stage) {
     const k = new Kit(), stemC = '#3f7d3f', leaf1 = '#4f9d5d', leaf2 = '#6fae6a';
-    if (stage <= 1) { k.ell(leaf1, [0, 0.03, 0], [0.05, 0.03, 0.05]); return k.build(); }
+    if (stage <= 1) {
+      for (let i = 0; i < 2; i++) { const a = i * Math.PI + 0.3; leafBlade(k, leaf1, [0, 0.015, 0], a, 0.08, 0.028, 0.1); }
+      return k.build();
+    }
     const h = 0.1 + stage * 0.09;
-    seg(k, stemC, [0, 0, 0], [0, h, 0], 0.025, 0.014);
-    const leaves = 4 + stage * 2;
-    for (let i = 0; i < leaves; i++) {
-      const a = (i / leaves) * Math.PI * 2 + rnd(), y = 0.08 + (i % (stage + 1)) * (h / (stage + 2));
-      k.ell(i % 2 ? leaf1 : leaf2, [Math.cos(a) * 0.13, y, Math.sin(a) * 0.13], [0.09, 0.045, 0.13], [0.25, a, 0]);
+    const stems = stage >= 4 ? 3 : stage >= 2 ? 2 : 1;
+    for (let s = 0; s < stems; s++) {
+      const sa = (s / stems) * Math.PI * 2 + rnd() * 0.6;
+      const sh = h * (0.78 + rnd() * 0.3);
+      const sx = Math.cos(sa) * 0.03 * s, sz = Math.sin(sa) * 0.03 * s;
+      seg(k, stemC, [sx, 0, sz], [sx * 1.3, sh, sz * 1.3], 0.02, 0.011);
+      const leaves = 5 + stage * 2;
+      for (let i = 0; i < leaves; i++) {
+        const a = (i / leaves) * Math.PI * 2 + rnd() * 0.8 + sa;
+        const y = 0.06 + (i % (stage + 1)) * (sh / (stage + 2));
+        const len = 0.15 + rnd() * 0.06, droop = 0.2 + rnd() * 0.35;
+        leafBlade(k, i % 2 ? leaf1 : leaf2, [sx, y, sz], a, len, 0.03, droop);
+      }
     }
     if (stage >= 5) for (let i = 0; i < 5; i++) { const a = i * 1.3 + 0.4; k.ell(p.flower, [Math.cos(a) * 0.15, h * 0.75, Math.sin(a) * 0.15], [0.032, 0.032, 0.032]); }
     if (stage >= 6) for (let i = 0; i < 6; i++) { const a = i * 1.1; k.ell(p.fruit, [Math.cos(a) * 0.17, h * 0.5 + (i % 3) * 0.04, Math.sin(a) * 0.17], [0.05, 0.05, 0.05]); }
     return k.build();
   }
-  function potTree(p, stage) {
-    const k = new Kit(), trunk = '#7a5234', leaf1 = '#3f8f4f', leaf2 = '#59a862';
-    const h = 0.18 + stage * 0.16;
-    seg(k, trunk, [0, 0, 0], [0, h, 0], 0.045, 0.028);
-    if (stage <= 1) { k.ell(leaf1, [0, h, 0], [0.07, 0.07, 0.07]); return k.build(); }
-    const canopyR = 0.14 + stage * 0.035;
-    const n = 10 + stage * 3;
-    for (let i = 0; i < n; i++) {
-      const a = rnd() * Math.PI * 2, el2 = rnd() * Math.PI - Math.PI / 2, r = canopyR * (0.6 + rnd() * 0.5);
-      const x = Math.cos(a) * Math.cos(el2) * r, z = Math.sin(a) * Math.cos(el2) * r, y = h + Math.sin(el2) * r * 0.7;
-      k.ell(i % 2 ? leaf1 : leaf2, [x, y, z], [0.06, 0.06, 0.06]);
+  // a small potted tree with a barked, banded trunk (the same ring technique as the big palms)
+  // and a layered canopy of flat leaf-blade clusters instead of round blobs.
+  // scatters small flat leaf-blade clumps over the surface of a canopy sphere, each oriented
+  // outward from the trunk — many little crisp-edged chips read as full rounded foliage, where
+  // blades all converging on one central point read as a spiky starburst instead.
+  function treeCanopy(k, leaf1, leaf2, topY, canopyR, layers, perLayer) {
+    const total = layers * perLayer;
+    for (let i = 0; i < total; i++) {
+      const az = rnd() * Math.PI * 2, el = (rnd() - 0.5) * Math.PI * 0.85;
+      const rr = canopyR * (0.55 + rnd() * 0.5);
+      const cx = Math.cos(az) * Math.cos(el) * rr, cz = Math.sin(az) * Math.cos(el) * rr, cy = topY + Math.sin(el) * rr * 0.75;
+      const len = canopyR * (0.3 + rnd() * 0.22);
+      leafBlade(k, i % 2 ? leaf1 : leaf2, [cx, cy, cz], az, len, 0.055, 0.15 + rnd() * 0.3);
     }
+  }
+  function potTree(p, stage) {
+    const k = new Kit(), trunkA = '#8a6a45', trunkB = '#7a5234', leaf1 = '#3f8f4f', leaf2 = '#59a862';
+    const h = 0.18 + stage * 0.16;
+    const segs = Math.max(2, Math.round(h / 0.07));
+    for (let i = 0; i < segs; i++) {
+      const y0 = i * h / segs, y1 = (i + 1) * h / segs, rr = 0.045 - i * (0.022 / segs);
+      k.add(GEO.cyl(Math.max(0.018, rr - 0.012), Math.max(0.022, rr), y1 - y0, 10), i % 2 ? trunkA : trunkB, [0, (y0 + y1) / 2, 0], [0, 0, 0], [1, 1, 1], true);
+    }
+    if (stage <= 1) { k.ell(leaf1, [0, h, 0], [0.07, 0.07, 0.07]); return k.build(); }
+    const canopyR = 0.15 + stage * 0.038;
+    treeCanopy(k, leaf1, leaf2, h, canopyR, 2 + Math.min(stage, 3), 6 + stage * 2);
     if (stage >= 5) for (let i = 0; i < 6; i++) { const a = i * 1.1; k.ell(p.flower, [Math.cos(a) * canopyR * 0.7, h + 0.03, Math.sin(a) * canopyR * 0.7], [0.03, 0.03, 0.03]); }
     if (stage >= 6) for (let i = 0; i < 7; i++) { const a = i * 0.95 + 0.3; k.ell(p.fruit, [Math.cos(a) * canopyR * 0.75, h - 0.04 + (i % 3) * 0.05, Math.sin(a) * canopyR * 0.75], [0.055, 0.055, 0.055]); }
     return k.build();
   }
-  function terracottaPot(r = 0.42, h = 0.4) {
-    const k = new Kit(), clay = '#b5673c', clayD = '#9a5430', rim = '#c67a4c';
-    k.add(GEO.cyl(r, r * 0.72, h, 20), [clayD, clay], [0, h / 2, 0]);
-    k.add(GEO.cyl(r * 1.05, r * 1.0, 0.06, 20), rim, [0, h + 0.02, 0]);
-    k.add(GEO.cyl(r * 1.15, r * 1.15, 0.03, 20), clayD, [0, -0.015, 0]);
+  // a bigger, un-potted version of the same tree for the orchard scattered around the farm
+  function orchardTree(ht = 1.6) {
+    const k = new Kit(), trunkA = '#8a6a45', trunkB = '#6b4a2e', leaf1 = '#3f8f4f', leaf2 = '#59a862';
+    const segs = Math.max(3, Math.round(ht / 0.22)), lean = (rnd() - 0.5) * 0.16;
+    for (let i = 0; i < segs; i++) {
+      const y0 = i * ht / segs, y1 = (i + 1) * ht / segs, rr = 0.1 - i * (0.07 / segs), lx = lean * (i / segs) * ht;
+      k.add(GEO.cyl(Math.max(0.025, rr - 0.018), Math.max(0.035, rr), y1 - y0, 10), i % 2 ? trunkA : trunkB, [lx, (y0 + y1) / 2, 0], [0, 0, lean * 0.5], [1, 1, 1], true);
+    }
+    treeCanopy(k, leaf1, leaf2, ht * 0.95, ht * 0.55, 4, 13);
     return k.build();
+  }
+  let clayTex = null;
+  function clayTexture() {
+    if (clayTex) return clayTex;
+    const W = 256, H = 256, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#c87d4d'); g.addColorStop(0.55, '#b5673c'); g.addColorStop(1, '#8f4e2b');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    x.strokeStyle = 'rgba(70,35,15,.22)'; x.lineWidth = 2;
+    for (let y = 8; y < H; y += 11) { x.beginPath(); x.moveTo(0, y); for (let xx = 0; xx <= W; xx += 16) x.lineTo(xx, y + Math.sin(xx * 0.1 + y) * 1.4); x.stroke(); }
+    for (let i = 0; i < 650; i++) {
+      x.globalAlpha = 0.1 + rnd() * 0.22; x.fillStyle = rnd() > 0.5 ? '#6f3a1f' : '#e0935e';
+      const r = 0.5 + rnd() * 1.6; x.beginPath(); x.arc(rnd() * W, rnd() * H, r, 0, Math.PI * 2); x.fill();
+    }
+    x.globalAlpha = 1;
+    clayTex = texFrom(c); clayTex.wrapS = T.RepeatWrapping; clayTex.wrapT = T.ClampToEdgeWrapping; clayTex.repeat.set(3, 1);
+    return clayTex;
+  }
+  function terracottaPot(r = 0.42, h = 0.4) {
+    const k = new Kit(), clayD = '#9a5430', rim = '#c67a4c';
+    const body = new T.Mesh(new T.CylinderGeometry(r, r * 0.72, h, 24), new T.MeshStandardMaterial({ map: clayTexture(), roughness: 0.92 }));
+    body.position.y = h / 2;
+    k.add(GEO.cyl(r * 1.05, r * 1.0, 0.06, 20), rim, [0, h + 0.02, 0]);
+    k.add(GEO.cyl(r * 0.97, r * 0.97, 0.022, 20), clayD, [0, h * 0.36, 0]);
+    k.add(GEO.cyl(r * 0.86, r * 0.86, 0.022, 20), clayD, [0, h * 0.72, 0]);
+    k.add(GEO.cyl(r * 1.15, r * 1.15, 0.03, 20), clayD, [0, -0.015, 0]);
+    const group = k.build();
+    group.add(body);
+    return group;
   }
 
   // =====================================================================
@@ -724,32 +791,57 @@
     }
     return k.build();
   }
+  // a low ring of warm hazy hills on the horizon, so the farm reads as a valley rather than
+  // ending in a void at the edge of the ground plane; fog (set on <a-scene>) blends it into the sky.
+  function buildHills(w) {
+    const k = new Kit(), m1 = '#b08a5e', m2 = '#9c7c52';
+    const R = 15.5;
+    for (let a = 0; a < 360; a += 16) {
+      const [x, z] = polar(a + rnd() * 6, R + rnd() * 1.5);
+      const hgt = 2.4 + rnd() * 2.6, wid = 3.6 + rnd() * 2.4;
+      k.add(GEO.cone(wid, hgt, 5), (a % 32) < 16 ? m1 : m2, [x, hgt * 0.38, z], [0, rnd() * 6, 0], [1, 1, 0.55], true);
+    }
+    w.add(k.build());
+  }
   function buildGarden() {
     const w = worldEl.object3D;
     const groundMat = new T.MeshStandardMaterial({ map: noiseTexture('#c9b06a', ['#a68a4d', '#e8d489'], { n: 2200, rep: 10, soft: true }), roughness: 1 });
     // finely tessellated near the camera — a coarse circle here gives huge wedge triangles
     // that pass right under the camera and z-fight on some GPUs (seen on first render test).
-    const ground = new T.Mesh(new T.PlaneGeometry(32, 32, 48, 48), groundMat);
+    const ground = new T.Mesh(new T.PlaneGeometry(36, 36, 54, 54), groundMat);
     ground.rotation.x = -Math.PI / 2; w.add(ground);
-    // mud-brick crenellated wall forming a courtyard open toward the child
-    const k = new Kit(), wall = '#b8956a', dark = '#9a7850';
-    const R = 6.4, H = 2.5;
-    const merlon = (a, r, y) => { const [x, z] = polar(a, r); k.add(GEO.box(0.55, 0.5, 0.4), wall, [x, y, z], [0, -rad(a), 0], [1, 1, 1], true); };
-    for (let a = 70; a <= 290; a += 11) {
-      const [x, z] = polar(a, R);
-      k.add(GEO.box(1.35, H, 0.6), a % 22 < 11 ? wall : dark, [x, H / 2, z], [0, -rad(a), 0], [1, 1, 1], true);
-      merlon(a, R, H + 0.25);
-    }
-    // a simple arch set into the back wall, purely decorative
-    const archA = 180, [ax, az] = polar(archA, R - 0.1);
-    for (const s of [-1, 1]) { const [px, pz] = polar(archA + s * 7, R - 0.1); k.add(GEO.box(0.5, 1.8, 0.7), dark, [px, 0.9, pz], [0, -rad(archA), 0], [1, 1, 1], true); }
+    // an old mud-brick archway behind the child — a boundary marker, not a wall that encloses
+    // the farm: the child should feel like they're standing in the middle of it, among the
+    // palms and trees and the falaj channels, not inside a walled-off yard.
+    const k = new Kit(), dark = '#9a7850';
+    const archA = 180, archR = 6.4, [ax, az] = polar(archA, archR);
+    for (const s of [-1, 1]) { const [px, pz] = polar(archA + s * 7, archR); k.add(GEO.box(0.5, 1.8, 0.7), dark, [px, 0.9, pz], [0, -rad(archA), 0], [1, 1, 1], true); }
     k.add(GEO.tor(1.05, 0.28, Math.PI), dark, [ax, 1.8, az], [0, -rad(archA), Math.PI], [1, 1, 1], true);
     w.add(k.build());
-    // palms along the back wall
-    for (let a = 95; a <= 265; a += 24) { const [x, z] = polar(a + (rnd() - 0.5) * 8, R - 1.1); const p = palm(3.0 + rnd() * 1.2); p.position.set(x, 0, z); p.rotation.y = rnd() * 6; w.add(p); }
+    // a palm grove in two loose rings, all the way around — the child stands among the palms,
+    // not facing a single row of them.
+    for (let ring = 0; ring < 2; ring++) {
+      const baseR = ring ? 11.3 : 7.6, count = ring ? 17 : 13;
+      for (let i = 0; i < count; i++) {
+        const a = (i / count) * 360 + rnd() * 14, r = baseR + (rnd() - 0.5) * 1.6;
+        const [x, z] = polar(a, r);
+        const p = palm(2.6 + rnd() * 1.6); p.position.set(x, 0, z); p.rotation.y = rnd() * 6;
+        w.add(p);
+      }
+    }
+    // orchard trees scattered among the palms, kept clear of the frontal arc where the pots sit
+    // so they frame the farm instead of hiding it
+    for (let i = 0; i < 9; i++) {
+      const a = (i / 9) * 360 + rnd() * 20;
+      if (Math.abs(((a + 180) % 360) - 180) < 55) continue;
+      const r = 6.6 + rnd() * 2.2, [x, z] = polar(a, r);
+      const t = orchardTree(1.3 + rnd() * 0.9); t.position.set(x, 0, z); t.rotation.y = rnd() * 6;
+      w.add(t);
+    }
+    buildHills(w);
     // tools table (left side)
     buildToolsTable(w);
-    // falaj channel (right side)
+    // falaj channels (right side)
     buildFalaj(w);
   }
   function buildToolsTable(w) {
@@ -773,16 +865,25 @@
     clickable(el, () => onProp('tools'), { hover: 1.03 });
   }
   function buildFalaj(w) {
-    const g = new T.Group(); const [x, z] = polar(95, 3.0); g.position.set(x, 0, z); g.rotation.y = rad(-95 - 90);
-    const k = new Kit(), stone = '#8d8273';
-    k.add(GEO.box(0.9, 0.18, 4.6), stone, [0, 0.09, 0]);
-    k.add(GEO.box(1.14, 0.1, 4.8), '#766c5e', [0, 0.0, 0]);
+    // a longer main channel plus a side branch peeling off toward the pots, crossed by a small
+    // stone footbridge — "ممرات الأفلاج" (falaj channels), plural, running through the farm
+    // rather than one short isolated trough.
+    const g = new T.Group(); const [x, z] = polar(95, 3.4); g.position.set(x, 0, z); g.rotation.y = rad(-95 - 90);
+    const k = new Kit(), stone = '#8d8273', stoneD = '#766c5e';
+    const LEN = 8.6;
+    k.add(GEO.box(0.9, 0.18, LEN), stone, [0, 0.09, 0]);
+    k.add(GEO.box(1.14, 0.1, LEN + 0.2), stoneD, [0, 0.0, 0]);
+    k.add(GEO.box(0.6, 0.16, 2.4), stone, [1.55, 0.08, -2.2], [0, rad(35), 0]);
+    k.add(GEO.box(0.78, 0.09, 2.55), stoneD, [1.55, 0.0, -2.2], [0, rad(35), 0]);
+    k.add(GEO.box(1.3, 0.1, 0.9), '#a89a82', [0, 0.2, 0.9]);
     g.add(k.build());
-    const water = new T.Mesh(new T.PlaneGeometry(0.72, 4.5), new T.MeshStandardMaterial({ color: '#2f8fc4', roughness: 0.25, metalness: 0.15, transparent: true, opacity: 0.88 }));
+    const water = new T.Mesh(new T.PlaneGeometry(0.72, LEN - 0.3), new T.MeshStandardMaterial({ color: '#2f8fc4', roughness: 0.25, metalness: 0.15, transparent: true, opacity: 0.88 }));
     water.rotation.x = -Math.PI / 2; water.position.y = 0.185; g.add(water);
+    const water2 = new T.Mesh(new T.PlaneGeometry(0.44, 2.2), new T.MeshStandardMaterial({ color: '#2f8fc4', roughness: 0.25, metalness: 0.15, transparent: true, opacity: 0.88 }));
+    water2.rotation.x = -Math.PI / 2; water2.rotation.z = rad(35); water2.position.set(1.55, 0.185, -2.2); g.add(water2);
     worldEl.object3D.add(g);
-    idlers.push({ step(t) { water.material.color.setHSL(0.56, 0.55, 0.42 + Math.sin(t * 1.5) * 0.03); } });
-    const el = entityWith(new T.Mesh(new T.BoxGeometry(1.2, 0.5, 5), new T.MeshBasicMaterial({ transparent: true, opacity: 0 })), worldEl);
+    idlers.push({ step(t) { const c = 0.42 + Math.sin(t * 1.5) * 0.03; water.material.color.setHSL(0.56, 0.55, c); water2.material.color.setHSL(0.56, 0.55, c); } });
+    const el = entityWith(new T.Mesh(new T.BoxGeometry(1.4, 0.5, LEN + 1.4), new T.MeshBasicMaterial({ transparent: true, opacity: 0 })), worldEl);
     el.object3D.position.set(x, 0.2, z); el.object3D.rotation.y = g.rotation.y;
     clickable(el, () => onProp('falaj'), { hover: 1.0 });
   }
@@ -996,6 +1097,7 @@
     shuffle(CHIPS.slice()).forEach((c, i) => {
       const b = button(`${c.icon} ${L.lines[c.key]}`, chipsRoot, { w: 0.85, h: 0.26, color: '#fffdf7', text: C.ink }, () => onCareChip(round, c, p));
       b.object3D.position.set((i - 1) * 0.95, 0, 0.02);
+      b.dataset.needId = c.id;
       care.chips.push(b);
     });
     setHud(`${p.name}: ${toAr(care.i + 1)} / ${toAr(care.rounds.length)}`, 'وَشْ تَحْتَاجُ هَذِهِ النَّبْتَةُ الْحِينَ؟');
@@ -1193,8 +1295,8 @@
     buttons: () => [...(panel ? panel.querySelectorAll('.clickable') : [])],
     pots: () => POTS.map(p => p.id), potStage: id => potStage.get(id), discovered: () => [...discovered],
     potClick: id => potEls.get(id).emit('click'),
-    explore: () => exploreIntro(), care: () => careIntro(),
-    careStart: startCare, carePick: id => { const round = care.rounds[care.i]; const idx = ['water', 'sun', 'soil'].indexOf(id); care.chips[idx] && care.chips[idx].emit('click'); },
+    explore: () => exploreIntro(), care: () => careIntro(), careRound: () => care && care.rounds[care.i],
+    careStart: startCare, carePick: id => { const chip = care.chips.find(c => c.dataset.needId === id); chip && chip.emit('click'); },
     harvest: id => harvest(potById(id)), harvested: () => [...harvested],
     turn: dir => rigEl.components['snap-turn'].turn(dir),
     gazeAt: el => { gazeTarget = el; }, gazeTarget: () => gazeTarget, handPinch: (id, on) => document.getElementById(id).emit(on ? 'pinchstarted' : 'pinchended'),
