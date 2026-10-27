@@ -910,6 +910,21 @@
     mkHit(worldOf([0.72, 1.0, 0.22]), 0.1, 0.4, () => equip('trowel', '🪏 الْمِجْرَفَةُ'));
     bowlPos.forEach(lp => mkHit(worldOf([lp[0], lp[1] + 0.05, lp[2]]), 0.1, 0.2, () => equip('seed', '🌱 بَذْرَةٌ')));
     mkHit(worldOf([canPos[0], canPos[1] + 0.12, canPos[2]]), 0.13, 0.3, () => equip('water', '💧 إِبْرِيقُ الْمَاءِ'));
+    // a soft glowing marker hovers over whichever tool is actually needed right now, so the child
+    // doesn't have to rely on reading the HUD hint to know where to look.
+    const mkGlow = lp => {
+      const c = document.createElement('canvas'); c.width = c.height = 128;
+      const ctx = c.getContext('2d'), grad = ctx.createRadialGradient(64, 64, 6, 64, 64, 60);
+      grad.addColorStop(0, 'rgba(255,214,102,.95)'); grad.addColorStop(1, 'rgba(255,214,102,0)');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, 128, 128);
+      const m = new T.Mesh(new T.PlaneGeometry(0.3, 0.3), new T.MeshBasicMaterial({ map: texFrom(c), transparent: true, depthWrite: false, depthTest: false }));
+      m.position.set(...lp); m.visible = false; m.renderOrder = 997;
+      g.add(m); billboards.push(m);
+      return m;
+    };
+    toolGlows.trowel = mkGlow([0.72, 1.45, 0.22]);
+    toolGlows.seed = mkGlow([-0.085, 1.15, 0]);
+    toolGlows.water = mkGlow([canPos[0], 1.3, canPos[2]]);
   }
   function buildFalaj(w) {
     // one single, straight stone channel with one tidy footbridge — a clean, organized shape
@@ -935,6 +950,16 @@
     k.add(GEO.cyl(0.36, 0.36, 0.04, 16), wickD, [0, 0.0, 0]);
     for (const s of [-1, 1]) k.add(GEO.cyl(0.015, 0.015, 0.3, 6), wickD, [s * 0.3, 0.42, 0], [0, 0, s * 0.5]);
     return k.build();
+  }
+  // right beside where the child stands (not out at the pots or the tools table), so every
+  // harvested fruit has somewhere close and obvious to land.
+  let basketPos = new T.Vector3();
+  function buildBasket() {
+    const [x, z] = polar(-75, 0.9);
+    basketPos.set(x, 0.42, z);
+    const basket = basketModel(); basket.position.set(x, 0, z); basket.rotation.y = rad(20);
+    worldEl.object3D.add(basket);
+    blobShadow(worldEl.object3D, 0.42, x, z);
   }
 
   // =====================================================================
@@ -1033,7 +1058,7 @@
       const g = new T.Group(); g.position.set(x, 0.06, z); g.rotation.y = rad(-p.angle);
       g.add(terracottaPot());
       blobShadow(worldEl.object3D, 0.55, x, z);
-      plant.set(p.id, { step: 0, stage: 0, nextAt: 0, readyAt: 0, shownRemain: -1 });
+      plant.set(p.id, { step: 0, stage: 0, nextAt: 0, readyAt: 0, shownRemain: -1, needsWater: false, rewateredOnce: false });
       const model = potVisual(p);
       model.position.y = 0.42; g.add(model);
       potModelEl.set(p.id, model);
@@ -1083,6 +1108,7 @@
   function updatePotLabel(p, st) {
     if (st.stage < 1) return;
     if (st.stage >= 6) { setPotLabel(p, [`${p.icon} ${STAGES[5]}`, '🧺 جَاهِزَةٌ لِلْقِطَافِ!']); return; }
+    if (st.needsWater) { setPotLabel(p, [`${p.icon} ${STAGES[st.stage - 1]}`, '💧 تَحْتَاجُ سَقْيًا لِتُكْمِلَ!']); return; }
     const remain = Math.max(0, Math.round(st.readyAt - clockT));
     st.shownRemain = remain;
     setPotLabel(p, [`${p.icon} ${STAGES[st.stage - 1]}`, `⏳ تَبَقَّى ${toAr(remain)} ث لِلْقِطَافِ`]);
@@ -1092,6 +1118,26 @@
   // Lesson flow
   // =====================================================================
   let mode = 'welcome', heldTool = null, toolMesh = null, toolsUsed = false;
+  const toolGlows = {};
+  idlers.push({ step(t) { for (const k in toolGlows) { const m = toolGlows[k]; if (m.visible) { m.scale.setScalar(1 + 0.15 * Math.sin(t * 3)); m.material.opacity = 0.65 + 0.35 * Math.sin(t * 3); } } } });
+  // lights up the tool the child still needs — for digging/planting (one pot at a time) and for
+  // any pot mid-growth that's paused waiting on a second watering.
+  function updateToolHighlights() {
+    if (!toolGlows.trowel) return;
+    let needTrowel = false, needSeed = false, needWater = false;
+    for (const p of POTS) {
+      const st = plant.get(p.id);
+      if (mode === 'plant') {
+        if (st.step === 0) needTrowel = true;
+        else if (st.step === 1) needSeed = true;
+        else if (st.step === 2) needWater = true;
+      }
+      if (st.needsWater) needWater = true;
+    }
+    toolGlows.trowel.visible = needTrowel && heldTool !== 'trowel';
+    toolGlows.seed.visible = needSeed && heldTool !== 'seed';
+    toolGlows.water.visible = needWater && heldTool !== 'water';
+  }
   function welcome() {
     mode = 'welcome'; hideHud();
     showPanel({
@@ -1102,7 +1148,7 @@
         { t: 'فِي هَذِهِ التَّجْرِبَةِ أَسْتَطِيعُ أَنْ:', size: 0.064, bold: true, color: C.soft },
         { type: 'bullet', t: 'أَزْرَعَ أَرْبَعَ نَبَاتَاتٍ بِيَدِي بِنَفْسِي.', size: 0.064 },
         { type: 'bullet', t: 'أَتَعَرَّفَ عَلَى مَرَاحِلِ نُمُوِّ كُلِّ نَبْتَةٍ وَأَنَا أُرَاقِبُهَا.', size: 0.064 },
-        { type: 'bullet', t: 'أَقْطِفَ الثِّمَارَ النَّاضِجَةَ.', size: 0.064 },
+        { type: 'bullet', t: 'أَقْطِفَ الثِّمَارَ النَّاضِجَةَ وَأَضَعَهَا فِي سَلَّتِي — انْظُرْ تَحْتَكَ قَلِيلًا، إِنَّهَا بِجَانِبِكَ!', size: 0.062 },
         { type: 'chips', label: 'مُفْرَدَاتٌ جَدِيدَةٌ:', items: [{ i: '🪏', t: 'حَفْرٌ' }, { i: '🌱', t: 'بَذْرَةٌ' }, { i: '💧', t: 'رَيٌّ' }, { i: '🍅', t: 'ثِمَارٌ' }] },
       ],
     }, [{ label: 'ابْدَأِ الرِّحْلَةَ', onClick: plantIntro }]);
@@ -1147,10 +1193,12 @@
     heldTool = tool; sfx.pop(); setToolHud(`✋ ${label}`);
     if (!toolsUsed) { toolsUsed = true; say('tools'); }
     if (mode === 'plant') plantHud();
+    updateToolHighlights();
   }
   function onPot(p) {
     const st = plant.get(p.id);
     if (mode === 'plant' && st.step < 3) { handlePlantStep(p, st); return; }
+    if (st.needsWater) { handleRewater(p, st); return; }
     if (st.stage === 6 && !harvested.has(p.id)) { harvest(p); return; }
     if (st.stage === 0) return;
     sfx.pop();
@@ -1184,6 +1232,7 @@
         if (plantedCount === POTS.length) setTimeout(allPlantedDone, 1800); else plantHud();
       }
     }
+    updateToolHighlights();
   }
   function allPlantedDone() {
     mode = 'free'; hideHud();
@@ -1195,15 +1244,23 @@
   function onProp(id) { sfx.pop(); setMood('point'); say(id === 'tools' ? 'tools' : 'falaj'); }
 
   // ---------- growth, over real time ----------
+  // every pot pauses once, partway through (stage 3), and needs a second watering to keep going —
+  // so the growing period stays interactive instead of being pure wait-and-watch.
   let clockT = 0;
   idlers.push({
     step(t) {
       clockT = t;
       for (const p of POTS) {
         const st = plant.get(p.id);
-        if (st.stage < 1 || st.stage >= 6) continue;
+        if (st.stage < 1 || st.stage >= 6 || st.needsWater) continue;
         if (t >= st.nextAt) {
-          st.stage++; st.nextAt = t + stageDuration(p);
+          st.stage++;
+          if (st.stage === 3 && !st.rewateredOnce) {
+            st.rewateredOnce = true; st.needsWater = true;
+            refreshPotVisual(p); pulse(potEls.get(p.id), true); updateToolHighlights(); say('rewaterPrompt');
+            continue;
+          }
+          st.nextAt = t + stageDuration(p);
           if (st.stage === 6) { refreshPotVisual(p); pulse(potEls.get(p.id), true); say('harvestReady'); continue; }
           refreshPotVisual(p);
         } else {
@@ -1213,11 +1270,31 @@
       }
     },
   });
+  function handleRewater(p, st) {
+    if (heldTool !== 'water') { sfx.bad(); shake(potEls.get(p.id)); return; }
+    heldTool = null; setToolHud(null);
+    st.needsWater = false; st.readyAt = clockT + (6 - st.stage) * stageDuration(p); st.nextAt = clockT + stageDuration(p);
+    sfx.good(); setMood('cheer'); hop(potEls.get(p.id)); burst(potWorldPos(p));
+    say(pick(['right1', 'right2', 'right3']));
+    pulse(potEls.get(p.id), false); updatePotLabel(p, st); updateToolHighlights();
+  }
+  // a small colored dot flies from the pot to the basket beside the child, so harvesting reads as
+  // "collect the fruit" rather than just a panel popping up.
+  function flyToBasket(p) {
+    const m = new T.Mesh(new T.SphereGeometry(0.05, 10, 8), new T.MeshStandardMaterial({ color: p.fruit }));
+    const from = potWorldPos(p); m.position.copy(from); scene.object3D.add(m);
+    tween(0.65, k => {
+      const k2 = k * k * (3 - 2 * k);
+      m.position.lerpVectors(from, basketPos, k2);
+      m.position.y += Math.sin(k * Math.PI) * 0.4;
+      m.scale.setScalar(1 - k * 0.3);
+    }, () => { scene.object3D.remove(m); burst(basketPos.clone().add(new T.Vector3(0, 0.1, 0))); });
+  }
   function harvest(p) {
     if (harvested.has(p.id)) return;
     harvested.add(p.id); sfx.good(); setMood('cheer');
     pulse(potEls.get(p.id), false);
-    burst(potWorldPos(p));
+    burst(potWorldPos(p)); flyToBasket(p);
     say('harvestDone');
     if (typeof hub !== 'undefined') trackDiscovery('harvest_' + p.id, p.icon, p.name + ' (مَحْصُودٌ)');
     showInfo({ w: 1.5, accent: p.accent, icon: p.icon, title: `قَطَفْتَ ${p.name}!`, blocks: [{ t: p.about, size: 0.068 }] }, potEls.get(p.id).object3D);
@@ -1241,69 +1318,13 @@
   }
 
   // =====================================================================
-  // Salem's Hub: companion + field journal, shared across every page via localStorage.
+  // Salem's Hub: field journal, shared across every page via localStorage. (No companion falcon
+  // in this experience — the garden's own harvest basket plays that "keep coming back" role.)
   // =====================================================================
   const LESSON_ID = 'omani-garden';
   const HUB_OK = typeof window.SalemHub !== 'undefined';
   const hub = HUB_OK ? window.SalemHub : { addXp() {}, stage: () => 0, xpToNext: () => null, xp: () => 0, recordDiscovery: () => false, journalList: () => [], journalCount: () => 0, recordVisit: () => false, daysVisited: () => 0 };
-  function trackDiscovery(key, icon, label) { hub.recordDiscovery(LESSON_ID, key, icon, label); refreshCompanionIfGrown(); }
-  function companionModel(stage) {
-    const k = new Kit(), tan = '#c88a4a', dark = '#8a5a2a', cream = '#f4e6c8', speck = '#a87840', eyeC = '#2a1810';
-    if (stage === 0) { k.ell(cream, [0, 0.09, 0], [0.09, 0.11, 0.095]); for (const [x, y, z] of [[0.03, 0.14, 0.04], [-0.04, 0.06, -0.03], [0.02, 0.03, 0.06]]) k.ell(speck, [x, y, z], [0.012, 0.01, 0.012]); return k.build(); }
-    const s = stage === 1 ? 0.6 : stage === 2 ? 0.85 : 1.1;
-    k.ell(tan, [0, 0.11 * s, 0], [0.11 * s, 0.11 * s, 0.14 * s]);
-    k.ell(cream, [0, 0.07 * s, 0.06 * s], [0.08 * s, 0.075 * s, 0.09 * s]);
-    k.ell(tan, [0, 0.19 * s, 0.08 * s], [0.075 * s, 0.075 * s, 0.075 * s]);
-    for (const sx of [-1, 1]) { k.ell('#ffffff', [sx * 0.035 * s, 0.2 * s, 0.13 * s], [0.024 * s, 0.024 * s, 0.02 * s]); k.ell(eyeC, [sx * 0.035 * s, 0.2 * s, 0.145 * s], [0.013 * s, 0.013 * s, 0.008 * s]); }
-    k.add(GEO.cone(0.02 * s, 0.045 * s, 8), dark, [0, 0.185 * s, 0.155 * s], [Math.PI / 2, 0, 0]);
-    const wingA = stage === 1 ? 0.15 : stage === 2 ? 0.5 : 1.0;
-    for (const sx of [-1, 1]) k.ell(dark, [sx * 0.1 * s, 0.1 * s, -0.02 * s], [0.05 * s, 0.09 * s * (0.6 + wingA * 0.5), 0.13 * s], [0, 0, sx * (0.25 + wingA * 0.9)]);
-    if (stage >= 2) for (const sx of [-1, 1]) for (let i = 0; i < 3; i++) k.ell(speck, [sx * (0.12 + i * 0.03) * s, 0.03 * s, -0.2 * s], [0.018 * s, 0.012 * s, 0.05 * s], [0, 0, sx * 0.3]);
-    if (stage >= 3) k.ell(dark, [0, 0.24 * s, 0.02 * s], [0.02 * s, 0.03 * s, 0.02 * s]);
-    for (const sx of [-1, 1]) k.add(GEO.cyl(0.006 * s, 0.005 * s, 0.05 * s, 6), dark, [sx * 0.02 * s, 0.005 * s, 0.02 * s]);
-    return k.build();
-  }
-  const COMPANION_TITLE = ['بَيْضَةٌ سِحْرِيَّةٌ', 'رَفِيقُكَ الصَّغِيرُ', 'رَفِيقُكَ يَكْبَرُ', 'رَفِيقُكَ الطَّائِرُ الْكَامِلُ'];
-  const companion = { root: null, mesh: null, stage: -1 };
-  function buildCompanionEntity() {
-    companion.root = new T.Group();
-    const [x, z] = polar(130, 4.2);
-    companion.root.position.set(x, 0.55, z);
-    const perch = new T.Mesh(new T.CylinderGeometry(0.02, 0.025, 0.55, 8), new T.MeshStandardMaterial({ color: '#7a5234' }));
-    perch.position.y = -0.28; companion.root.add(perch);
-    setCompanionStage(hub.stage(), true);
-    const el = entityWith(companion.root, worldEl);
-    clickable(el, () => showCompanion(), { hover: 1.08 });
-    companion.el = el;
-    idlers.push({ ph: rnd() * 6, step(t) { if (companion.mesh) companion.mesh.rotation.y = Math.sin(t * 0.6 + this.ph) * 0.3; } });
-  }
-  function setCompanionStage(stage, silent) {
-    if (companion.mesh) companion.root.remove(companion.mesh);
-    companion.mesh = companionModel(stage); companion.root.add(companion.mesh);
-    const grown = companion.stage >= 0 && stage > companion.stage;
-    companion.stage = stage;
-    if (grown && !silent) { burst(companion.root.position.clone().add(new T.Vector3(0, 0.3, 0))); sfx.good(); say(stage === 1 ? 'companionHatch' : stage === 3 ? 'companionFull' : 'companionGrow'); }
-  }
-  function refreshCompanionIfGrown() { const s = hub.stage(); if (s !== companion.stage) setCompanionStage(s); }
-  function companionBarCanvas() {
-    const c = document.createElement('canvas'); c.width = 900; c.height = 140; const x = c.getContext('2d');
-    x.direction = 'rtl'; x.textAlign = 'right'; x.textBaseline = 'middle';
-    const left = hub.xpToNext();
-    x.fillStyle = '#e8e1d2'; x.beginPath(); x.roundRect(20, 60, 860, 36, 18); x.fill();
-    const pct = left === null ? 1 : Math.min(1, 1 - left / (hub.STAGES[companion.stage + 1] ? hub.STAGES[companion.stage + 1] - hub.STAGES[companion.stage] : 1));
-    x.fillStyle = C.leaf; x.beginPath(); x.roundRect(20, 60, 860 * Math.max(0.06, pct), 36, 18); x.fill();
-    x.fillStyle = C.ink; x.font = `700 30px ${FONT}`;
-    x.fillText(left === null ? 'وَصَلَ لِأَقْصَى حَجْمٍ! 🏆' : `يَحْتَاجُ ${toAr(left)} اكْتِشَافٍ لِيَكْبَرَ`, 880, 30);
-    return c;
-  }
-  function showCompanion() {
-    closePanel(); closeInfo();
-    const bar = planeMesh(companionBarCanvas(), 1.5);
-    showPanel({ w: 1.7, accent: '#c88a4a', icon: '🦅', title: COMPANION_TITLE[companion.stage], blocks: [{ t: 'يَكْبَرُ رَفِيقُكَ كُلَّمَا اكْتَشَفْتَ أَشْيَاءَ جَدِيدَةً مَعِي، وَكُلَّمَا زُرْتَنِي يَوْمًا جَدِيدًا.', size: 0.058 }] },
-      [{ label: 'رُجُوعٌ', color: '#dff1ff', onClick: closePanel }]);
-    if (panel) { bar.position.set(0, -0.55, 0.02); panel.object3D.add(bar); }
-    setMood('point'); say('companionIntro');
-  }
+  function trackDiscovery(key, icon, label) { hub.recordDiscovery(LESSON_ID, key, icon, label); }
 
   // =====================================================================
   // Portal back to "Local habitats"
@@ -1393,10 +1414,13 @@
     plantIntro: () => plantIntro(), startPlant, equip: tool => equip(tool, tool),
     heldTool: () => heldTool, plantedCount: () => plantedCount,
     forceGrow: id => { const st = plant.get(potById(id).id); if (st.stage >= 1 && st.stage < 6) { st.stage = 6; refreshPotVisual(potById(id)); } },
+    needsWater: id => plant.get(id).needsWater,
+    basketPos: () => basketPos.toArray(),
+    toolGlow: name => toolGlows[name] && toolGlows[name].visible,
     harvest: id => harvest(potById(id)), harvested: () => [...harvested],
     turn: dir => rigEl.components['snap-turn'].turn(dir),
     gazeAt: el => { gazeTarget = el; }, gazeTarget: () => gazeTarget, handPinch: (id, on) => document.getElementById(id).emit(on ? 'pinchstarted' : 'pinchended'),
-    companion: () => ({ stage: companion.stage, xp: hub.xp() }), showCompanion, journal: () => hub.journalList(),
+    journal: () => hub.journalList(),
     portal: () => onPortal('رِحْلَةِ الْبِيئَاتِ الْمَحَلِّيَّةِ', '../lesson-01-local-habitats/'), portalWent: () => window.__portalWent, portalConfirm: () => panel.querySelectorAll('.clickable')[0].emit('click'),
   };
 
@@ -1413,9 +1437,9 @@
     try { maxAniso = scene.renderer.capabilities.getMaxAnisotropy(); } catch (e) {}
     buildGarden();
     buildPots();
-    worldEl.object3D.add(basketModel());
+    buildBasket();
+    updateToolHighlights();
     hub.recordVisit(LESSON_ID);
-    buildCompanionEntity();
     buildPortal('رِحْلَةِ الْبِيئَاتِ الْمَحَلِّيَّةِ', '١ — الْبِيئَاتُ الْمَحَلِّيَّةُ 🌍', '../lesson-01-local-habitats/', 180);
     salem = buildSalem(); salem.baseY = 0;
     scene.object3D.add(salem.root);

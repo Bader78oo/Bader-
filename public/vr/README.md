@@ -343,3 +343,40 @@ the child can watch tick down, not just a label). Caught one more real bug while
 the on-screen "what to do next" hint was read before the just-used tool was cleared from the child's
 hand, so right after watering a pot it would still say "touch the pot to water it" instead of the
 correct "pick up a tool" — fixed by clearing the held tool before refreshing the hint, not after.
+
+**Two more real-headset-video bugs, fixed the same way (watch → diagnose → fix → re-verify):** the
+tools table's rotation had been tuned for its old behind-left position and was never re-derived when
+it moved to straight-ahead, so on the real headset it ran away from the child lengthwise instead of
+sitting broadside — fixed with rotation 0. Separately, the pot's clay body was a *closed* cylinder, so
+its solid top cap sat right over the soil disc and still hid it — fixed by making the body open-ended
+(with a small interior floor so it doesn't look hollow from a low angle). A third video then showed the
+welcome/mission panels (which always open ~2.2m in front of wherever the child is facing) clipping
+straight through the table, which had been moved to only 2.1m away — fixed by moving the table to 3.8m,
+past the pot ring and safely past every panel's render distance.
+
+**More interactive growth, a tool-use guide, no falcon, and a basket beside the child** — from the
+user's next round of feedback (two more real-device videos):
+
+- Every pot now pauses once, partway through growing (at stage 3), and needs a second watering to
+  keep going — so the growing period itself is something the child does, not just something they
+  wait out. A floating label switches to "needs watering to continue" and the watering can glows
+  again until they water it.
+- A soft glowing marker now hovers over whichever tool is actually needed — the trowel while any pot
+  still needs digging, the seed bowls once it's dug, the watering can once it's seeded (and again if
+  a pot pauses mid-growth) — so the child has a visual guide to follow instead of relying only on the
+  HUD text.
+- Removed the growing falcon companion from this experience entirely (per the user's explicit "احذف
+  الصقر") — it was a cross-lesson feature inherited from `hub.js` that didn't fit a standalone
+  planting experience. The field journal (discovery tracking) stays; only the bird and its perch are
+  gone.
+- Added a harvest basket right beside where the child stands (not out at the pots or the tools
+  table), and harvesting now animates a small colored dot flying from the pot into the basket instead
+  of just popping an info card — "collect the fruit" reads as an actual action. Because the basket
+  sits at ground level close to the child while the default view looks straight ahead at eye height,
+  it's naturally just below the resting view (the same way a real basket by your feet would be) — the
+  welcome panel's text was given a one-line nudge ("look down a bit, it's beside you") rather than
+  moving the basket somewhere that reads as less "beside" the child.
+
+Verified end to end via Playwright: tool glows appear/disappear exactly when expected, the stage-3
+re-water pause triggers and clears correctly, harvest's fly-to-basket animation runs, the falcon's
+removal leaves no dead code path, zero console errors.
