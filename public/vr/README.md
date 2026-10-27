@@ -328,3 +328,18 @@ carried over unchanged since their wording still fits. Verified end to end: dig�
 in any order, growth advances on its own over real time, harvesting all 4 once ripe, zero console
 errors, and render cost actually dropped slightly (pots start empty) to ≈151k triangles / 59 draw
 calls.
+
+**Follow-up fixes from the user's first hands-on test:** the tools table moved from an awkward
+behind-left position to directly in front of the child, just closer than the pot ring, so every tool
+is reachable without turning. Each seed bowl now shows a little scatter of seed shapes (round reds for
+tomato, pale pips for strawberry, yellow pips for lemon, brown pips for apple) instead of a plain disc.
+Every pot now shows real dark soil inset just under its rim (previously the inside just looked like
+more clay), and the whole pot is raised slightly off the ground so it reads as sitting on the sand
+rather than sinking into it. The falaj dropped its diagonal side-branch, which crossed the main channel
+at an untidy angle — it's a single straight channel with one footbridge now. Added a live growth
+countdown: the moment a pot is watered, a floating label above it starts counting down the seconds left
+until harvest (6s/stage for vegetables, 9s/stage for trees, so the "trees take longer" point is a number
+the child can watch tick down, not just a label). Caught one more real bug while wiring the countdown up:
+the on-screen "what to do next" hint was read before the just-used tool was cleared from the child's
+hand, so right after watering a pot it would still say "touch the pot to water it" instead of the
+correct "pick up a tool" — fixed by clearing the held tool before refreshing the hint, not after.

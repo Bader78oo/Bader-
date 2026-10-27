@@ -269,13 +269,15 @@
     return clayTex;
   }
   function terracottaPot(r = 0.42, h = 0.4) {
-    const k = new Kit(), clayD = '#9a5430', rim = '#c67a4c';
+    const k = new Kit(), clayD = '#9a5430', rim = '#c67a4c', soil = '#4a3320', soilD = '#3a2715';
     const body = new T.Mesh(new T.CylinderGeometry(r, r * 0.72, h, 24), new T.MeshStandardMaterial({ map: clayTexture(), roughness: 0.92 }));
     body.position.y = h / 2;
     k.add(GEO.cyl(r * 1.05, r * 1.0, 0.06, 20), rim, [0, h + 0.02, 0]);
     k.add(GEO.cyl(r * 0.97, r * 0.97, 0.022, 20), clayD, [0, h * 0.36, 0]);
     k.add(GEO.cyl(r * 0.86, r * 0.86, 0.022, 20), clayD, [0, h * 0.72, 0]);
     k.add(GEO.cyl(r * 1.15, r * 1.15, 0.03, 20), clayD, [0, -0.015, 0]);
+    // visible soil filling the pot, just under the rim — every pot shows real earth, planted or not
+    k.add(GEO.cyl(r * 0.93, r * 0.9, 0.05, 20), [soilD, soil], [0, h - 0.025, 0], [0, 0, 0], [1, 1, 1], true);
     const group = k.build();
     group.add(body);
     return group;
@@ -857,15 +859,28 @@
   // the tools table: a trowel, 4 seed bowls and a watering can, each individually equippable —
   // the child picks one up by clicking it, then clicks a pot to use it there.
   function buildToolsTable(w) {
-    const g = new T.Group(); const [x, z] = polar(-95, 2.6); g.position.set(x, 0, z); g.rotation.y = rad(-(-95) + 90);
+    // placed straight ahead, closer than the pot ring, so the child always sees it first and can
+    // reach every tool without turning
+    const g = new T.Group(); const [x, z] = polar(0, 2.1); g.position.set(x, 0, z); g.rotation.y = rad(-0 + 90);
     const k = new Kit(), wood = '#8a5a34', top = '#dcd3c0';
     k.add(GEO.box(1.6, 0.06, 0.6), top, [0, 0.78, 0]);
     for (const [sx, sz] of [[-0.7, -0.25], [0.7, -0.25], [-0.7, 0.25], [0.7, 0.25]]) k.add(GEO.cyl(0.03, 0.03, 0.78, 8), wood, [sx, 0.39, sz]);
     g.add(k.build());
     const bowlCols = ['#4f9d5d', '#2f8fc4', '#e9c13a', '#e8355f'];
+    const seedShapes = [
+      { c: '#e63946', s: [0.014, 0.01, 0.018] }, // tomato: small round red seeds
+      { c: '#fff4e0', s: [0.012, 0.007, 0.02] }, // strawberry: tiny pale pips
+      { c: '#caa23a', s: [0.013, 0.013, 0.013] }, // lemon: round pips
+      { c: '#7a4a2a', s: [0.016, 0.011, 0.016] }, // apple: round brown pips
+    ];
     const bowlPos = [];
     for (let i = 0; i < 4; i++) {
       const bk = new Kit(); bk.add(GEO.cyl(0.1, 0.08, 0.06, 16), bowlCols[i], [0, 0.03, 0]); bk.ell('#8a6238', [0, 0.065, 0], [0.08, 0.015, 0.08]);
+      const seed = seedShapes[i];
+      for (let j = 0; j < 6; j++) {
+        const a = (j / 6) * Math.PI * 2 + rnd(), rr = 0.015 + rnd() * 0.035;
+        bk.ell(seed.c, [Math.cos(a) * rr, 0.075 + rnd() * 0.006, Math.sin(a) * rr], seed.s, [rnd(), rnd() * 6, rnd()]);
+      }
       const lp = [-0.5 + i * 0.33, 0.81, 0];
       const b = bk.build(); b.position.set(...lp); g.add(b);
       bowlPos.push(lp);
@@ -889,25 +904,20 @@
     mkHit(worldOf([canPos[0], canPos[1] + 0.12, canPos[2]]), 0.16, 0.3, () => equip('water', '💧 إِبْرِيقُ الْمَاءِ'));
   }
   function buildFalaj(w) {
-    // a longer main channel plus a side branch peeling off toward the pots, crossed by a small
-    // stone footbridge — "ممرات الأفلاج" (falaj channels), plural, running through the farm
-    // rather than one short isolated trough.
-    const g = new T.Group(); const [x, z] = polar(95, 3.4); g.position.set(x, 0, z); g.rotation.y = rad(-95 - 90);
+    // one single, straight stone channel with one tidy footbridge — a clean, organized shape
+    // rather than two overlapping channels crossing at an angle.
+    const g = new T.Group(); const [x, z] = polar(95, 3.6); g.position.set(x, 0, z); g.rotation.y = rad(-95 - 90);
     const k = new Kit(), stone = '#8d8273', stoneD = '#766c5e';
-    const LEN = 8.6;
+    const LEN = 9.2;
     k.add(GEO.box(0.9, 0.18, LEN), stone, [0, 0.09, 0]);
     k.add(GEO.box(1.14, 0.1, LEN + 0.2), stoneD, [0, 0.0, 0]);
-    k.add(GEO.box(0.6, 0.16, 2.4), stone, [1.55, 0.08, -2.2], [0, rad(35), 0]);
-    k.add(GEO.box(0.78, 0.09, 2.55), stoneD, [1.55, 0.0, -2.2], [0, rad(35), 0]);
-    k.add(GEO.box(1.3, 0.1, 0.9), '#a89a82', [0, 0.2, 0.9]);
+    k.add(GEO.box(1.3, 0.1, 0.9), '#a89a82', [0, 0.2, 1.6]);
     g.add(k.build());
     const water = new T.Mesh(new T.PlaneGeometry(0.72, LEN - 0.3), new T.MeshStandardMaterial({ color: '#2f8fc4', roughness: 0.25, metalness: 0.15, transparent: true, opacity: 0.88 }));
     water.rotation.x = -Math.PI / 2; water.position.y = 0.185; g.add(water);
-    const water2 = new T.Mesh(new T.PlaneGeometry(0.44, 2.2), new T.MeshStandardMaterial({ color: '#2f8fc4', roughness: 0.25, metalness: 0.15, transparent: true, opacity: 0.88 }));
-    water2.rotation.x = -Math.PI / 2; water2.rotation.z = rad(35); water2.position.set(1.55, 0.185, -2.2); g.add(water2);
     worldEl.object3D.add(g);
-    idlers.push({ step(t) { const c = 0.42 + Math.sin(t * 1.5) * 0.03; water.material.color.setHSL(0.56, 0.55, c); water2.material.color.setHSL(0.56, 0.55, c); } });
-    const el = entityWith(new T.Mesh(new T.BoxGeometry(1.4, 0.5, LEN + 1.4), new T.MeshBasicMaterial({ transparent: true, opacity: 0 })), worldEl);
+    idlers.push({ step(t) { water.material.color.setHSL(0.56, 0.55, 0.42 + Math.sin(t * 1.5) * 0.03); } });
+    const el = entityWith(new T.Mesh(new T.BoxGeometry(1.2, 0.5, LEN + 1), new T.MeshBasicMaterial({ transparent: true, opacity: 0 })), worldEl);
     el.object3D.position.set(x, 0.2, z); el.object3D.rotation.y = g.rotation.y;
     clickable(el, () => onProp('falaj'), { hover: 1.0 });
   }
@@ -1004,41 +1014,47 @@
     const st = plant.get(p.id);
     if (st.stage >= 1) return growModel(p, st.stage);
     const k = new Kit();
-    if (st.step >= 2) k.ell('#5a3b22', [0, 0.015, 0], [0.045, 0.014, 0.045]); // a seed resting on the soil
-    else if (st.step >= 1) k.add(GEO.cyl(0.28, 0.3, 0.025, 16), '#6b4a2e', [0, 0.012, 0], [0, 0, 0], [1, 1, 1], true); // dug, darker soil
+    if (st.step >= 2) k.ell('#5a3b22', [0, 0.012, 0], [0.045, 0.014, 0.045]); // a seed resting on the soil
+    else if (st.step >= 1) k.add(GEO.tor(0.12, 0.018, Math.PI * 2), '#2e1e10', [0, 0.008, 0], [Math.PI / 2, 0, 0], [1, 1, 1], true); // a small dug hole in the soil
     return k.build();
   }
   function buildPots() {
     for (const p of POTS) {
       const [x, z] = polar(p.angle, POT_R);
-      const g = new T.Group(); g.position.set(x, 0, z); g.rotation.y = rad(-p.angle);
+      // raised a little above the ground so the pot reads as sitting on the sand, not sunk into it
+      const g = new T.Group(); g.position.set(x, 0.06, z); g.rotation.y = rad(-p.angle);
       g.add(terracottaPot());
       blobShadow(worldEl.object3D, 0.55, x, z);
-      plant.set(p.id, { step: 0, stage: 0, nextAt: 0 });
+      plant.set(p.id, { step: 0, stage: 0, nextAt: 0, readyAt: 0, shownRemain: -1 });
       const model = potVisual(p);
       model.position.y = 0.42; g.add(model);
       potModelEl.set(p.id, model);
       worldEl.object3D.add(g);
       const hit = new T.Mesh(new T.CylinderGeometry(0.5, 0.5, 1.4, 12), new T.MeshBasicMaterial({ transparent: true, opacity: 0 }));
-      hit.position.set(0, 0.7, 0);
+      hit.position.set(0, 0.76, 0);
       const el = entityWith(hit, worldEl); el.object3D.position.set(x, 0, z);
       clickable(el, () => onPot(p), { hover: 1.05 });
       potEls.set(p.id, el);
     }
   }
-  function setPotLabel(p, text) {
+  function setPotLabel(p, lines) {
     const old = potLabelEl.get(p.id);
     if (old) { old.parent.remove(old); billboards.splice(billboards.indexOf(old), 1); potLabelEl.delete(p.id); }
-    if (!text) return;
-    const c = document.createElement('canvas'); c.width = 360; c.height = 120;
+    if (!lines) return;
+    lines = [].concat(lines);
+    const c = document.createElement('canvas'); c.width = 380; c.height = lines.length > 1 ? 160 : 120;
     const x = c.getContext('2d');
     x.fillStyle = 'rgba(255,253,247,.95)'; x.beginPath(); x.roundRect(6, 6, c.width - 12, c.height - 12, 28); x.fill();
     x.lineWidth = 6; x.strokeStyle = p.accent; x.stroke();
-    x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = C.ink;
-    let fs = 46; x.font = `800 ${fs}px ${FONT}`;
-    while (x.measureText(text).width > c.width - 40 && fs > 22) { fs -= 2; x.font = `800 ${fs}px ${FONT}`; }
-    x.fillText(text, c.width / 2, c.height / 2);
-    const m = planeMesh(c, 0.52);
+    x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    const rowH = c.height / lines.length;
+    lines.forEach((text, i) => {
+      x.fillStyle = i === 0 ? C.ink : C.soft;
+      let fs = i === 0 ? 46 : 36; x.font = `800 ${fs}px ${FONT}`;
+      while (x.measureText(text).width > c.width - 40 && fs > 20) { fs -= 2; x.font = `800 ${fs}px ${FONT}`; }
+      x.fillText(text, c.width / 2, rowH * (i + 0.5));
+    });
+    const m = planeMesh(c, lines.length > 1 ? 0.56 : 0.52);
     m.position.set(0, 1.05, 0);
     potEls.get(p.id).object3D.add(m);
     billboards.push(m);
@@ -1052,7 +1068,16 @@
     model.position.y = 0.42; g.add(model);
     potModelEl.set(p.id, model);
     const st = plant.get(p.id);
-    if (st.stage >= 1) setPotLabel(p, `${p.icon} ${STAGES[st.stage - 1]}`);
+    updatePotLabel(p, st);
+  }
+  // the stage name, plus — while it's still growing — a live countdown to harvest, so the child
+  // can see for themself how long each kind of plant takes from seed to fruit.
+  function updatePotLabel(p, st) {
+    if (st.stage < 1) return;
+    if (st.stage >= 6) { setPotLabel(p, [`${p.icon} ${STAGES[5]}`, '🧺 جَاهِزَةٌ لِلْقِطَافِ!']); return; }
+    const remain = Math.max(0, Math.round(st.readyAt - clockT));
+    st.shownRemain = remain;
+    setPotLabel(p, [`${p.icon} ${STAGES[st.stage - 1]}`, `⏳ تَبَقَّى ${toAr(remain)} ث لِلْقِطَافِ`]);
   }
 
   // =====================================================================
@@ -1129,15 +1154,20 @@
     const el = potEls.get(p.id);
     if (st.step === 0) {
       if (heldTool !== 'trowel') { sfx.bad(); shake(el); return; }
+      heldTool = null; setToolHud(null);
       st.step = 1; sfx.pop(); hop(el); burst(potWorldPos(p)); refreshPotVisual(p);
+      if (mode === 'plant') plantHud();
     } else if (st.step === 1) {
       if (heldTool !== 'seed') { sfx.bad(); shake(el); return; }
+      heldTool = null; setToolHud(null);
       st.step = 2; sfx.pop(); hop(el); burst(potWorldPos(p)); refreshPotVisual(p);
       say([pick(['praise1', 'praise2', 'praise3']), 'f_' + p.id]);
       if (typeof hub !== 'undefined') trackDiscovery(p.id, p.icon, p.name);
+      if (mode === 'plant') plantHud();
     } else if (st.step === 2) {
       if (heldTool !== 'water') { sfx.bad(); shake(el); return; }
-      st.step = 3; st.stage = 1; st.nextAt = clockT + stageDuration(p);
+      heldTool = null; setToolHud(null);
+      st.step = 3; st.stage = 1; st.nextAt = clockT + stageDuration(p); st.readyAt = clockT + 5 * stageDuration(p);
       sfx.good(); setMood('cheer'); hop(el); burst(potWorldPos(p)); refreshPotVisual(p);
       say(pick(['right1', 'right2', 'right3']));
       plantedCount++;
@@ -1146,7 +1176,6 @@
         if (plantedCount === POTS.length) setTimeout(allPlantedDone, 1800); else plantHud();
       }
     }
-    heldTool = null; setToolHud(null);
   }
   function allPlantedDone() {
     mode = 'free'; hideHud();
@@ -1164,9 +1193,14 @@
       clockT = t;
       for (const p of POTS) {
         const st = plant.get(p.id);
-        if (st.stage >= 1 && st.stage < 6 && t >= st.nextAt) {
-          st.stage++; refreshPotVisual(p); st.nextAt = t + stageDuration(p);
-          if (st.stage === 6) { pulse(potEls.get(p.id), true); say('harvestReady'); }
+        if (st.stage < 1 || st.stage >= 6) continue;
+        if (t >= st.nextAt) {
+          st.stage++; st.nextAt = t + stageDuration(p);
+          if (st.stage === 6) { refreshPotVisual(p); pulse(potEls.get(p.id), true); say('harvestReady'); continue; }
+          refreshPotVisual(p);
+        } else {
+          const remain = Math.max(0, Math.round(st.readyAt - t));
+          if (remain !== st.shownRemain) updatePotLabel(p, st);
         }
       }
     },
