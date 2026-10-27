@@ -1492,6 +1492,7 @@
     forceGrow: id => { const st = plant.get(potById(id).id); if (st.stage >= 1 && st.stage < 6) { st.stage = 6; refreshPotVisual(potById(id)); } },
     needsWater: id => plant.get(id).needsWater,
     basketPos: () => basketPos.toArray(),
+    potPos: id => { const v = new T.Vector3(); potEls.get(id).object3D.getWorldPosition(v); return v.toArray(); },
     toolGlow: name => toolGlows[name] && toolGlows[name].visible,
     harvest: id => harvest(potById(id)), harvested: () => [...harvested],
     turn: dir => rigEl.components['snap-turn'].turn(dir),
