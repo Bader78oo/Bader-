@@ -287,3 +287,22 @@ matching lesson 1's existing fix. Verified end to end with the `?test` hooks and
 screenshots: all 4 pots discovered, all 6 care rounds answered correctly in sequence advancing the
 right pots' stages, both ripe pots harvested into the basket, summary panel reached — zero console
 errors in the final run.
+
+**Opened up into a real farm, from the user's "the farm feels incomplete" feedback:** the courtyard's
+full enclosing wall (which made the whole experience read as a small walled yard) is now a single
+standalone archway; two loose rings of palms, a scatter of orchard trees, a hazy ring of hills on the
+horizon and scene fog surround the child instead, so they stand in the middle of a farm among palms
+and trees rather than inside a box. The falaj gained a second branch and a small footbridge. Pots now
+have a real painted-clay texture; plant leaves are built from thin flat blades (the same technique the
+palm fronds already used) instead of round blobs, and the potted trees have a banded bark trunk and a
+canopy of leaf-blade clusters scattered over a sphere for a fuller, leafier silhouette instead of a
+spiky starburst. Render cost checked against lesson 1 (≈207k triangles / 64 draw calls here vs. ≈102k /
+78 there) — comfortably within a standalone headset's budget.
+
+A full Playwright run of the care mission caught two real bugs this pass missed before: the care
+round's answer chips are shuffled on screen each round, but the `?test` hook assumed a fixed
+water/sun/soil order, so it silently answered the wrong chip after the first round — fixed by tagging
+each chip with its need id. That fix then exposed a second, real content bug underneath it: strawberry
+started too early (stage 2) for its two care rounds to ever reach stage 6, so it could never actually be
+harvested — contradicting the lesson's own closing line that both vegetables ripen. Fixed by starting
+it one stage further along.
