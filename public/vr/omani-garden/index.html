@@ -98,7 +98,7 @@
   'use strict';
   const L = window.LESSON, T = THREE;
   const POTS = L.pots, STAGES = L.stages;
-  const EXPLORE_GOAL = POTS.length, POT_R = 3.3;
+  const POT_R = 3.3;
   const TEST = /[?&]test\b/.test(location.search);
 
   const rad = d => d * Math.PI / 180;
@@ -844,6 +844,18 @@
     // falaj channels (right side)
     buildFalaj(w);
   }
+  // an orange watering can, per the reference photos
+  function wateringCan() {
+    const k = new Kit(), body = '#e2812b', bodyD = '#c46a1f', metal = '#7a5a3a';
+    k.add(GEO.cyl(0.1, 0.12, 0.17, 16), [bodyD, body], [0, 0.085, 0]);
+    k.add(GEO.cyl(0.09, 0.09, 0.02, 16), bodyD, [0, 0.18, 0]);
+    seg(k, body, [0.08, 0.14, 0], [0.22, 0.2, 0], 0.026, 0.016);
+    k.ell(bodyD, [0.235, 0.205, 0], [0.034, 0.03, 0.034]);
+    k.add(GEO.tor(0.08, 0.014, Math.PI), metal, [-0.015, 0.2, 0], [Math.PI / 2, 0, 0], [1, 1, 1], true);
+    return k.build();
+  }
+  // the tools table: a trowel, 4 seed bowls and a watering can, each individually equippable —
+  // the child picks one up by clicking it, then clicks a pot to use it there.
   function buildToolsTable(w) {
     const g = new T.Group(); const [x, z] = polar(-95, 2.6); g.position.set(x, 0, z); g.rotation.y = rad(-(-95) + 90);
     const k = new Kit(), wood = '#8a5a34', top = '#dcd3c0';
@@ -851,18 +863,30 @@
     for (const [sx, sz] of [[-0.7, -0.25], [0.7, -0.25], [-0.7, 0.25], [0.7, 0.25]]) k.add(GEO.cyl(0.03, 0.03, 0.78, 8), wood, [sx, 0.39, sz]);
     g.add(k.build());
     const bowlCols = ['#4f9d5d', '#2f8fc4', '#e9c13a', '#e8355f'];
+    const bowlPos = [];
     for (let i = 0; i < 4; i++) {
       const bk = new Kit(); bk.add(GEO.cyl(0.1, 0.08, 0.06, 16), bowlCols[i], [0, 0.03, 0]); bk.ell('#8a6238', [0, 0.065, 0], [0.08, 0.015, 0.08]);
-      const b = bk.build(); b.position.set(-0.5 + i * 0.33, 0.81, 0); g.add(b);
+      const lp = [-0.5 + i * 0.33, 0.81, 0];
+      const b = bk.build(); b.position.set(...lp); g.add(b);
+      bowlPos.push(lp);
     }
     const tk = new Kit();
     seg(tk, '#8a5a34', [0.55, 0.85, 0.22], [0.78, 1.2, 0.22], 0.016, 0.016);
     tk.ell('#7a7a7a', [0.82, 1.2, 0.22], [0.045, 0.1, 0.03], [0.3, 0, 0.3]);
     g.add(tk.build());
-    worldEl.object3D.add(g);
-    const el = entityWith(new T.Mesh(new T.CylinderGeometry(0.9, 0.9, 1.4, 10), new T.MeshBasicMaterial({ transparent: true, opacity: 0 })), worldEl);
-    el.object3D.position.set(x, 0.7, z);
-    clickable(el, () => onProp('tools'), { hover: 1.03 });
+    const canPos = [0.3, 0.81, -0.26];
+    const can = wateringCan(); can.position.set(...canPos); can.rotation.y = Math.PI * 0.15; g.add(can);
+    w.add(g);
+    g.updateMatrixWorld(true);
+    const worldOf = lp => new T.Vector3(...lp).applyMatrix4(g.matrixWorld);
+    const mkHit = (wp, r, h, onClick) => {
+      const el = entityWith(new T.Mesh(new T.CylinderGeometry(r, r, h, 10), new T.MeshBasicMaterial({ transparent: true, opacity: 0 })), worldEl);
+      el.object3D.position.copy(wp);
+      clickable(el, onClick, { hover: 1.08 });
+    };
+    mkHit(worldOf([0.665, 1.0, 0.22]), 0.14, 0.4, () => equip('trowel', '🪏 الْمِجْرَفَةُ'));
+    bowlPos.forEach(lp => mkHit(worldOf([lp[0], lp[1] + 0.05, lp[2]]), 0.13, 0.2, () => equip('seed', '🌱 بَذْرَةٌ')));
+    mkHit(worldOf([canPos[0], canPos[1] + 0.12, canPos[2]]), 0.16, 0.3, () => equip('water', '💧 إِبْرِيقُ الْمَاءِ'));
   }
   function buildFalaj(w) {
     // a longer main channel plus a side branch peeling off toward the pots, crossed by a small
@@ -968,18 +992,30 @@
   function hideHud() { if (hudMesh) hudMesh.visible = false; }
 
   // =====================================================================
-  // Pots
+  // Pots — every pot starts empty (step 0, no plant at all). The child digs it (step 1), plants
+  // a seed in it (step 2) and waters it (step 3), which starts real growth: `stage` then advances
+  // on its own, once per stageDuration(), from 1 (seedling) to 6 (ripe).
   // =====================================================================
-  const potEls = new Map(), potStage = new Map(), potModelEl = new Map(), discovered = new Set();
+  const potEls = new Map(), potModelEl = new Map(), potLabelEl = new Map(), plant = new Map(), harvested = new Set();
+  let plantedCount = 0, summaryOffered = false;
   function growModel(p, stage) { return p.kind === 'tree' ? potTree(p, stage) : bushPlant(p, stage); }
+  function stageDuration(p) { return p.kind === 'tree' ? 9 : 6; } // seconds per growth stage; trees take longer to ripen
+  function potVisual(p) {
+    const st = plant.get(p.id);
+    if (st.stage >= 1) return growModel(p, st.stage);
+    const k = new Kit();
+    if (st.step >= 2) k.ell('#5a3b22', [0, 0.015, 0], [0.045, 0.014, 0.045]); // a seed resting on the soil
+    else if (st.step >= 1) k.add(GEO.cyl(0.28, 0.3, 0.025, 16), '#6b4a2e', [0, 0.012, 0], [0, 0, 0], [1, 1, 1], true); // dug, darker soil
+    return k.build();
+  }
   function buildPots() {
     for (const p of POTS) {
       const [x, z] = polar(p.angle, POT_R);
       const g = new T.Group(); g.position.set(x, 0, z); g.rotation.y = rad(-p.angle);
       g.add(terracottaPot());
       blobShadow(worldEl.object3D, 0.55, x, z);
-      potStage.set(p.id, p.stage0);
-      const model = growModel(p, p.stage0);
+      plant.set(p.id, { step: 0, stage: 0, nextAt: 0 });
+      const model = potVisual(p);
       model.position.y = 0.42; g.add(model);
       potModelEl.set(p.id, model);
       worldEl.object3D.add(g);
@@ -990,148 +1026,165 @@
       potEls.set(p.id, el);
     }
   }
-  function refreshPot(p) {
+  function setPotLabel(p, text) {
+    const old = potLabelEl.get(p.id);
+    if (old) { old.parent.remove(old); billboards.splice(billboards.indexOf(old), 1); potLabelEl.delete(p.id); }
+    if (!text) return;
+    const c = document.createElement('canvas'); c.width = 360; c.height = 120;
+    const x = c.getContext('2d');
+    x.fillStyle = 'rgba(255,253,247,.95)'; x.beginPath(); x.roundRect(6, 6, c.width - 12, c.height - 12, 28); x.fill();
+    x.lineWidth = 6; x.strokeStyle = p.accent; x.stroke();
+    x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = C.ink;
+    let fs = 46; x.font = `800 ${fs}px ${FONT}`;
+    while (x.measureText(text).width > c.width - 40 && fs > 22) { fs -= 2; x.font = `800 ${fs}px ${FONT}`; }
+    x.fillText(text, c.width / 2, c.height / 2);
+    const m = planeMesh(c, 0.52);
+    m.position.set(0, 1.05, 0);
+    potEls.get(p.id).object3D.add(m);
+    billboards.push(m);
+    potLabelEl.set(p.id, m);
+  }
+  function refreshPotVisual(p) {
     const old = potModelEl.get(p.id);
     const g = old.parent;
     g.remove(old);
-    const model = growModel(p, potStage.get(p.id));
+    const model = potVisual(p);
     model.position.y = 0.42; g.add(model);
     potModelEl.set(p.id, model);
-  }
-  function needsChips(p) {
-    const stage = potStage.get(p.id);
-    return { label: 'مَرْحَلَةُ النُّمُوِّ:', items: [{ i: '🌱', t: STAGES[stage - 1] }] };
+    const st = plant.get(p.id);
+    if (st.stage >= 1) setPotLabel(p, `${p.icon} ${STAGES[st.stage - 1]}`);
   }
 
   // =====================================================================
   // Lesson flow
   // =====================================================================
-  let mode = 'welcome';
+  let mode = 'welcome', heldTool = null, toolMesh = null, toolsUsed = false;
   function welcome() {
     mode = 'welcome'; hideHud();
     showPanel({
       w: 2.3, accent: C.teal, flag: true,
       title: 'ازْرَعْ وَاحْصُدِ الثَّمَرَةَ', subtitle: 'تَجْرِبَةٌ تَفَاعُلِيَّةٌ عَنِ الزِّرَاعَةِ',
       blocks: [
-        { type: 'highlight', t: 'النَّبَاتَاتُ تَمُرُّ بِمَرَاحِلَ نُمُوٍّ مُخْتَلِفَةٍ حَتَّى تُثْمِرَ.', size: 0.064, color: C.teal },
+        { type: 'highlight', t: 'أَنْتَ مَنْ يَزْرَعُ: احْفِرْ، ازْرَعْ بَذْرَةً، اسْقِهَا، ثُمَّ رَاقِبْهَا تَكْبُرُ حَتَّى تُثْمِرَ.', size: 0.064, color: C.teal },
         { t: 'فِي هَذِهِ التَّجْرِبَةِ أَسْتَطِيعُ أَنْ:', size: 0.064, bold: true, color: C.soft },
-        { type: 'bullet', t: 'أَتَعَرَّفَ عَلَى نَبَاتَاتِ الْمَشْتَلِ وَمَرَاحِلِ نُمُوِّهَا.', size: 0.064 },
-        { type: 'bullet', t: 'أَعْتَنِيَ بِالنَّبَاتَاتِ حَتَّى تُثْمِرَ.', size: 0.064 },
+        { type: 'bullet', t: 'أَزْرَعَ أَرْبَعَ نَبَاتَاتٍ بِيَدِي بِنَفْسِي.', size: 0.064 },
+        { type: 'bullet', t: 'أَتَعَرَّفَ عَلَى مَرَاحِلِ نُمُوِّ كُلِّ نَبْتَةٍ وَأَنَا أُرَاقِبُهَا.', size: 0.064 },
         { type: 'bullet', t: 'أَقْطِفَ الثِّمَارَ النَّاضِجَةَ.', size: 0.064 },
-        { type: 'chips', label: 'مُفْرَدَاتٌ جَدِيدَةٌ:', items: [{ i: '🌱', t: 'نُمُوٌّ' }, { i: '💧', t: 'رَيٌّ' }, { i: '☀️', t: 'شَمْسٌ' }, { i: '🍅', t: 'ثِمَارٌ' }] },
+        { type: 'chips', label: 'مُفْرَدَاتٌ جَدِيدَةٌ:', items: [{ i: '🪏', t: 'حَفْرٌ' }, { i: '🌱', t: 'بَذْرَةٌ' }, { i: '💧', t: 'رَيٌّ' }, { i: '🍅', t: 'ثِمَارٌ' }] },
       ],
-    }, [{ label: 'ابْدَأِ الرِّحْلَةَ', onClick: exploreIntro }]);
+    }, [{ label: 'ابْدَأِ الرِّحْلَةَ', onClick: plantIntro }]);
     setMood('wave'); say('hello');
   }
-  function exploreIntro() {
+  function plantIntro() {
     showPanel({
-      w: 2.1, accent: C.leaf, icon: '🔍', title: 'الْمَهَمَّةُ الْأُولَى: اكْتَشِفْ!', subtitle: `هُنَاكَ ${toAr(POTS.length)} نَبَاتَاتٍ حَوْلَكَ`,
+      w: 2.1, accent: C.leaf, icon: '🪏', title: 'هَيَّا نَزْرَعُ!', subtitle: `${toAr(POTS.length)} أُصُصٍ فَارِغَةٍ تَحْتَاجُ زِرَاعَةً`,
       blocks: [
-        { type: 'bullet', t: 'الْتَفِتْ حَوْلَكَ، وَانْظُرْ إِلَى الْأُصُصِ.', size: 0.066 },
-        { type: 'bullet', t: 'الْمِسْ كُلَّ نَبْتَةٍ لِتَعْرِفَ اسْمَهَا وَمَرْحَلَةَ نُمُوِّهَا.', size: 0.066 },
-        { type: 'highlight', t: 'فِي النَّظَّارَةِ: حَرِّكْ عَصَا التَّحَكُّمِ يَمِينًا أَوْ يَسَارًا لِتَلْتَفِتَ.', size: 0.058, color: C.sky },
+        { type: 'bullet', t: 'رُوحْ لِطَاوِلَةِ الْأَدَوَاتِ وَخُذِ الْمِجْرَفَةَ، ثُمَّ الْمِسِ الْأَصِيصَ لِتَحْفُرَ فِيهِ.', size: 0.062 },
+        { type: 'bullet', t: 'خُذْ بَذْرَةً مِنْ أَحَدِ الْأَوْعِيَةِ وَازْرَعْهَا، ثُمَّ خُذْ إِبْرِيقَ الْمَاءِ وَاسْقِهَا.', size: 0.062 },
+        { type: 'bullet', t: 'كَرِّرْ هَذَا لِكُلِّ الْأُصُصِ الْأَرْبَعَةِ.', size: 0.062 },
+        { type: 'highlight', t: 'فِي النَّظَّارَةِ: حَرِّكْ عَصَا التَّحَكُّمِ يَمِينًا أَوْ يَسَارًا لِتَلْتَفِتَ.', size: 0.056, color: C.sky },
       ],
-    }, [{ label: 'هَيَّا نَكْتَشِفُ', color: C.leaf, text: '#fff', onClick: startExplore }]);
+    }, [{ label: 'هَيَّا أَزْرَعُ', color: C.leaf, text: '#fff', onClick: startPlant }]);
     setMood('point'); say('m1');
   }
-  function exploreHud() { setHud(`اكْتَشَفْتَ ${toAr(discovered.size)} مِنْ ${toAr(EXPLORE_GOAL)}`, 'الْمِسِ النَّبَاتَاتِ حَوْلَكَ'); }
-  function startExplore() { closePanel(); mode = 'explore'; exploreHud(); }
+  function nextHint() {
+    if (!heldTool) return 'خُذْ أَدَاةً مِنْ طَاوِلَةِ الْأَدَوَاتِ';
+    if (heldTool === 'trowel') return 'الْمِسِ الْأَصِيصَ لِتَحْفُرَ فِيهِ';
+    if (heldTool === 'seed') return 'الْمِسِ الْأَصِيصَ لِتَزْرَعَ الْبَذْرَةَ';
+    return 'الْمِسِ الْأَصِيصَ لِتَسْقِيَهُ';
+  }
+  function plantHud() { setHud(`زَرَعْتَ ${toAr(plantedCount)} مِنْ ${toAr(POTS.length)}`, nextHint()); }
+  function startPlant() { closePanel(); mode = 'plant'; plantHud(); }
   function hop(el) { const y0 = el.object3D.position.y; tween(0.4, k => { el.object3D.position.y = y0 + Math.sin(k * Math.PI) * 0.12; }, () => { el.object3D.position.y = y0; }); }
+  function potWorldPos(p) { const v = new T.Vector3(); potEls.get(p.id).object3D.getWorldPosition(v); v.y += 0.5; return v; }
+  function setToolHud(label) {
+    if (toolMesh) { toolMesh.parent.remove(toolMesh); toolMesh.material.map.dispose(); toolMesh = null; }
+    if (!label) return;
+    const c = document.createElement('canvas'); c.width = 460; c.height = 130;
+    const x = c.getContext('2d');
+    x.fillStyle = 'rgba(31,58,77,.88)'; x.beginPath(); x.roundRect(4, 4, c.width - 8, c.height - 8, 40); x.fill();
+    x.direction = 'rtl'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#ffe28a';
+    let fs = 48; x.font = `800 ${fs}px ${FONT}`;
+    while (x.measureText(label).width > c.width - 40 && fs > 24) { fs -= 2; x.font = `800 ${fs}px ${FONT}`; }
+    x.fillText(label, c.width / 2, c.height / 2);
+    toolMesh = planeMesh(c, 0.46, { overlay: true });
+    toolMesh.position.set(0.5, -0.62, -1); camEl.object3D.add(toolMesh);
+  }
+  function equip(tool, label) {
+    heldTool = tool; sfx.pop(); setToolHud(`✋ ${label}`);
+    if (!toolsUsed) { toolsUsed = true; say('tools'); }
+    if (mode === 'plant') plantHud();
+  }
   function onPot(p) {
-    if (mode === 'care') return;
-    if (mode !== 'explore' && mode !== 'free') return;
-    if (mode === 'free' && potStage.get(p.id) === 6 && !harvested.has(p.id)) return; // the harvest listener handles ripe, uncollected pots
+    const st = plant.get(p.id);
+    if (mode === 'plant' && st.step < 3) { handlePlantStep(p, st); return; }
+    if (st.stage === 6 && !harvested.has(p.id)) { harvest(p); return; }
+    if (st.stage === 0) return;
     sfx.pop();
     const el = potEls.get(p.id); hop(el);
-    const isNew = !discovered.has(p.id);
-    showInfo({ w: 1.75, accent: p.accent, icon: p.icon, title: p.name, subtitle: `الْمَرْحَلَةُ ${toAr(potStage.get(p.id))} مِنْ ٦`,
-      blocks: [{ t: p.about, size: 0.07 }, { type: 'chips', ...needsChips(p) }] }, el.object3D);
-    if (isNew) {
-      discovered.add(p.id); setMood('cheer');
-      const keys = [pick(['praise1', 'praise2', 'praise3']), 'f_' + p.id];
-      if (mode === 'explore' && discovered.size === Math.ceil(EXPLORE_GOAL / 2)) keys.splice(1, 0, 'half');
-      say(keys);
-      if (typeof hub !== 'undefined') trackDiscovery(p.id, p.icon, p.name);
-      if (mode === 'explore') { exploreHud(); if (discovered.size === EXPLORE_GOAL) setTimeout(exploreDone, 4200); }
-    } else say('f_' + p.id, { bubble: false });
+    showInfo({ w: 1.75, accent: p.accent, icon: p.icon, title: p.name, subtitle: `الْمَرْحَلَةُ ${toAr(st.stage)} مِنْ ٦`,
+      blocks: [{ t: p.about, size: 0.07 }, { type: 'chips', label: 'مَرْحَلَةُ النُّمُوِّ:', items: [{ i: '🌱', t: STAGES[st.stage - 1] }] }] }, el.object3D);
   }
-  function onProp(id) { sfx.pop(); setMood('point'); say(id === 'tools' ? 'tools' : 'falaj'); }
-  function exploreDone() {
-    if (mode !== 'explore') return;
-    sfx.good();
-    showPanel({ w: 2.0, accent: C.gold, icon: '🏆', title: `رَائِعٌ! تَعَرَّفْتَ عَلَى كُلِّ النَّبَاتَاتِ`,
-      blocks: [{ type: 'stars', n: 3, total: 3 }, { t: 'الْآنَ سَاعِدِ النَّبَاتَاتِ عَلَى النُّمُوِّ حَتَّى تُثْمِرَ.', size: 0.068, align: 'center' }] },
-      [{ label: 'الْمَهَمَّةُ الثَّانِيَةُ', onClick: careIntro }, { label: 'أُكْمِلُ الِاسْتِكْشَافَ', color: '#dff1ff', onClick: () => closePanel() }]);
+  function handlePlantStep(p, st) {
+    const el = potEls.get(p.id);
+    if (st.step === 0) {
+      if (heldTool !== 'trowel') { sfx.bad(); shake(el); return; }
+      st.step = 1; sfx.pop(); hop(el); burst(potWorldPos(p)); refreshPotVisual(p);
+    } else if (st.step === 1) {
+      if (heldTool !== 'seed') { sfx.bad(); shake(el); return; }
+      st.step = 2; sfx.pop(); hop(el); burst(potWorldPos(p)); refreshPotVisual(p);
+      say([pick(['praise1', 'praise2', 'praise3']), 'f_' + p.id]);
+      if (typeof hub !== 'undefined') trackDiscovery(p.id, p.icon, p.name);
+    } else if (st.step === 2) {
+      if (heldTool !== 'water') { sfx.bad(); shake(el); return; }
+      st.step = 3; st.stage = 1; st.nextAt = clockT + stageDuration(p);
+      sfx.good(); setMood('cheer'); hop(el); burst(potWorldPos(p)); refreshPotVisual(p);
+      say(pick(['right1', 'right2', 'right3']));
+      plantedCount++;
+      if (mode === 'plant') {
+        if (plantedCount === Math.ceil(POTS.length / 2)) setTimeout(() => say('half'), 1400);
+        if (plantedCount === POTS.length) setTimeout(allPlantedDone, 1800); else plantHud();
+      }
+    }
+    heldTool = null; setToolHud(null);
+  }
+  function allPlantedDone() {
+    mode = 'free'; hideHud();
+    showPanel({ w: 2.0, accent: C.gold, icon: '🏆', title: 'زَرَعْتَ كُلَّ النَّبَاتَاتِ!',
+      blocks: [{ type: 'stars', n: 3, total: 3 }, { t: 'الْحِينْ رَاقِبْهَا تَكْبُرُ مَرْحَلَةً بَعْدَ مَرْحَلَةٍ، وَاقْطِفِ الثِّمَارَ لَمَّا تَنْضَجُ!', size: 0.062, align: 'center' }] },
+      [{ label: 'تَمَامٌ', onClick: closePanel }]);
     setMood('cheer'); say('m1done');
   }
+  function onProp(id) { sfx.pop(); setMood('point'); say(id === 'tools' ? 'tools' : 'falaj'); }
 
-  // ---------- Mission 2: tend the plants ----------
-  const CHIPS = [{ id: 'water', icon: '💧', key: 'need_water' }, { id: 'sun', icon: '☀️', key: 'need_sun' }, { id: 'soil', icon: '🌱', key: 'need_soil' }];
-  let care = null, harvested = new Set();
-  function careIntro() {
-    mode = 'intro2';
-    showPanel({ w: 2.1, accent: C.coral, icon: '💧', title: 'الْمَهَمَّةُ الثَّانِيَةُ: اعْتَنِ بِالنَّبَاتَاتِ',
-      blocks: [
-        { type: 'bullet', t: 'كُلُّ نَبْتَةٍ تَحْتَاجُ عِنَايَةً لِتَكْبُرَ.', size: 0.066 },
-        { type: 'bullet', t: 'الْمِسِ الشَّيْءَ الَّذِي تَحْتَاجُهُ النَّبْتَةُ: مَاءً أَمِ شَمْسًا أَمِ تُرْبَةً.', size: 0.066 },
-        { type: 'bullet', t: 'كُلُّ إِجَابَةٍ صَحِيحَةٍ تُكَبِّرُ النَّبْتَةَ مَرْحَلَةً وَاحِدَةً.', size: 0.066 },
-      ] }, [{ label: 'ابْدَأْ', onClick: startCare }]);
-    setMood('point'); say('m2');
-  }
-  function startCare() {
-    closePanel(); closeInfo(); mode = 'care';
-    care = { rounds: L.careRounds, i: 0, stars: 0, chips: [] };
-    nextCareRound();
-  }
-  function clearCareChips() { for (const c of (care.chips || [])) c.remove(); care.chips = []; }
-  function nextCareRound() {
-    clearCareChips();
-    if (care.i >= care.rounds.length) return careDone();
-    const round = care.rounds[care.i], p = potById(round.pot);
-    const el = potEls.get(p.id);
-    pulse(el, true);
-    const { pos, rotY } = frontOf(2.3, (() => { const v = new T.Vector3(); el.object3D.getWorldPosition(v); v.sub(camPos); return v; })());
-    salemBeside(pos.clone().setY(0), rotY, 0.4);
-    const chipsRoot = document.createElement('a-entity'); uiEl.appendChild(chipsRoot);
-    chipsRoot.object3D.position.set(pos.x, eyeY() - 0.5, pos.z); chipsRoot.object3D.rotation.y = rotY;
-    shuffle(CHIPS.slice()).forEach((c, i) => {
-      const b = button(`${c.icon} ${L.lines[c.key]}`, chipsRoot, { w: 0.85, h: 0.26, color: '#fffdf7', text: C.ink }, () => onCareChip(round, c, p));
-      b.object3D.position.set((i - 1) * 0.95, 0, 0.02);
-      b.dataset.needId = c.id;
-      care.chips.push(b);
-    });
-    setHud(`${p.name}: ${toAr(care.i + 1)} / ${toAr(care.rounds.length)}`, 'وَشْ تَحْتَاجُ هَذِهِ النَّبْتَةُ الْحِينَ؟');
-    setMood('think');
-  }
-  function onCareChip(round, chip, p) {
-    if (!care || care.busy) return;
-    if (chip.id === round.need) {
-      care.busy = true; care.stars++; sfx.good(); setMood('cheer');
-      const stage = Math.min(6, potStage.get(p.id) + 1);
-      potStage.set(p.id, stage); refreshPot(p);
-      pulse(potEls.get(p.id), false);
-      burst((() => { const v = new T.Vector3(); potEls.get(p.id).object3D.getWorldPosition(v); v.y += 0.5; return v; })());
-      say([pick(['right1', 'right2', 'right3'])]);
-      if (stage === 6) setTimeout(() => { say('harvestReady'); }, 900);
-      setTimeout(() => { care.busy = false; care.i++; nextCareRound(); }, 1700);
-    } else { sfx.bad(); shake(potEls.get(p.id)); say(pick(['wrong1', 'wrong2'])); }
-  }
-  function careDone() {
-    clearCareChips(); hideHud(); mode = 'free';
-    for (const p of POTS) pulse(potEls.get(p.id), false);
-    POTS.forEach(p => { if (potStage.get(p.id) === 6) clickable(potEls.get(p.id), () => harvest(p), { hover: 1.08 }); });
-    showPanel({ w: 1.9, accent: C.gold, icon: '🏅', title: 'أَحْسَنْتَ الْعِنَايَةَ بِالنَّبَاتَاتِ!',
-      blocks: [{ type: 'stars', n: Math.min(3, Math.round(care.stars / 2)), total: 3 }, { t: 'النَّبَاتُ النَّاضِجُ يَلْمَعُ — الْمِسْهُ لِتَقْطِفَهُ!', size: 0.064, align: 'center' }] },
-      [{ label: 'مَاذَا تَعَلَّمْتُ؟', onClick: summary }]);
-    setMood('cheer'); say('free');
-  }
+  // ---------- growth, over real time ----------
+  let clockT = 0;
+  idlers.push({
+    step(t) {
+      clockT = t;
+      for (const p of POTS) {
+        const st = plant.get(p.id);
+        if (st.stage >= 1 && st.stage < 6 && t >= st.nextAt) {
+          st.stage++; refreshPotVisual(p); st.nextAt = t + stageDuration(p);
+          if (st.stage === 6) { pulse(potEls.get(p.id), true); say('harvestReady'); }
+        }
+      }
+    },
+  });
   function harvest(p) {
     if (harvested.has(p.id)) return;
     harvested.add(p.id); sfx.good(); setMood('cheer');
-    burst((() => { const v = new T.Vector3(); potEls.get(p.id).object3D.getWorldPosition(v); v.y += 0.6; return v; })());
+    pulse(potEls.get(p.id), false);
+    burst(potWorldPos(p));
     say('harvestDone');
     if (typeof hub !== 'undefined') trackDiscovery('harvest_' + p.id, p.icon, p.name + ' (مَحْصُودٌ)');
     showInfo({ w: 1.5, accent: p.accent, icon: p.icon, title: `قَطَفْتَ ${p.name}!`, blocks: [{ t: p.about, size: 0.068 }] }, potEls.get(p.id).object3D);
+    if (harvested.size === 2 && !summaryOffered) { summaryOffered = true; setTimeout(offerSummary, 2400); }
+  }
+  function offerSummary() {
+    showPanel({ w: 1.9, accent: C.gold, icon: '🏅', title: 'أَحْسَنْتَ! حَصَدْتَ أَوَّلَ ثِمَارِكَ!',
+      blocks: [{ t: 'كَمِّلْ مُرَاقَبَةَ بَقِيَّةِ النَّبَاتَاتِ، أَوِ انْتَقِلْ لِلْمُلَخَّصِ الْآنَ.', size: 0.064, align: 'center' }] },
+      [{ label: 'مَاذَا تَعَلَّمْتُ؟', onClick: summary }, { label: 'أُكْمِلُ الْمُرَاقَبَةَ', color: '#dff1ff', onClick: closePanel }]);
   }
   function summary() {
     mode = 'summary'; hideHud(); closePanel();
@@ -1140,7 +1193,7 @@
         { type: 'bullet', t: 'النَّبَاتَاتُ تَمُرُّ بِسِتِّ مَرَاحِلِ نُمُوٍّ: بَذْرَةٌ، إِنْبَاتٌ، شَتْلَةٌ، نَبَاتٌ صَغِيرٌ، إِزْهَارٌ، ثُمَّ ثِمَارٌ.', size: 0.062 },
         { type: 'bullet', t: 'تَحْتَاجُ النَّبَاتَاتُ إِلَى الْمَاءِ وَالشَّمْسِ وَالتُّرْبَةِ لِتَكْبُرَ.', size: 0.062 },
         { type: 'bullet', t: 'الْأَشْجَارُ (مِثْلَ التُّفَّاحِ وَاللَّيْمُونِ) تَأْخُذُ وَقْتًا أَطْوَلَ لِتُثْمِرَ مِنَ الْخُضَارِ.', size: 0.062 },
-        { type: 'chips', label: 'الْأَدَوَاتُ الَّتِي اسْتَخْدَمْتُهَا:', items: [{ i: '💧', t: 'الْفَلَجُ' }, { i: '🌱', t: 'الْبُذُورُ' }, { i: '🧺', t: 'سَلَّةُ الْحَصَادِ' }] },
+        { type: 'chips', label: 'الْأَدَوَاتُ الَّتِي اسْتَخْدَمْتُهَا:', items: [{ i: '🪏', t: 'الْمِجْرَفَةُ' }, { i: '🌱', t: 'الْبُذُورُ' }, { i: '💧', t: 'إِبْرِيقُ الْمَاءِ' }, { i: '🧺', t: 'سَلَّةُ الْحَصَادِ' }] },
       ] }, [{ label: 'مِنَ الْبِدَايَةِ', onClick: welcome }]);
     setMood('cheer'); say('end');
   }
@@ -1293,10 +1346,11 @@
   if (TEST) window.__t = {
     mode: () => mode, panel: () => panel,
     buttons: () => [...(panel ? panel.querySelectorAll('.clickable') : [])],
-    pots: () => POTS.map(p => p.id), potStage: id => potStage.get(id), discovered: () => [...discovered],
+    pots: () => POTS.map(p => p.id), potStage: id => plant.get(id).stage, potStep: id => plant.get(id).step,
     potClick: id => potEls.get(id).emit('click'),
-    explore: () => exploreIntro(), care: () => careIntro(), careRound: () => care && care.rounds[care.i],
-    careStart: startCare, carePick: id => { const chip = care.chips.find(c => c.dataset.needId === id); chip && chip.emit('click'); },
+    plantIntro: () => plantIntro(), startPlant, equip: tool => equip(tool, tool),
+    heldTool: () => heldTool, plantedCount: () => plantedCount,
+    forceGrow: id => { const st = plant.get(potById(id).id); if (st.stage >= 1 && st.stage < 6) { st.stage = 6; refreshPotVisual(potById(id)); } },
     harvest: id => harvest(potById(id)), harvested: () => [...harvested],
     turn: dir => rigEl.components['snap-turn'].turn(dir),
     gazeAt: el => { gazeTarget = el; }, gazeTarget: () => gazeTarget, handPinch: (id, on) => document.getElementById(id).emit(on ? 'pinchstarted' : 'pinchended'),

@@ -306,3 +306,25 @@ each chip with its need id. That fix then exposed a second, real content bug und
 started too early (stage 2) for its two care rounds to ever reach stage 6, so it could never actually be
 harvested — contradicting the lesson's own closing line that both vegetables ripen. Fixed by starting
 it one stage further along.
+
+**Replaced the abstract water/sun/soil quiz with the child actually planting, from the user's
+"I want the child to be the one who plants" feedback:** every pot now starts completely empty — no
+pre-grown stage. The child goes to the tools table, equips a tool by clicking it (trowel, a seed from
+one of the four bowls, or the new orange watering can — a small on-screen label shows what's in hand),
+then clicks a pot to use that tool there, in order: dig, plant, water. Watering starts real-time growth:
+each pot now advances through the 6 named stages on its own, once every 6 seconds for the vegetables
+and every 9 for the trees (so "trees take longer" is something the child watches happen, not just a
+line they're told), with a small floating label over each pot naming its current stage. A ripe pot
+(stage 6) is harvested the same way as before — touch it to move its fruit into the basket. The four
+pots can be planted in any order and grow in the background while the child keeps exploring — nothing
+blocks on a single pot. The old discover-by-touch mission is gone; each plant's fact line is now said
+the moment its seed goes in, and the two-mission "explore then quiz" structure collapses into one
+plant-then-watch flow, matching the user's explicit interaction-style choice: point-and-click
+equip-then-use rather than full pick-up-and-carry grab physics.
+
+Three lines whose text changed for the new mechanic (`m1`, `half`, `m1done`) were re-recorded through
+the same Higgsfield pipeline, same Benji voice, as every other lesson; the rest of the voice lines
+carried over unchanged since their wording still fits. Verified end to end: dig→plant→water all 4 pots
+in any order, growth advances on its own over real time, harvesting all 4 once ripe, zero console
+errors, and render cost actually dropped slightly (pots start empty) to ≈151k triangles / 59 draw
+calls.
