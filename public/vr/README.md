@@ -426,3 +426,14 @@ expected, zero console errors throughout.
 Verified this pass with screenshots: the logo renders cleanly with no white box, the welcome panel
 and Salem's spoken line both carry the new farm/ministry framing, every bowl shows its crop name, and
 Salem stands clearly beside the table rather than inside it. Full regression suite still clean.
+
+**Quick follow-up — watering can was effectively unclickable, logo sat too high in the headset:**
+shrank the seed name cards and moved the watering can to the opposite edge of the table from the
+trowel. That surfaced a real bug a real click (not the test harness's `equip()` shortcut) caught but
+a screenshot wouldn't have: the can's hit zone was positioned slightly *behind* the depth of the
+pots' own hit-cylinders (which are large, radius 0.5), so a ray aimed at the can hit a pot's hit zone
+first — the can was never actually clickable, even though every visual and the `equip()`-based test
+suite looked fine. Fixed by moving the can to the same depth as the trowel (closer to the child than
+every pot), confirmed this time with simulated real mouse clicks projected through the actual
+camera, not the shortcut. Also lowered the logo overlay, since on the real headset it sat high
+enough to be hard to see clearly.

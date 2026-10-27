@@ -903,22 +903,27 @@
       const b = bk.build(); b.position.set(...lp); g.add(b);
       bowlPos.push(lp);
       // a small name card over each bowl, so the child knows which seed is which before picking one up
+      // — kept small and tucked close to its own bowl so it never drifts over a neighboring tool
       const p = POTS[i];
-      const nc = document.createElement('canvas'); nc.width = 240; nc.height = 90;
+      const nc = document.createElement('canvas'); nc.width = 200; nc.height = 70;
       const nx = nc.getContext('2d');
-      nx.fillStyle = 'rgba(255,253,247,.95)'; nx.beginPath(); nx.roundRect(4, 4, nc.width - 8, nc.height - 8, 22); nx.fill();
-      nx.lineWidth = 4; nx.strokeStyle = p.accent; nx.stroke();
+      nx.fillStyle = 'rgba(255,253,247,.95)'; nx.beginPath(); nx.roundRect(3, 3, nc.width - 6, nc.height - 6, 18); nx.fill();
+      nx.lineWidth = 3; nx.strokeStyle = p.accent; nx.stroke();
       nx.direction = 'rtl'; nx.textAlign = 'center'; nx.textBaseline = 'middle'; nx.fillStyle = C.ink;
-      let nfs = 30; nx.font = `800 ${nfs}px ${FONT}`;
+      let nfs = 24; nx.font = `800 ${nfs}px ${FONT}`;
       const label = `${p.icon} ${p.name}`;
-      while (nx.measureText(label).width > nc.width - 24 && nfs > 16) { nfs -= 2; nx.font = `800 ${nfs}px ${FONT}`; }
+      while (nx.measureText(label).width > nc.width - 18 && nfs > 13) { nfs -= 2; nx.font = `800 ${nfs}px ${FONT}`; }
       nx.fillText(label, nc.width / 2, nc.height / 2);
-      const nameCard = planeMesh(nc, 0.34);
-      nameCard.position.set(lp[0], lp[1] + 0.17, lp[2]);
+      const nameCard = planeMesh(nc, 0.24);
+      nameCard.position.set(lp[0], lp[1] + 0.14, lp[2]);
       g.add(nameCard); billboards.push(nameCard);
     }
     const trowel = trowelModel(); trowel.position.set(0.55, 0.85, 0.22); g.add(trowel);
-    const canPos = [0.3, 0.81, -0.32];
+    // mirrors the trowel's position (opposite edge, same depth): sharing the trowel's x meant a
+    // ray aimed at the can hit the trowel's zone first, and the can's old more-negative z put it
+    // slightly behind the pots' own (large) hit-cylinders, so a ray aimed at the can hit a pot's
+    // hit zone first instead — the can was effectively unclickable either way.
+    const canPos = [-0.78, 0.81, 0.22];
     const can = wateringCan(); can.position.set(...canPos); can.rotation.y = Math.PI * 0.15; g.add(can);
     w.add(g);
     g.updateMatrixWorld(true);
@@ -932,7 +937,7 @@
     // tools) while still being a comfortable target at the table's distance from the child.
     mkHit(worldOf([0.78, 1.0, 0.22]), 0.14, 0.4, () => equip('trowel', '🪏 الْمِجْرَفَةُ'));
     bowlPos.forEach(lp => mkHit(worldOf([lp[0], lp[1] + 0.05, lp[2]]), 0.14, 0.24, () => equip('seed', '🌱 بَذْرَةٌ')));
-    mkHit(worldOf([canPos[0], canPos[1] + 0.12, canPos[2]]), 0.17, 0.34, () => equip('water', '💧 إِبْرِيقُ الْمَاءِ'));
+    mkHit(worldOf([canPos[0], canPos[1] + 0.12, canPos[2]]), 0.2, 0.36, () => equip('water', '💧 إِبْرِيقُ الْمَاءِ'));
     // a soft glowing marker hovers over whichever tool is actually needed right now, so the child
     // doesn't have to rely on reading the HUD hint to know where to look.
     const mkGlow = lp => {
@@ -1272,9 +1277,9 @@
   function buildLogoOverlay() {
     const tex = new T.TextureLoader().load('logo.png');
     tex.colorSpace = T.SRGBColorSpace;
-    const w = 0.5, h = w * (972 / 2392);
+    const w = 0.44, h = w * (972 / 2392);
     const m = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false }));
-    m.renderOrder = 999; m.position.set(0.58, 0.66, -1.3);
+    m.renderOrder = 999; m.position.set(0.5, 0.38, -1.1);
     camEl.object3D.add(m);
   }
   function setToolHud(label) {
