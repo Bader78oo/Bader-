@@ -2,8 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Images, Map, Rotate3d, X } from 'lucide-react';
+import type { PluginConstructor } from '@photo-sphere-viewer/core';
 import type { TourManifest, TourPanorama } from '@/lib/tours/manifest';
-import { SiteExplorer } from './site-explorer';
+import { SiteExplorer, type AutoPlay } from './site-explorer';
 import '@photo-sphere-viewer/core/index.css';
 import '@photo-sphere-viewer/markers-plugin/index.css';
 import '@photo-sphere-viewer/virtual-tour-plugin/index.css';
@@ -25,12 +26,15 @@ function PanoramaTour({
   manifest,
   panoramas,
   startId,
-  baseUrl
+  baseUrl,
+  autoRotate = false
 }: {
   manifest: TourManifest;
   panoramas: TourPanorama[];
   startId?: string;
   baseUrl: string;
+  /** Unattended display: turn slowly on its own and drop the controls nobody can press */
+  autoRotate?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -39,10 +43,11 @@ function PanoramaTour({
     let cancelled = false;
 
     (async () => {
-      const [{ Viewer }, { MarkersPlugin }, { VirtualTourPlugin }] = await Promise.all([
+      const [{ Viewer }, { MarkersPlugin }, { VirtualTourPlugin }, autorotate] = await Promise.all([
         import('@photo-sphere-viewer/core'),
         import('@photo-sphere-viewer/markers-plugin'),
-        import('@photo-sphere-viewer/virtual-tour-plugin')
+        import('@photo-sphere-viewer/virtual-tour-plugin'),
+        autoRotate ? import('@photo-sphere-viewer/autorotate-plugin') : Promise.resolve(null)
       ]);
       if (cancelled || !containerRef.current) return;
 
@@ -67,7 +72,7 @@ function PanoramaTour({
         defaultYaw: start?.heading ?? start?.links[0]?.yaw ?? 0,
         defaultPitch: -0.1,
         loadingTxt: 'جارٍ التحميل...',
-        navbar: ['zoom', 'move', 'caption', 'fullscreen'],
+        navbar: autoRotate ? false : ['zoom', 'move', 'caption', 'fullscreen'],
         plugins: [
           MarkersPlugin,
           [
@@ -78,7 +83,10 @@ function PanoramaTour({
               nodes,
               startNodeId: start?.id
             }
-          ]
+          ],
+          ...((autorotate
+            ? [[autorotate.AutorotatePlugin, { autostartDelay: 500, autostartOnIdle: true, autorotateSpeed: '1rpm' }]]
+            : []) as [PluginConstructor, unknown][])
         ]
       });
     })();
@@ -87,7 +95,7 @@ function PanoramaTour({
       cancelled = true;
       viewer?.destroy();
     };
-  }, [manifest, panoramas, startId, baseUrl]);
+  }, [manifest, panoramas, startId, baseUrl, autoRotate]);
 
   return <div ref={containerRef} className="h-full w-full" />;
 }
@@ -131,7 +139,19 @@ function Stills({ manifest, baseUrl }: { manifest: TourManifest; baseUrl: string
   );
 }
 
-export function TourViewer({ manifest, baseUrl }: { manifest: TourManifest; baseUrl: string }) {
+/** How long each stop holds on an unattended wall screen */
+export type DisplayTiming = { stillMs: number; panoMs: number };
+
+export function TourViewer({
+  manifest,
+  baseUrl,
+  display = null
+}: {
+  manifest: TourManifest;
+  baseUrl: string;
+  /** Set for an unattended screen: no controls, walks itself, never stops */
+  display?: DisplayTiming | null;
+}) {
   const site = manifest.site?.amenities.length ? manifest.site : null;
   const [mode, setMode] = useState<Mode>(site ? 'site' : 'tour');
   // Amenity 360 opened from the site view, shown as an overlay
@@ -141,6 +161,80 @@ export function TourViewer({ manifest, baseUrl }: { manifest: TourManifest; base
     () => manifest.panoramas.filter((p) => p.id === amenityPano),
     [manifest, amenityPano]
   );
+
+  const auto = useMemo<AutoPlay | null>(
+    () => (display ? { ...display, paused: amenityPano !== null } : null),
+    [display, amenityPano]
+  );
+
+  // Close the 360 leg and let the walk carry on
+  useEffect(() => {
+    if (!display || !amenityPano || display.panoMs <= 0) return;
+    const timer = setTimeout(() => setAmenityPano(null), display.panoMs);
+    return () => clearTimeout(timer);
+  }, [display, amenityPano]);
+
+  // A screen in a lobby must not sleep. Ignored where the browser has no wake lock.
+  useEffect(() => {
+    if (!display) return;
+    type Lock = { release(): Promise<void> };
+    const wakeLock = (navigator as Navigator & { wakeLock?: { request(t: 'screen'): Promise<Lock> } }).wakeLock;
+    if (!wakeLock) return;
+    let lock: Lock | null = null;
+    const acquire = () => {
+      wakeLock
+        .request('screen')
+        .then((l) => {
+          lock = l;
+        })
+        .catch(() => {});
+    };
+    acquire();
+    const onVisible = () => document.visibilityState === 'visible' && acquire();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      lock?.release().catch(() => {});
+    };
+  }, [display]);
+
+  // With no amenities to walk there is still something to show: step through the 360s instead
+  const [panoStep, setPanoStep] = useState(0);
+  useEffect(() => {
+    if (!display || site || tourPanoramas.length < 2) return;
+    const every = display.panoMs > 0 ? display.panoMs : 15000;
+    const timer = setInterval(() => setPanoStep((i) => (i + 1) % tourPanoramas.length), every);
+    return () => clearInterval(timer);
+  }, [display, site, tourPanoramas]);
+
+  if (display) {
+    const standby = tourPanoramas[panoStep % Math.max(tourPanoramas.length, 1)];
+    return (
+      <div dir="rtl" className="h-[100dvh] w-full cursor-none overflow-hidden bg-black text-white">
+        <main dir="ltr" className="relative h-full w-full">
+          {site ? (
+            <SiteExplorer site={site} baseUrl={baseUrl} onOpen360={setAmenityPano} auto={auto} />
+          ) : standby ? (
+            <PanoramaTour
+              key={standby.id}
+              manifest={manifest}
+              panoramas={tourPanoramas}
+              startId={standby.id}
+              baseUrl={baseUrl}
+              autoRotate
+            />
+          ) : (
+            <ModelView manifest={manifest} baseUrl={baseUrl} />
+          )}
+          {amenityPano && (
+            <div className="absolute inset-0 z-20 bg-black">
+              <PanoramaTour manifest={manifest} panoramas={overlayPanoramas} baseUrl={baseUrl} autoRotate />
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  }
   const tabs: { mode: Mode; label: string; icon: typeof Box; show: boolean }[] = [
     { mode: 'site', label: 'المشروع', icon: Map, show: !!site },
     { mode: 'tour', label: 'جولة 360°', icon: Rotate3d, show: tourPanoramas.length > 0 },

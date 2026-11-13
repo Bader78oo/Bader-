@@ -18,7 +18,8 @@ viewer UI is Arabic-first (RTL).
   point, `amenities.py` detects amenities from object names and renders stills/360s/clips. Test
   models: `make_test_apartment.py`, `make_test_complex.py`. Full details in `pipeline/README.md`.
 - `app/tour/[id]/` — the viewer page (`/tour/<id>`), reading `public/tours/<id>/manifest.json`
-  written by the pipeline. `public/tours/demo` (apartment) and `public/tours/compound-demo`
+  written by the pipeline. `/tour/<id>?display=1` is the unattended variant for a wall screen
+  with no touch: no controls, walks the amenities on a loop (`docs/display-mode-ar.md`). `public/tours/demo` (apartment) and `public/tours/compound-demo`
   (compound with 12 amenities) are rendered examples.
 - Rendering is meant to run on the owner's Windows PC (RTX 5080, Cycles/OptiX). Blender and Unity
   can be driven through MCP servers when the session runs on that PC (see `.mcp.json` and
