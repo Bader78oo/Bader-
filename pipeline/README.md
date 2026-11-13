@@ -65,6 +65,13 @@ Portuguese: e.g. `Pool_Water`, `مسبح`, `Gym`, `Tennis_Court`, `Playground`, 
 grouped by proximity; towers can appear several times (A, B, C), other types keep their largest
 group. Developers get the best result by naming their model's groups this way.
 
+Healthcare buildings (a hospital or a medical city) use the same mechanism with departments
+instead of leisure amenities: `Emergency`/`الطوارئ`, `OPD_Clinic`/`العيادات`, `Radiology`/`الأشعة`,
+`Laboratory`/`المختبر`, `Pharmacy`/`الصيدلية`, `Operating_Theatre`/`العمليات`, `ICU`/`العناية المركزة`,
+`Maternity`/`الولادة`, `Ward`/`التنويم`, `Dialysis`, `Cardiology`, `Oncology`, `Paediatrics`,
+`Physiotherapy`, `Auditorium`, `Cafeteria`, `Helipad`. A type can also list excluded keywords, so
+`Lab` does not match every floor `Slab` and `Emergency_Exit_Stair` is not read as the ER.
+
 For each amenity:
 - **Camera**: outdoor amenities are framed from 16 candidate directions, keeping the one with the
   clearest line of sight (no trees or buildings in the way) on the compound side. Indoor ones
@@ -83,3 +90,5 @@ use `--clip-engine eevee` for quick drafts.
 - Fill lights are added at each viewpoint; models with their own lighting may look brighter.
 - Exterior-only models (no ceilings) produce no interior viewpoints, only aerial/stills.
 - Stairs aren't linked between floors yet.
+- Only the largest group of each type is kept (towers aside), so a hospital with several ward
+  blocks or clinic wings gets one of each until those types are allowed to repeat.

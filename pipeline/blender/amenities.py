@@ -15,9 +15,33 @@ import shutil
 import bpy
 from mathutils import Vector
 
-# (type, English, Arabic, keywords). Matching runs in this order, so more specific types come
-# first ("parking" before "garden", whose keyword "park" it contains).
+# (type, English, Arabic, keywords[, excluded keywords]). Matching runs in this order, so more
+# specific types come first ("parking" before "garden", whose keyword "park" it contains). A type
+# is skipped when one of its excluded keywords is present, which keeps short keywords usable
+# ("lab" would otherwise match every floor "Slab").
 AMENITY_TYPES = [
+    # --- healthcare: hospitals, clinics, a medical city ---------------------
+    ("emergency", "Emergency", "الطوارئ", ["emergency", "casualty", "trauma", "طوارئ", "اسعاف", "إسعاف"],
+     ["stair", "exit", "sign", "lighting"]),
+    ("radiology", "Radiology", "الأشعة", ["radiolog", "imaging", "x-ray", "xray", "mri", "ct-scan", "ct_scan", "أشعة", "اشعة"]),
+    ("lab", "Laboratory", "المختبر", ["laborator", "pathology", "lab", "مختبر", "معمل"], ["slab"]),
+    ("pharmacy", "Pharmacy", "الصيدلية", ["pharmac", "dispensary", "صيدل"]),
+    ("surgery", "Operating theatres", "غرف العمليات", ["operating", "surgery", "surgical", "عمليات", "جراح"]),
+    ("icu", "Intensive care", "العناية المركزة", ["icu", "intensive", "critical care", "عناية", "مركزة", "حرجة"]),
+    ("maternity", "Maternity", "الولادة", ["maternity", "obstetric", "natal", "ولادة", "أمومة", "امومة"]),
+    ("dialysis", "Dialysis", "غسيل الكلى", ["dialysis", "nephro", "غسيل", "كلى"]),
+    ("cardiology", "Cardiology", "القلب", ["cardio", "cath lab", "قلب"]),
+    ("oncology", "Oncology", "الأورام", ["oncolog", "chemo", "radiotherap", "أورام", "اورام", "سرطان"]),
+    ("pediatrics", "Paediatrics", "الأطفال", ["pediatric", "paediatric", "neonat", "أطفال"],
+     ["playground", "ألعاب", "kids"]),
+    ("physio", "Physiotherapy", "العلاج الطبيعي", ["physiotherap", "physio", "rehab", "تأهيل", "علاج طبيعي"]),
+    ("ward", "Inpatient wards", "أجنحة التنويم", ["ward", "inpatient", "in-patient", "patient room", "nursing unit",
+                                                   "تنويم", "جناح", "أجنحة", "اجنحة", "مرضى"], ["forward"]),
+    ("clinic", "Outpatient clinics", "العيادات الخارجية", ["clinic", "outpatient", "out-patient", "opd", "عيادة", "عيادات"]),
+    ("helipad", "Helipad", "مهبط المروحيات", ["helipad", "helideck", "heliport", "مهبط", "مروحي"]),
+    ("auditorium", "Auditorium", "القاعة", ["auditorium", "lecture", "conference", "مدرج", "قاعة"]),
+    ("cafeteria", "Cafeteria", "الكافتيريا", ["cafeteria", "canteen", "restaurant", "كافتيريا", "مقصف", "مطعم"]),
+    # --- residential compounds ---------------------------------------------
     ("parking", "Parking", "المواقف", ["parking", "garage", "carport", "estacionamento", "مواقف"]),
     ("playground", "Kids' play area", "ألعاب الأطفال", ["playground", "kids", "parquinho", "ألعاب", "اطفال"]),
     ("lobby", "Lobby", "الاستقبال", ["lobby", "reception", "foyer", "majlis", "salão", "استقبال", "مجلس", "ردهة"]),
@@ -30,7 +54,13 @@ AMENITY_TYPES = [
     ("tower", "Tower", "البرج", ["tower", "block", "bloco", "torre", "برج", "عمارة"]),
 ]
 # Menu order in the viewer
-MENU_ORDER = ["tower", "lobby", "pool", "gym", "court", "playground", "bbq", "garden", "mosque", "parking"]
+MENU_ORDER = ["tower", "lobby",
+              # healthcare, in the order a visitor would ask for them
+              "emergency", "clinic", "radiology", "lab", "pharmacy", "surgery", "icu", "maternity",
+              "ward", "dialysis", "cardiology", "oncology", "pediatrics", "physio",
+              "auditorium", "cafeteria", "helipad",
+              # residential
+              "pool", "gym", "court", "playground", "bbq", "garden", "mosque", "parking"]
 # Types that can legitimately appear several times (Tower A, B, C); others keep the largest cluster
 MULTI = {"tower"}
 
@@ -43,8 +73,9 @@ def classify(obj):
         p = p.parent
     names += [c.name for c in obj.users_collection]
     text = " ".join(names).lower()
-    for type_id, _en, _ar, keywords in AMENITY_TYPES:
-        if any(k in text for k in keywords):
+    for type_id, _en, _ar, keywords, *rest in AMENITY_TYPES:
+        excluded = rest[0] if rest else ()
+        if any(k in text for k in keywords) and not any(x in text for x in excluded):
             return type_id
     return None
 
@@ -88,7 +119,7 @@ def detect(objs, gap=6.0):
         t = classify(o)
         if t:
             by_type.setdefault(t, []).append(o)
-    names = {t: (en, ar) for t, en, ar, _k in AMENITY_TYPES}
+    names = {t: (en, ar) for t, en, ar, *_ in AMENITY_TYPES}
     found = []
     for t in MENU_ORDER:
         if t not in by_type:
