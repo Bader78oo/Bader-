@@ -20,6 +20,8 @@ viewer UI is Arabic-first (RTL).
 - `app/tour/[id]/` — the viewer page (`/tour/<id>`), reading `public/tours/<id>/manifest.json`
   written by the pipeline. `public/tours/demo` (apartment) and `public/tours/compound-demo`
   (compound with 12 amenities) are rendered examples.
+- `public/game/index.html` — «درب اللبان», a standalone Omani 3D adventure game (single file, three.js
+  r128 from cdnjs, no build step), served at `/game/index.html`. Unrelated to the SaaS code.
 - Rendering is meant to run on the owner's Windows PC (RTX 5080, Cycles/OptiX). Blender and Unity
   can be driven through MCP servers when the session runs on that PC (see `.mcp.json` and
   `docs/desktop-setup-ar.md`).
