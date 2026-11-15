@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+@font-face{font-family:Cairo;font-weight:600;src:url(fonts/Cairo-600.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#05000d}
+#root{width:100%;height:100%;position:relative;font-family:Cairo;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 45%,#2B0157 0%,#12002a 55%,#05000d 100%)}
+.full{position:absolute;inset:0}
+#glow{background:radial-gradient(circle at 50% 46%,rgba(127,0,255,.75) 0%,rgba(127,0,255,0) 45%)}
+#grid{background-image:linear-gradient(rgba(1,206,201,.14) 2px,transparent 2px),linear-gradient(90deg,rgba(1,206,201,.14) 2px,transparent 2px);
+  background-size:120px 120px;transform:perspective(900px) rotateX(62deg) translateY(380px) scale(2.2);transform-origin:50% 100%;
+  -webkit-mask-image:linear-gradient(to top,#000 0%,transparent 60%)}
+.p{position:absolute;width:6px;height:6px;border-radius:50%;background:#01CEC9;box-shadow:0 0 12px #01CEC9}
+#streak{position:absolute;top:880px;left:-1200px;width:1200px;height:6px;background:linear-gradient(90deg,transparent,#01CEC9,#fff);box-shadow:0 0 30px #01CEC9}
+.t{position:absolute;left:0;right:0;text-align:center;direction:rtl;color:#fff;white-space:nowrap}
+#s1a{top:760px;font-size:120px;font-weight:900}
+#s1b{top:975px;font-size:64px;font-weight:800;color:#bfefff}
+#ring{position:absolute;left:290px;top:610px;width:500px;height:500px;border-radius:50%;border:6px solid #01CEC9;box-shadow:0 0 50px #01CEC9,inset 0 0 50px rgba(1,206,201,.5)}
+#ring2{position:absolute;left:240px;top:560px;width:600px;height:600px;border-radius:50%;border:3px dashed rgba(255,255,255,.35)}
+#sym{position:absolute;left:390px;top:735px;width:300px}
+#scan{position:absolute;left:0;right:0;top:600px;height:4px;background:#01CEC9;box-shadow:0 0 25px #01CEC9}
+#words{top:1230px;font-size:58px;font-weight:800;color:#fff}
+#words span{display:inline-block;margin:0 14px}
+#words .dot{color:#01CEC9}
+#t1{top:560px;font-size:150px;font-weight:900}
+#t2{top:740px;font-size:250px;font-weight:900;color:#01CEC9;text-shadow:0 0 50px rgba(1,206,201,.7)}
+#t3{top:1110px;font-size:58px;font-weight:800;color:#e9dcff}
+#lock{position:absolute;top:640px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:28px;direction:ltr}
+#lock .s{height:150px} #lock .e{height:92px} #lock .a{height:100px} #lock .bar{width:5px;height:110px;background:#01CEC9;border-radius:3px}
+#soon2{top:880px;font-size:96px;font-weight:900;color:#01CEC9;text-shadow:0 0 40px rgba(1,206,201,.6)}
+#contacts{position:absolute;top:1130px;left:140px;right:140px;display:flex;flex-direction:column;gap:26px}
+.c{display:flex;align-items:center;justify-content:center;gap:22px;direction:rtl;background:rgba(127,0,255,.28);border:2px solid rgba(1,206,201,.55);border-radius:26px;padding:22px 30px;color:#fff;font-size:54px;font-weight:800}
+.c img{width:58px;height:58px}
+.c b{direction:ltr;font-weight:900;color:#fff}
+#h{top:1470px;font-size:46px;font-weight:800;color:#bfefff;direction:ltr}
+#flash{position:absolute;inset:0;background:#fff}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="15" data-width="1080" data-height="1920">
+  <div id="glow" class="full clip" data-start="0" data-duration="15" data-track-index="0"></div>
+  <div id="grid" class="full clip" data-start="0" data-duration="15" data-track-index="1"></div>
+  <div id="parts" class="full clip" data-start="0" data-duration="15" data-track-index="2"></div>
+  <div id="streak" class="clip" data-start="0" data-duration="3.87" data-track-index="3"></div>
+  <!-- scene 1: 0 - 3.87 -->
+  <div id="s1a" class="t clip" data-start="0" data-duration="3.87" data-track-index="4">شي جديد…</div>
+  <div id="s1b" class="t clip" data-start="0" data-duration="3.87" data-track-index="5">قاعد يتجهّز…</div>
+  <!-- scene 2: 3.87 - 7.74 -->
+  <div id="ring2" class="clip" data-start="3.87" data-duration="3.87" data-track-index="6"></div>
+  <div id="ring" class="clip" data-start="3.87" data-duration="3.87" data-track-index="7"></div>
+  <img id="sym" class="clip" src="logo_symbol_white.png" data-start="3.87" data-duration="3.87" data-track-index="8">
+  <div id="scan" class="clip" data-start="3.87" data-duration="3.87" data-track-index="9"></div>
+  <div id="words" class="t clip" data-start="3.87" data-duration="3.87" data-track-index="10"><span>تقنية</span><span class="dot">•</span><span>إبداع</span><span class="dot">•</span><span>تجربة</span></div>
+  <!-- scene 3: 7.74 - 11.61 -->
+  <div id="t1" class="t clip" data-start="7.74" data-duration="3.87" data-track-index="11">ترقّبوا…</div>
+  <div id="t2" class="t clip" data-start="7.74" data-duration="3.87" data-track-index="12">قريبًا</div>
+  <div id="t3" class="t clip" data-start="7.74" data-duration="3.87" data-track-index="13">والكشف بيكون مختلف</div>
+  <!-- scene 4: 11.61 - 15 -->
+  <div id="lock" class="clip" data-start="11.61" data-duration="3.39" data-track-index="14"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"><div class="bar"></div><img class="a" src="logo_wordmark_ar.png"></div>
+  <div id="soon2" class="t clip" data-start="11.61" data-duration="3.39" data-track-index="15">قريبًا</div>
+  <div id="contacts" class="clip" data-start="11.61" data-duration="3.39" data-track-index="16">
+    <div class="c"><img src="message-circle.svg"><span>واتساب</span><b>96946416</b></div>
+    <div class="c"><img src="phone-call.svg"><span>اتصال</span><b>77721144</b></div>
+  </div>
+  <div id="h" class="t clip" data-start="11.61" data-duration="3.39" data-track-index="17">@Bviro.1</div>
+  <div id="flash" class="clip" data-start="0" data-duration="15" data-track-index="18"></div>
+</div>
+<script>
+// deterministic particles
+const parts = document.getElementById("parts"); let seed = 7;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+for (let i = 0; i < 40; i++) { const d = document.createElement("div"); d.className = "p";
+  d.style.left = (rnd() * 1080) + "px"; d.style.top = (rnd() * 1920) + "px"; d.style.opacity = 0.25 + rnd() * 0.6;
+  const s = 3 + rnd() * 7; d.style.width = d.style.height = s + "px"; parts.appendChild(d); }
+const tl = gsap.timeline({ paused: true });
+const B = 1.935, D = 3.87, M = 7.74, S = 11.61;
+// flash hits on every scene change
+[0, D, M, S].forEach(t => tl.fromTo("#flash", { opacity: t === 0 ? 1 : 0.85 }, { opacity: 0, duration: 0.35, ease: "power2.out", immediateRender: t === 0 }, t));
+tl.set("#flash", { opacity: 0 }, 0.36);
+tl.to(".p", { y: -260, duration: 15, ease: "none" }, 0);
+tl.to("#grid", { backgroundPositionY: "480px", duration: 15, ease: "none" }, 0);
+tl.fromTo("#glow", { scale: 0.9, opacity: 0.6 }, { scale: 1.15, opacity: 1, duration: B, yoyo: true, repeat: 7, ease: "sine.inOut" }, 0);
+// scene 1
+tl.from("#s1a", { opacity: 0, scale: 1.6, filter: "blur(18px)", duration: 0.45, ease: "power3.out" }, 0.05)
+  .from("#s1b", { opacity: 0, y: 50, duration: 0.5, ease: "power3.out" }, 0.6)
+  .to("#streak", { x: 2400, duration: 0.9, ease: "power2.in" }, 1.2)
+  .to("#s1a", { scale: 1.08, duration: 2.0, ease: "sine.inOut" }, 0.5)
+  .to(["#s1a", "#s1b"], { opacity: 0, scale: 0.85, duration: 0.25, ease: "power2.in" }, D - 0.3);
+// scene 2: logo reveal
+tl.from("#ring", { scale: 0, rotation: -90, duration: 0.55, ease: "back.out(1.8)" }, D)
+  .from("#ring2", { scale: 1.6, opacity: 0, duration: 0.6, ease: "power3.out" }, D + 0.1)
+  .to("#ring2", { rotation: 120, duration: 3.6, ease: "none" }, D)
+  .from("#sym", { scale: 0.2, opacity: 0, rotation: 25, duration: 0.6, ease: "back.out(2.2)" }, D + 0.25)
+  .fromTo("#scan", { y: 0, opacity: 1 }, { y: 520, opacity: 0, duration: 0.9, ease: "power1.inOut" }, D + 0.8)
+  .from("#words span", { opacity: 0, y: 40, duration: 0.35, stagger: 0.2, ease: "power3.out" }, D + B * 0.5)
+  .to("#ring", { scale: 1.06, duration: 0.24, yoyo: true, repeat: 7, ease: "sine.inOut" }, D + 0.9)
+  .to(["#ring", "#ring2", "#sym", "#words"], { opacity: 0, scale: 1.3, duration: 0.25, ease: "power2.in" }, M - 0.28);
+// scene 3: coming soon slam
+tl.from("#t1", { opacity: 0, scale: 1.5, filter: "blur(16px)", duration: 0.5, ease: "power3.out" }, M + 0.05)
+  .from("#t2", { scale: 3.2, opacity: 0, duration: 0.35, ease: "power4.in" }, M + B * 0.5)
+  .to("#root", { x: 16, duration: 0.05, yoyo: true, repeat: 5, ease: "none" }, M + B * 0.5 + 0.35)
+  .set("#root", { x: 0 }, M + B * 0.5 + 0.66)
+  .from("#t3", { opacity: 0, y: 40, duration: 0.45, ease: "power3.out" }, M + B)
+  .to("#t2", { scale: 1.06, duration: 1.4, ease: "sine.inOut" }, M + B * 0.5 + 0.4)
+  .to(["#t1", "#t2", "#t3"], { opacity: 0, y: -60, duration: 0.25, ease: "power2.in" }, S - 0.28);
+// scene 4: lockup + contacts
+tl.from("#lock", { opacity: 0, scale: 0.7, y: 60, duration: 0.55, ease: "back.out(2)" }, S + 0.05)
+  .from("#soon2", { opacity: 0, scale: 1.4, duration: 0.4, ease: "power3.out" }, S + 0.45)
+  .from(".c", { opacity: 0, x: 120, duration: 0.45, stagger: 0.18, ease: "power3.out" }, S + 0.8)
+  .from("#h", { opacity: 0, duration: 0.4 }, S + 1.3);
+window.__timelines["main"] = tl;
+tl.seek(0);
+</script>
+</body>
+</html>
