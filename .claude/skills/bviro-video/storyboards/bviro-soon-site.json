@@ -1,0 +1,130 @@
+{
+ "width": 1080,
+ "height": 1920,
+ "fps": 30,
+ "duration": 22.0,
+ "output": "bviro_soon_v1.mp4",
+ "shots": [
+  {
+   "src": "a.mp4",
+   "in": 0.2,
+   "dur": 1.935,
+   "zoom": 1.08
+  },
+  {
+   "src": "b.mp4",
+   "in": 1.0,
+   "dur": 1.935,
+   "tin": "flash"
+  },
+  {
+   "src": "a.mp4",
+   "in": 6.0,
+   "dur": 0.97,
+   "tin": "whip"
+  },
+  {
+   "src": "b.mp4",
+   "in": 4.5,
+   "dur": 0.97,
+   "tin": "zoom"
+  },
+  {
+   "src": "a.mp4",
+   "in": 3.0,
+   "dur": 0.97,
+   "tin": "whip"
+  },
+  {
+   "src": "b.mp4",
+   "in": 9.2,
+   "dur": 0.97,
+   "tin": "zoom"
+  },
+  {
+   "src": "a.mp4",
+   "in": 6.97,
+   "dur": 1.935,
+   "tin": "whip"
+  },
+  {
+   "src": "b.mp4",
+   "in": 10.4,
+   "dur": 1.935,
+   "tin": "zoom"
+  },
+  {
+   "src": "a.mp4",
+   "in": 8.95,
+   "dur": 1.45,
+   "tin": "whip"
+  },
+  {
+   "src": "b.mp4",
+   "in": 6.5,
+   "dur": 1.45,
+   "tin": "zoom"
+  },
+  {
+   "src": "b.mp4",
+   "in": 12.4,
+   "dur": 1.93,
+   "tin": "whip",
+   "zoom": 1.1
+  },
+  {
+   "src": "card.mp4",
+   "in": 0.0,
+   "dur": 5.55,
+   "tin": "cut"
+  }
+ ],
+ "transitions": {
+  "default": "zoom"
+ },
+ "grade": {
+  "lut": "brand/bviro_look.cube",
+  "grain": 4
+ },
+ "layout": {
+  "caption_top": 1320,
+  "sticker_top": 240
+ },
+ "hook": [
+  {
+   "s": 0.1,
+   "e": 3.8,
+   "text": "خمّنوا… وش قاعدين نجهّز؟",
+   "top": 1080
+  }
+ ],
+ "captions": [
+  {
+   "s": 4.0,
+   "e": 7.75,
+   "text": "فريق بيفيرو في الميدان",
+   "icon": "wrench"
+  },
+  {
+   "s": 7.9,
+   "e": 11.55,
+   "text": "التجهيزات… على قدم وساق",
+   "icon": "scan-eye"
+  },
+  {
+   "s": 11.7,
+   "e": 14.4,
+   "text": "اللمسات الأخيرة…",
+   "icon": "sparkles"
+  }
+ ],
+ "audio": {
+  "music": "music.wav",
+  "music_gain_db": 0,
+  "pad": false,
+  "whoosh_on_cuts": false,
+  "impact_at_end": false,
+  "duck": false,
+  "sfx": []
+ }
+}
