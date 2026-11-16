@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ar"><head><meta charset="UTF-8" /><meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{width:1080px;height:1920px;position:relative;font-family:Cairo;overflow:hidden}
+.cap{position:absolute;left:40px;right:40px;top:1240px;text-align:center;direction:rtl;font-weight:900;font-size:108px;line-height:1.25;color:#fff;
+  -webkit-text-stroke:10px #1a0038;paint-order:stroke fill;text-shadow:0 10px 0 rgba(26,0,56,.55),0 0 34px rgba(127,0,255,.9)}
+.cap .w{display:inline-block;margin:0 12px;opacity:0}.cap .k{color:#01CEC9}
+#g7{top:760px;font-size:190px}
+#n1,#n2{top:1330px;font-size:96px}
+.br{position:absolute;width:130px;height:130px;border:12px solid #01CEC9;filter:drop-shadow(0 0 14px #01CEC9);opacity:0}
+#b1{left:30px;top:420px;border-right:none;border-bottom:none}#b2{right:30px;top:420px;border-left:none;border-bottom:none}
+#b3{left:30px;top:1050px;border-right:none;border-top:none}#b4{right:30px;top:1050px;border-left:none;border-top:none}
+#arr{position:absolute;left:440px;top:170px;width:200px;height:200px;border-radius:50%;background:#7F00FF;border:8px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px #7F00FF;opacity:0}
+#arr img{width:130px;height:130px}
+/* smart screen in the wall opening */
+#scr{position:absolute;left:24px;top:478px;width:1032px;height:650px;border-radius:18px;background:#05000d;border:14px solid #111;box-shadow:0 0 0 3px #01CEC9,0 0 70px rgba(1,206,201,.75);overflow:hidden;opacity:0}
+#scr .on{position:absolute;left:0;right:0;top:50%;height:6px;margin-top:-3px;background:#fff;box-shadow:0 0 40px 10px #fff}
+#ui{position:absolute;inset:0;background:linear-gradient(135deg,#2B0157,#7F00FF 60%,#01CEC9 130%);opacity:0}
+#ui .hd{position:absolute;left:30px;right:30px;top:26px;height:54px;border-radius:14px;background:rgba(255,255,255,.16)}
+#ui .lg{position:absolute;left:50%;top:150px;width:520px;margin-left:-260px;display:flex;align-items:center;justify-content:center;gap:18px;direction:ltr}
+#ui .lg img.s{height:120px}#ui .lg img.e{height:72px}
+#ui .tl{position:absolute;bottom:34px;height:170px;border-radius:18px;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4)}
+#chipS{position:absolute;left:50%;top:330px;transform:translateX(-50%);background:#01CEC9;color:#12002a;font-weight:900;font-size:60px;border-radius:50px;padding:8px 44px;display:flex;align-items:center;gap:18px;direction:rtl;white-space:nowrap;opacity:0}
+#chipS img{width:64px;height:64px;filter:invert(1)}
+/* stepper */
+#stp{position:absolute;left:40px;right:40px;top:170px;display:flex;direction:rtl;gap:16px;opacity:0}
+.st{flex:1;height:120px;border-radius:28px;background:rgba(18,0,42,.82);border:3px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;gap:12px;color:#fff;font-weight:900;font-size:42px;direction:rtl}
+.st img{width:48px;height:48px}
+.st .f{position:absolute}
+/* screens row */
+#row{position:absolute;left:60px;right:60px;top:760px;display:flex;justify-content:space-between;direction:rtl;opacity:1}
+.ms{width:170px;height:110px;border-radius:14px;background:linear-gradient(135deg,#7F00FF,#01CEC9);border:8px solid #111;box-shadow:0 0 30px rgba(1,206,201,.8);opacity:0}
+#fl{position:absolute;inset:0;background:#fff;opacity:0}
+/* dark scenes */
+.dark{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,#4a00a0 0%,#1a0038 52%,#05000d 100%);opacity:0;overflow:hidden}
+.glow{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,rgba(127,0,255,.8) 0%,rgba(127,0,255,0) 46%)}
+.p{position:absolute;border-radius:50%;background:#01CEC9;box-shadow:0 0 12px #01CEC9}
+#netw{position:absolute;inset:0;transform-origin:540px 760px}
+svg{position:absolute;inset:0}
+.ln{stroke:#01CEC9;stroke-width:5;stroke-dasharray:640;stroke-dashoffset:640;filter:drop-shadow(0 0 8px #01CEC9)}
+.pu{fill:#fff;opacity:0;filter:drop-shadow(0 0 10px #fff)}
+.nd{position:absolute;width:170px;height:110px;border-radius:14px;background:#0b0018;border:7px solid #1c1c1c;box-shadow:0 0 0 2px #01CEC9,0 0 26px rgba(1,206,201,.7);overflow:hidden;opacity:0}
+.nd .sc{position:absolute;inset:0;background:linear-gradient(135deg,#7F00FF,#01CEC9);opacity:0}
+#hub{position:absolute;left:400px;top:620px;width:280px;height:280px;border-radius:50%;background:#7F00FF;border:8px solid #fff;box-shadow:0 0 70px #7F00FF;display:flex;align-items:center;justify-content:center;opacity:0}
+#hub img{width:170px}
+#ring{position:absolute;left:370px;top:590px;width:340px;height:340px;border-radius:50%;border:4px dashed rgba(255,255,255,.5);opacity:0}
+.t{position:absolute;left:0;right:0;text-align:center;direction:rtl;color:#fff;white-space:nowrap;font-weight:900}
+#ttl{top:1180px}
+#ttl .a{font-size:112px;display:block}#ttl .b{font-size:150px;color:#01CEC9;display:block;line-height:1.1;text-shadow:0 0 40px rgba(1,206,201,.7)}#ttl .d{font-size:84px;display:block;margin-top:10px}
+#ttl .w{display:inline-block;margin:0 10px;opacity:0}
+#e1{top:470px;font-size:150px}#e2{top:640px;font-size:260px;color:#01CEC9;text-shadow:0 0 50px rgba(1,206,201,.7)}
+#lock{position:absolute;top:1100px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:28px;direction:ltr}
+#lock .s{height:140px}#lock .e{height:86px}#lock .a{height:94px}#lock .bv{width:5px;height:104px;background:#01CEC9;border-radius:3px}
+#ct{position:absolute;top:1300px;left:150px;right:150px;display:flex;flex-direction:column;gap:24px}
+.c{display:flex;align-items:center;justify-content:center;gap:22px;direction:rtl;background:rgba(127,0,255,.3);border:2px solid rgba(1,206,201,.6);border-radius:26px;padding:18px 30px;color:#fff;font-size:52px;font-weight:800}
+.c img{width:54px;height:54px}.c b{direction:ltr;font-weight:900}
+#h{top:1600px;font-size:44px;font-weight:800;color:#bfefff;direction:ltr}
+</style></head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="28" data-width="1080" data-height="1920">
+ <div id="ov" class="clip" style="position:absolute;inset:0" data-start="0" data-duration="28" data-track-index="0">
+  <div class="br" id="b1"></div><div class="br" id="b2"></div><div class="br" id="b3"></div><div class="br" id="b4"></div>
+  <div id="arr"><img src="arrow-down.svg"></div>
+  <div id="scr"><div id="ui"><div class="hd"></div><div class="lg"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"></div>
+    <div class="tl" style="left:30px;width:300px"></div><div class="tl" style="left:360px;width:300px"></div><div class="tl" style="left:690px;width:290px"></div></div><div class="on"></div></div>
+  <div id="chipS"><img src="monitor.svg">شاشة ذكية</div>
+  <div id="stp"><div class="st" id="s1"><img src="ruler.svg">قياس</div><div class="st" id="s2"><img src="hammer.svg">تجهيز</div><div class="st" id="s3"><img src="cable.svg">تمديد</div><div class="st" id="s4"><img src="lock.svg">الشاشة</div></div>
+  <div id="row"><div class="ms"></div><div class="ms"></div><div class="ms"></div><div class="ms"></div><div class="ms"></div></div>
+  <div class="cap" id="hook"><span class="w" data-t="0.02">شايفين</span><span class="w k" data-t="0.52">هالفتحة</span><br><span class="w" data-t="1.18">في</span><span class="w" data-t="1.26">الجدار؟</span></div>
+  <div class="cap" id="g1"><span class="w k" data-t="2.02">هنا…</span><span class="w" data-t="2.68">بتتركّب</span></div>
+  <div class="cap" id="g2"><span class="w" data-t="3.52">شاشة</span><span class="w k" data-t="4.06">ذكية!</span></div>
+  <div class="cap" id="g3"><span class="w" data-t="4.88">نقيس</span><span class="w k" data-t="5.28">بدقّة</span></div>
+  <div class="cap" id="g4"><span class="w" data-t="6.14">نجهّز</span><span class="w k" data-t="6.76">الجدار</span></div>
+  <div class="cap" id="g5"><span class="w" data-t="7.72">ونمدّ</span><span class="w k" data-t="8.4">التمديدات</span></div>
+  <div class="cap" id="g6"><span class="w" data-t="9.8">شاشة</span><span class="w" data-t="10.36">ورا</span><span class="w k" data-t="10.68">شاشة</span></div>
+  <div class="cap" id="g7"><span class="w k" data-t="11.44">والأقوى؟</span></div>
+  <div class="dark" id="net">
+   <div class="glow"></div><div class="parts"></div>
+   <div id="netw"><svg viewBox="0 0 1080 1920"><line class="ln" x1="540" y1="760" x2="540" y2="290"/><circle class="pu" r="10" cx="540" cy="760" data-x="0" data-y="-470"/><line class="ln" x1="540" y1="760" x2="823" y2="428"/><circle class="pu" r="10" cx="540" cy="760" data-x="283" data-y="-332"/><line class="ln" x1="540" y1="760" x2="940" y2="760"/><circle class="pu" r="10" cx="540" cy="760" data-x="400" data-y="0"/><line class="ln" x1="540" y1="760" x2="823" y2="1092"/><circle class="pu" r="10" cx="540" cy="760" data-x="283" data-y="332"/><line class="ln" x1="540" y1="760" x2="540" y2="1230"/><circle class="pu" r="10" cx="540" cy="760" data-x="0" data-y="470"/><line class="ln" x1="540" y1="760" x2="257" y2="1092"/><circle class="pu" r="10" cx="540" cy="760" data-x="-283" data-y="332"/><line class="ln" x1="540" y1="760" x2="140" y2="760"/><circle class="pu" r="10" cx="540" cy="760" data-x="-400" data-y="0"/><line class="ln" x1="540" y1="760" x2="257" y2="428"/><circle class="pu" r="10" cx="540" cy="760" data-x="-283" data-y="-332"/></svg><div class="nd" style="left:455px;top:235px"><div class="sc"></div></div><div class="nd" style="left:738px;top:373px"><div class="sc"></div></div><div class="nd" style="left:855px;top:705px"><div class="sc"></div></div><div class="nd" style="left:738px;top:1037px"><div class="sc"></div></div><div class="nd" style="left:455px;top:1175px"><div class="sc"></div></div><div class="nd" style="left:172px;top:1037px"><div class="sc"></div></div><div class="nd" style="left:55px;top:705px"><div class="sc"></div></div><div class="nd" style="left:172px;top:373px"><div class="sc"></div></div><div id="ring"></div><div id="hub"><img src="logo_symbol_white.png"></div></div>
+   <div class="cap" id="n1"><span class="w" data-t="12.28">كل</span><span class="w k" data-t="12.42">الشاشات…</span></div>
+   <div class="cap" id="n2"><span class="w" data-t="13.62">يديرها</span><span class="w k" data-t="14.38">نظام</span><span class="w k" data-t="15.02">واحد!</span></div>
+   <div id="ttl" class="t"><span class="a"><span class="w" data-t="15.88">أول</span><span class="w" data-t="16.18">نظام</span><span class="w" data-t="16.86">مبتكر</span></span><span class="b"><span class="w" data-t="17.54">في</span><span class="w" data-t="17.8">السلطنة</span></span><span class="d"><span class="w" data-t="18.8">لإدارة</span><span class="w" data-t="19.56">المحتوى</span></span></div>
+  </div>
+  <div class="dark" id="end">
+   <div class="glow"></div><div class="parts"></div>
+   <div id="e1" class="t">ترقّبوا…</div><div id="e2" class="t">قريبًا</div>
+   <div id="lock"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"><div class="bv"></div><img class="a" src="logo_wordmark_ar.png"></div>
+   <div id="ct"><div class="c"><img src="message-circle.svg"><span>واتساب</span><b>96946416</b></div><div class="c"><img src="phone-call.svg"><span>اتصال</span><b>77721144</b></div></div>
+   <div id="h" class="t">@Bviro.1</div>
+  </div>
+  <div id="fl"></div>
+ </div>
+</div>
+<script>
+let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+document.querySelectorAll(".parts").forEach(parts => { for (let i = 0; i < 34; i++) { const d = document.createElement("div"); d.className = "p"; const s = 3 + rnd() * 7;
+  d.style.cssText = `left:${rnd() * 1080}px;top:${rnd() * 1920}px;width:${s}px;height:${s}px;opacity:${0.25 + rnd() * 0.6}`; parts.appendChild(d); } });
+const tl = gsap.timeline({ paused: true });
+[["#hook", 2.0], ["#g1", 3.5], ["#g2", 4.8], ["#g3", 6.1], ["#g4", 7.7], ["#g5", 9.75], ["#g6", 11.4], ["#g7", 12.2], ["#n1", 13.6], ["#n2", 15.8], ["#ttl", 99]].forEach(([id, out]) => {
+  document.querySelectorAll(id + " .w").forEach(w => { const t = parseFloat(w.dataset.t);
+    tl.fromTo(w, { opacity: 0, scale: 0.4, y: 40, rotation: -6 }, { opacity: 1, scale: 1, y: 0, rotation: 0, duration: 0.22, ease: "back.out(2.6)" }, t); });
+  if (out < 90) tl.to(id, { opacity: 0, scale: 0.8, duration: 0.14, ease: "power2.in" }, out - 0.14);
+});
+const flash = (t, a = 0.8) => tl.fromTo("#fl", { opacity: a }, { opacity: 0, duration: 0.3, ease: "power2.out" }, t);
+// hook: brackets on the opening + arrow
+flash(0.0, 1);
+tl.fromTo(".br", { opacity: 0, scale: 1.8 }, { opacity: 1, scale: 1, duration: 0.35, ease: "power3.out" }, 0.05)
+  .fromTo("#arr", { opacity: 0, scale: 0, y: -80 }, { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: "back.out(2.5)" }, 0.5)
+  .to("#arr", { y: 40, duration: 0.25, yoyo: true, repeat: 5, ease: "sine.inOut" }, 0.9)
+  .to(["#arr"], { opacity: 0, duration: 0.15 }, 2.0)
+// smart screen turns on inside the opening (freeze frame 2.0 - 4.2)
+  .fromTo("#scr", { opacity: 0, scaleY: 0.02, scaleX: 0.6 }, { opacity: 1, scaleY: 1, scaleX: 1, duration: 0.35, ease: "power4.out" }, 2.1)
+  .fromTo("#scr .on", { opacity: 1, scaleX: 0 }, { opacity: 1, scaleX: 1, duration: 0.2, ease: "power2.out" }, 2.1)
+  .to("#scr .on", { opacity: 0, scaleY: 80, duration: 0.25, ease: "power2.in" }, 2.45)
+  .fromTo("#ui", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 2.6)
+  .fromTo("#ui .lg", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 2.85)
+  .fromTo("#ui .tl", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.3, stagger: 0.12, ease: "power3.out" }, 3.1)
+  .fromTo("#chipS", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.3, ease: "back.out(2)" }, 3.52)
+  .to(["#scr", "#chipS", ".br"], { opacity: 0, duration: 0.12 }, 4.12);
+// stepper
+tl.fromTo("#stp", { opacity: 0, y: -60 }, { opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.6)" }, 4.75);
+[["#s1", 4.88], ["#s2", 6.14], ["#s3", 7.72]].forEach(([id, t]) => tl.to(id, { backgroundColor: "#7F00FF", borderColor: "#01CEC9", scale: 1.1, duration: 0.2, ease: "back.out(3)" }, t).to(id, { scale: 1, duration: 0.2 }, t + 0.25));
+tl.to("#s4", { borderColor: "#01CEC9", scale: 1.08, duration: 0.3, yoyo: true, repeat: 3, ease: "sine.inOut" }, 9.8)
+  .to("#stp", { opacity: 0, duration: 0.2 }, 11.3);
+// screens row
+tl.fromTo(".ms", { opacity: 0, scale: 0, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.25, stagger: 0.22, ease: "back.out(2.5)" }, 9.8)
+  .to(".ms", { opacity: 0, duration: 0.15 }, 11.3);
+// "والأقوى؟" punch
+flash(11.4, 0.7);
+// network scene
+flash(12.2, 1);
+tl.set("#net", { opacity: 1 }, 12.2)
+  .fromTo("#hub", { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(2.2)" }, 12.25)
+  .fromTo("#ring", { opacity: 0, scale: 1.6 }, { opacity: 1, scale: 1, duration: 0.5 }, 12.3).to("#ring", { rotation: 200, duration: 8, ease: "none" }, 12.3)
+  .fromTo(".nd", { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.3, stagger: 0.09, ease: "back.out(2)" }, 12.45)
+  .to(".ln", { strokeDashoffset: 0, duration: 0.5, stagger: 0.05, ease: "power2.out" }, 13.5)
+  .fromTo(".pu", { opacity: 1, x: 0, y: 0 }, { opacity: 1, x: (i, el) => +el.dataset.x, y: (i, el) => +el.dataset.y, duration: 0.5, ease: "power2.in" }, 14.3)
+  .to(".pu", { opacity: 0, duration: 0.05 }, 14.8)
+  .to(".nd .sc", { opacity: 1, duration: 0.15 }, 14.82)
+  .to("#hub", { scale: 1.18, duration: 0.2, yoyo: true, repeat: 1, ease: "power2.out" }, 15.02)
+  .to(".nd", { scale: 1.12, duration: 0.2, yoyo: true, repeat: 1 }, 15.02)
+  .to("#netw", { scale: 0.62, y: -250, duration: 0.5, ease: "power3.inOut" }, 15.6)
+  .fromTo(".pu", { opacity: 1, x: 0, y: 0 }, { opacity: 1, x: (i, el) => +el.dataset.x, y: (i, el) => +el.dataset.y, duration: 0.6, ease: "power1.in", repeat: 5, repeatDelay: 0.15 }, 16.2);
+// end scene
+flash(20.3, 1);
+tl.set("#net", { opacity: 0 }, 20.3).set("#end", { opacity: 1 }, 20.3)
+  .fromTo("#end .p", { y: 0 }, { y: -160, duration: 7.7, ease: "none" }, 20.3)
+  .fromTo("#e1", { opacity: 0, scale: 1.5, filter: "blur(16px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.4, ease: "power3.out" }, 20.4)
+  .fromTo("#e2", { opacity: 0, scale: 3.2 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power4.in" }, 21.1)
+  .to("#end", { x: 16, duration: 0.05, yoyo: true, repeat: 5, ease: "none" }, 21.4).set("#end", { x: 0 }, 21.72)
+  .to("#e2", { scale: 1.05, duration: 1.2, yoyo: true, repeat: 3, ease: "sine.inOut" }, 21.75)
+  .fromTo("#lock", { opacity: 0, y: 60, scale: 0.7 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(2)" }, 22.1)
+  .fromTo(".c", { opacity: 0, x: 120 }, { opacity: 1, x: 0, duration: 0.4, stagger: 0.18, ease: "power3.out" }, 23.2)
+  .fromTo("#h", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 23.8);
+window.__timelines["main"] = tl;
+tl.seek(0);
+</script></body></html>
