@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{width:1080px;height:1920px;position:relative;font-family:Cairo;overflow:hidden}
+.abs{position:absolute}
+.cap{position:absolute;left:40px;right:40px;top:1150px;text-align:center;direction:rtl;font-weight:900;font-size:104px;line-height:1.25;color:#fff;
+  -webkit-text-stroke:10px #1a0038;paint-order:stroke fill;text-shadow:0 10px 0 rgba(26,0,56,.55),0 0 34px rgba(127,0,255,.9)}
+.cap .w{display:inline-block;margin:0 12px;opacity:0}
+.cap .k{color:#01CEC9}
+#hook{top:560px;font-size:128px}
+#hook .l1{display:block;font-size:104px;color:#01CEC9}
+.br{position:absolute;width:150px;height:150px;border:12px solid #01CEC9;filter:drop-shadow(0 0 14px #01CEC9);opacity:0}
+#b1{left:90px;top:330px;border-right:none;border-bottom:none}#b2{right:90px;top:330px;border-left:none;border-bottom:none}
+#b3{left:90px;top:1420px;border-right:none;border-top:none}#b4{right:90px;top:1420px;border-left:none;border-top:none}
+#scan{position:absolute;left:90px;right:90px;top:340px;height:6px;background:#01CEC9;box-shadow:0 0 30px 6px #01CEC9;opacity:0}
+#q{position:absolute;right:120px;top:360px;width:190px;height:190px;border-radius:50%;background:#7F00FF;border:8px solid #fff;color:#fff;font-weight:900;font-size:130px;line-height:170px;text-align:center;box-shadow:0 0 40px #7F00FF;opacity:0}
+#bar{position:absolute;left:300px;right:60px;top:74px;opacity:0;direction:rtl}
+#bar .lb{font-weight:800;font-size:34px;color:#fff;text-shadow:0 2px 8px #000;text-align:right;margin-bottom:8px}
+#bar .tr{height:16px;border-radius:8px;background:rgba(255,255,255,.28);overflow:hidden;direction:ltr}
+#bar .fl{height:100%;width:100%;background:linear-gradient(90deg,#7F00FF,#01CEC9);transform-origin:0 50%;transform:scaleX(0);border-radius:8px}
+.card{position:absolute;right:60px;width:560px;height:150px;border-radius:34px;background:rgba(43,1,87,.88);border:3px solid #01CEC9;box-shadow:0 14px 40px rgba(0,0,0,.45);
+  display:flex;align-items:center;direction:rtl;padding:0 26px;gap:24px;color:#fff;font-weight:900;font-size:68px;opacity:0}
+.card .ic{width:96px;height:96px;border-radius:50%;background:#7F00FF;display:flex;align-items:center;justify-content:center;flex:none}
+.card .ic img{width:56px;height:56px}
+.card .ok{margin-right:auto;width:70px;height:70px;border-radius:50%;background:#01CEC9;display:flex;align-items:center;justify-content:center}
+.card .ok img{width:46px;height:46px}
+#c1{top:560px}#c2{top:740px}#c3{top:920px}
+#dim{position:absolute;left:120px;top:760px;width:840px;height:120px;opacity:0}
+#dim .ln{position:absolute;left:0;top:58px;height:6px;width:100%;background:#01CEC9;box-shadow:0 0 18px #01CEC9;transform-origin:50% 50%}
+#dim .t1,#dim .t2{position:absolute;top:20px;width:6px;height:82px;background:#01CEC9;box-shadow:0 0 18px #01CEC9}#dim .t1{left:0}#dim .t2{right:0}
+#chip{position:absolute;left:50%;top:640px;transform:translateX(-50%);background:#01CEC9;color:#12002a;font-weight:900;font-size:44px;border-radius:40px;padding:8px 34px;display:flex;align-items:center;gap:16px;direction:rtl;white-space:nowrap;opacity:0}
+#chip img{width:48px;height:48px;filter:invert(1)}
+#stamp{position:absolute;left:190px;top:470px;width:700px;height:330px;border:16px solid #01CEC9;border-radius:36px;color:#01CEC9;font-weight:900;font-size:190px;
+  display:flex;align-items:center;justify-content:center;gap:30px;direction:rtl;background:rgba(18,0,42,.72);box-shadow:0 0 60px rgba(1,206,201,.6);opacity:0}
+#stamp img{width:150px;height:150px}
+.hz{position:absolute;left:-200px;width:1500px;height:70px;background:repeating-linear-gradient(-45deg,#7F00FF 0 50px,#12002a 50px 100px);opacity:0}
+#hz1{top:300px}#hz2{top:1560px}
+#fl{position:absolute;inset:0;background:#fff;opacity:0}
+/* end scene */
+#end{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,#4a00a0 0%,#1a0038 52%,#05000d 100%);opacity:0;overflow:hidden}
+#glow{position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,rgba(127,0,255,.8) 0%,rgba(127,0,255,0) 46%)}
+.p{position:absolute;border-radius:50%;background:#01CEC9;box-shadow:0 0 12px #01CEC9}
+.t{position:absolute;left:0;right:0;text-align:center;direction:rtl;color:#fff;white-space:nowrap;font-weight:900}
+#e1{top:470px;font-size:150px}
+#e2{top:640px;font-size:260px;color:#01CEC9;text-shadow:0 0 50px rgba(1,206,201,.7)}
+#lock{position:absolute;top:1100px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:28px;direction:ltr}
+#lock .s{height:140px}#lock .e{height:86px}#lock .a{height:94px}#lock .bv{width:5px;height:104px;background:#01CEC9;border-radius:3px}
+#ct{position:absolute;top:1300px;left:150px;right:150px;display:flex;flex-direction:column;gap:24px}
+.c{display:flex;align-items:center;justify-content:center;gap:22px;direction:rtl;background:rgba(127,0,255,.3);border:2px solid rgba(1,206,201,.6);border-radius:26px;padding:18px 30px;color:#fff;font-size:52px;font-weight:800}
+.c img{width:54px;height:54px}.c b{direction:ltr;font-weight:900}
+#h{top:1600px;font-size:44px;font-weight:800;color:#bfefff;direction:ltr}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="27.5" data-width="1080" data-height="1920">
+ <div id="ov" class="clip abs" style="inset:0" data-start="0" data-duration="27.5" data-track-index="0">
+  <div id="bar"><div class="lb">جاري التجهيز…</div><div class="tr"><div class="fl"></div></div></div>
+  <div class="br" id="b1"></div><div class="br" id="b2"></div><div class="br" id="b3"></div><div class="br" id="b4"></div>
+  <div id="scan"></div><div id="q">؟</div>
+  <div class="cap" id="hook"><span class="l1 w" data-t="0.02">تتوقّعون…</span><span class="w" data-t="1.38">وش</span><span class="w" data-t="1.76">قاعدين</span><br><span class="w k" data-t="2.16">نجهّز</span><span class="w k" data-t="2.68">هنا؟</span></div>
+  <div class="cap" id="g1"><span class="w" data-t="4.0">من</span><span class="w" data-t="4.1">أيام…</span></div>
+  <div class="cap" id="g2"><span class="w" data-t="5.14">وفريق</span><span class="w k" data-t="5.6">بيفيرو</span></div>
+  <div class="cap" id="g3"><span class="w" data-t="6.34">ما</span><span class="w" data-t="6.58">وقّف</span><span class="w k" data-t="7.0">شغل!</span></div>
+  <div class="card" id="c1"><div class="ic"><img src="layout-panel-top.svg"></div>سقف<div class="ok"><img src="circle-check.svg"></div></div>
+  <div class="card" id="c2"><div class="ic"><img src="brick-wall.svg"></div>جدران<div class="ok"><img src="circle-check.svg"></div></div>
+  <div class="card" id="c3"><div class="ic"><img src="cable.svg"></div>تمديدات<div class="ok"><img src="circle-check.svg"></div></div>
+  <div id="dim"><div class="ln"></div><div class="t1"></div><div class="t2"></div></div>
+  <div id="chip"><img src="ruler.svg">قياس • ضبط • تثبيت</div>
+  <div class="cap" id="g4"><span class="w" data-t="11.66">كل</span><span class="w" data-t="11.92">شي</span><span class="w" data-t="12.28">محسوب</span><span class="w k" data-t="13.08">بدقّة</span></div>
+  <div class="cap" id="g5"><span class="w" data-t="14.64">ليش</span><span class="w" data-t="14.82">كل</span><span class="w k" data-t="14.94">هالتعب؟</span></div>
+  <div class="cap" id="g6"><span class="w" data-t="16.16">لأن</span><span class="w" data-t="16.44">اللي</span><span class="w k" data-t="16.74">جاي…</span></div>
+  <div class="hz" id="hz1"></div><div class="hz" id="hz2"></div>
+  <div id="stamp"><img src="lock.svg">سرّي</div>
+  <div class="cap" id="g7"><span class="w" data-t="17.86">شي</span><span class="w" data-t="18.18">ما</span><span class="w k" data-t="18.4">شفتوه</span><span class="w" data-t="19.08">من</span><span class="w" data-t="19.24">قبل!</span></div>
+  <div id="end">
+   <div id="glow"></div><div id="parts"></div>
+   <div id="e1" class="t">ترقّبوا…</div><div id="e2" class="t">قريبًا</div>
+   <div id="lock"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"><div class="bv"></div><img class="a" src="logo_wordmark_ar.png"></div>
+   <div id="ct"><div class="c"><img src="message-circle.svg"><span>واتساب</span><b>96946416</b></div><div class="c"><img src="phone-call.svg"><span>اتصال</span><b>77721144</b></div></div>
+   <div id="h" class="t">@Bviro.1</div>
+  </div>
+  <div id="fl"></div>
+ </div>
+</div>
+<script>
+const parts = document.getElementById("parts"); let seed = 11;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+for (let i = 0; i < 36; i++) { const d = document.createElement("div"); d.className = "p"; const s = 3 + rnd() * 7;
+  d.style.cssText = `left:${rnd() * 1080}px;top:${rnd() * 1920}px;width:${s}px;height:${s}px;opacity:${0.25 + rnd() * 0.6}`; parts.appendChild(d); }
+const tl = gsap.timeline({ paused: true });
+// word-pop caption groups: [id, out time]
+[["#hook", 3.4], ["#g1", 5.1], ["#g2", 6.3], ["#g3", 7.95], ["#g4", 14.4], ["#g5", 16.1], ["#g6", 17.8], ["#g7", 20.45]].forEach(([id, out]) => {
+  document.querySelectorAll(id + " .w").forEach(w => { const t = parseFloat(w.dataset.t);
+    tl.fromTo(w, { opacity: 0, scale: 0.4, y: 40, rotation: -6 }, { opacity: 1, scale: 1, y: 0, rotation: 0, duration: 0.22, ease: "back.out(2.6)" }, t); });
+  tl.to(id, { opacity: 0, scale: 0.8, duration: 0.14, ease: "power2.in" }, out - 0.14);
+});
+const flash = (t, a = 0.8) => tl.fromTo("#fl", { opacity: a }, { opacity: 0, duration: 0.3, ease: "power2.out" }, t);
+// hook HUD
+flash(0.0, 1);
+tl.fromTo(".br", { opacity: 0, scale: 1.8 }, { opacity: 1, scale: 1, duration: 0.35, ease: "power3.out" }, 0.05)
+  .fromTo("#scan", { opacity: 1, y: 0 }, { opacity: 1, y: 1220, duration: 1.2, ease: "power1.inOut" }, 0.15)
+  .to("#scan", { opacity: 0, duration: 0.1 }, 1.35)
+  .fromTo("#q", { opacity: 0, scale: 0, rotation: -120 }, { opacity: 1, scale: 1, rotation: 12, duration: 0.4, ease: "back.out(2.5)" }, 1.38)
+  .to("#q", { scale: 1.15, duration: 0.25, yoyo: true, repeat: 5, ease: "sine.inOut" }, 1.8)
+  .to([".br", "#q"], { opacity: 0, scale: 1.4, duration: 0.18, ease: "power2.in" }, 3.3);
+// loading bar
+tl.fromTo("#bar", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.4 }, 3.5)
+  .fromTo("#bar .fl", { scaleX: 0.04 }, { scaleX: 0.93, duration: 16.6, ease: "none" }, 3.6)
+  .to("#bar", { opacity: 0, duration: 0.2 }, 20.4);
+// checklist
+[["#c1", 8.2], ["#c2", 9.12], ["#c3", 10.22]].forEach(([id, t]) => {
+  tl.fromTo(id, { opacity: 0, x: 420, scale: 0.8 }, { opacity: 1, x: 0, scale: 1, duration: 0.35, ease: "back.out(1.9)" }, t)
+    .fromTo(id + " .ok", { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: 0.3, ease: "back.out(3)" }, t + 0.3); });
+tl.to(".card", { opacity: 0, x: 420, duration: 0.22, stagger: 0.05, ease: "power2.in" }, 11.2);
+// precision HUD
+tl.fromTo("#dim", { opacity: 0 }, { opacity: 1, duration: 0.1 }, 11.6)
+  .fromTo("#dim .ln", { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: "power3.out" }, 11.6)
+  .fromTo("#dim .t1", { x: 420 }, { x: 0, duration: 0.5, ease: "power3.out" }, 11.6)
+  .fromTo("#dim .t2", { x: -420 }, { x: 0, duration: 0.5, ease: "power3.out" }, 11.6)
+  .fromTo("#chip", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.3, ease: "back.out(2)" }, 12.1)
+  .to(["#dim", "#chip"], { opacity: 0, duration: 0.2 }, 14.3);
+// secret stamp
+flash(18.2, 0.9);
+tl.fromTo("#stamp", { opacity: 0, scale: 3.4, rotation: 8 }, { opacity: 1, scale: 1, rotation: -9, duration: 0.28, ease: "power4.in" }, 18.2)
+  .to("#ov", { x: 14, duration: 0.05, yoyo: true, repeat: 5, ease: "none" }, 18.48).set("#ov", { x: 0 }, 18.8)
+  .fromTo("#hz1", { opacity: 0, x: -300 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 18.3)
+  .fromTo("#hz2", { opacity: 0, x: 300 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 18.3)
+  .to("#hz1", { x: 100, duration: 2, ease: "none" }, 18.7).to("#hz2", { x: -100, duration: 2, ease: "none" }, 18.7)
+  .to(["#stamp", ".hz"], { opacity: 0, duration: 0.15 }, 20.45);
+// end scene
+flash(20.6, 1);
+tl.set("#end", { opacity: 1 }, 20.6)
+  .fromTo(".p", { y: 0 }, { y: -160, duration: 6.9, ease: "none" }, 20.6)
+  .fromTo("#glow", { scale: 0.9 }, { scale: 1.15, duration: 1, yoyo: true, repeat: 6, ease: "sine.inOut" }, 20.6)
+  .fromTo("#e1", { opacity: 0, scale: 1.5, filter: "blur(16px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.45, ease: "power3.out" }, 20.66)
+  .fromTo("#e2", { opacity: 0, scale: 3.2 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power4.in" }, 21.3)
+  .to("#end", { x: 16, duration: 0.05, yoyo: true, repeat: 5, ease: "none" }, 21.6).set("#end", { x: 0 }, 21.92)
+  .to("#e2", { scale: 1.05, duration: 1.2, yoyo: true, repeat: 3, ease: "sine.inOut" }, 21.95)
+  .fromTo("#lock", { opacity: 0, y: 60, scale: 0.7 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(2)" }, 22.5)
+  .fromTo(".c", { opacity: 0, x: 120 }, { opacity: 1, x: 0, duration: 0.4, stagger: 0.18, ease: "power3.out" }, 23.5)
+  .fromTo("#h", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 24.1);
+window.__timelines["main"] = tl;
+tl.seek(0);
+</script>
+</body>
+</html>
