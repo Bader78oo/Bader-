@@ -1,0 +1,129 @@
+{
+ "width": 1080,
+ "height": 1920,
+ "fps": 30,
+ "duration": 22.0,
+ "output": "bviro_soon_p2.mp4",
+ "shots": [
+  {
+   "src": "a.mp4",
+   "in": 5.6,
+   "dur": 1.935
+  },
+  {
+   "src": "b.mp4",
+   "in": 2.6,
+   "dur": 1.935,
+   "tin": "flash"
+  },
+  {
+   "src": "a.mp4",
+   "in": 0.5,
+   "dur": 0.97,
+   "tin": "whip"
+  },
+  {
+   "src": "b.mp4",
+   "in": 0.3,
+   "dur": 0.97,
+   "tin": "zoom"
+  },
+  {
+   "src": "a.mp4",
+   "in": 4.2,
+   "dur": 0.97,
+   "tin": "whip"
+  },
+  {
+   "src": "b.mp4",
+   "in": 4.6,
+   "dur": 0.97,
+   "tin": "zoom"
+  },
+  {
+   "src": "a.mp4",
+   "in": 7.6,
+   "dur": 1.935,
+   "tin": "whip"
+  },
+  {
+   "src": "b.mp4",
+   "in": 7.0,
+   "dur": 1.935,
+   "tin": "zoom"
+  },
+  {
+   "src": "a.mp4",
+   "in": 10.3,
+   "dur": 1.45,
+   "tin": "whip"
+  },
+  {
+   "src": "b.mp4",
+   "in": 9.2,
+   "dur": 1.45,
+   "tin": "zoom"
+  },
+  {
+   "src": "a.mp4",
+   "in": 12.6,
+   "dur": 1.93,
+   "tin": "whip",
+   "zoom": 1.1
+  },
+  {
+   "src": "card.mp4",
+   "in": 0.0,
+   "dur": 5.55,
+   "tin": "cut"
+  }
+ ],
+ "transitions": {
+  "default": "zoom"
+ },
+ "grade": {
+  "lut": "brand/bviro_look.cube",
+  "grain": 4
+ },
+ "layout": {
+  "caption_top": 1320,
+  "sticker_top": 240
+ },
+ "hook": [
+  {
+   "s": 0.1,
+   "e": 3.8,
+   "text": "الجزء الثاني… قرّبنا أكثر",
+   "top": 1080
+  }
+ ],
+ "captions": [
+  {
+   "s": 4.0,
+   "e": 7.75,
+   "text": "الشغل ماشي… خطوة بخطوة",
+   "icon": "layers-3"
+  },
+  {
+   "s": 7.9,
+   "e": 11.55,
+   "text": "دقّة في كل زاوية",
+   "icon": "scan-eye"
+  },
+  {
+   "s": 11.7,
+   "e": 14.4,
+   "text": "قرّبنا…",
+   "icon": "clock"
+  }
+ ],
+ "audio": {
+  "music": "music.wav",
+  "music_gain_db": 0,
+  "pad": false,
+  "whoosh_on_cuts": false,
+  "impact_at_end": false,
+  "duck": false,
+  "sfx": []
+ }
+}
