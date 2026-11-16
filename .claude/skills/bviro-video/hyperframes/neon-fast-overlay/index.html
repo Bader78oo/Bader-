@@ -1,0 +1,145 @@
+<!doctype html><html lang="ar"><head><meta charset="UTF-8" /><meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{width:1080px;height:1920px;position:relative;font-family:Cairo;overflow:hidden}
+.ow{position:absolute;left:0;right:0;top:1180px;text-align:center;direction:rtl;font-weight:900;font-size:190px;line-height:1.3;color:#fff;opacity:0;white-space:nowrap;
+  -webkit-text-stroke:14px #0b0018;paint-order:stroke fill;text-shadow:0 12px 0 #0b0018}
+.ow.k span{display:inline-block;background:#7F00FF;color:#fff;-webkit-text-stroke:0;text-shadow:none;padding:0 46px;border-radius:30px;box-shadow:10px 10px 0 #01CEC9;transform:rotate(-3deg)}
+#bars{position:absolute;left:30px;right:30px;top:96px;display:flex;gap:10px;direction:ltr}
+#bars div{flex:1;height:10px;border-radius:5px;background:rgba(255,255,255,.35);overflow:hidden}
+#bars i{display:block;height:100%;width:100%;background:#fff;transform-origin:0 50%;transform:scaleX(0)}
+#tag{position:absolute;right:36px;top:130px;background:rgba(11,0,24,.75);color:#fff;font-weight:800;font-size:38px;border-radius:30px;padding:6px 26px;direction:rtl;display:flex;align-items:center;gap:14px}
+#tag b{width:20px;height:20px;border-radius:50%;background:#ff3b5c;display:inline-block}
+#stop{position:absolute;left:340px;top:520px;width:400px;height:400px;border-radius:50%;border:34px solid #ff3b5c;opacity:0;box-shadow:0 0 60px rgba(255,59,92,.8)}
+#stop:after{content:"";position:absolute;left:-20px;right:-20px;top:149px;height:34px;background:#ff3b5c;transform:rotate(-45deg)}
+.br{position:absolute;width:130px;height:130px;border:14px solid #01CEC9;filter:drop-shadow(0 0 14px #01CEC9);opacity:0}
+#b1{left:30px;top:420px;border-right:none;border-bottom:none}#b2{right:30px;top:420px;border-left:none;border-bottom:none}
+#b3{left:30px;top:1050px;border-right:none;border-top:none}#b4{right:30px;top:1050px;border-left:none;border-top:none}
+/* before / after slider */
+#ba{position:absolute;inset:0;opacity:0}
+#scr{position:absolute;left:24px;top:478px;width:1032px;height:650px;border-radius:18px;background:linear-gradient(135deg,#2B0157,#7F00FF 60%,#01CEC9 130%);border:14px solid #111;box-shadow:0 0 0 3px #01CEC9,0 0 70px rgba(1,206,201,.75);overflow:hidden}
+#scr .hd{position:absolute;left:30px;right:30px;top:26px;height:54px;border-radius:14px;background:rgba(255,255,255,.16)}
+#scr .lg{position:absolute;left:0;right:0;top:150px;display:flex;align-items:center;justify-content:center;gap:18px;direction:ltr}
+#scr .lg img.s{height:120px}#scr .lg img.e{height:72px}
+#scr .tl{position:absolute;bottom:34px;height:170px;border-radius:18px;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4)}
+#hd{position:absolute;top:400px;left:1070px;width:10px;height:800px;background:#fff;box-shadow:0 0 30px 6px #01CEC9}
+#hd:after{content:"";position:absolute;left:-45px;top:350px;width:100px;height:100px;border-radius:50%;background:#fff;box-shadow:0 0 30px #01CEC9}
+.lb{position:absolute;top:1150px;font-weight:900;font-size:64px;color:#fff;background:#0b0018;border-radius:20px;padding:0 30px;opacity:0}
+#lbB{left:60px}#lbA{right:60px;background:#01CEC9;color:#0b0018}
+/* big step number */
+.num{position:absolute;left:60px;top:260px;font-weight:900;font-size:300px;color:transparent;-webkit-text-stroke:8px #01CEC9;opacity:0;line-height:1}
+.ico{position:absolute;right:70px;top:300px;width:230px;height:230px;border-radius:50%;background:#7F00FF;border:8px solid #fff;display:flex;align-items:center;justify-content:center;opacity:0;box-shadow:10px 10px 0 #01CEC9}
+.ico img{width:130px;height:130px}
+.cnt{position:absolute;left:0;right:0;top:330px;text-align:center;font-weight:900;font-size:260px;color:#fff;-webkit-text-stroke:12px #0b0018;paint-order:stroke fill;opacity:0;direction:ltr}
+.cnt small{font-size:150px;color:#01CEC9}
+#fl{position:absolute;inset:0;background:#fff;opacity:0}
+.dark{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,#3a0080 0%,#12002a 55%,#05000d 100%);opacity:0;overflow:hidden}
+.gs{position:absolute;width:260px;height:180px;border-radius:16px;border:9px solid #151515;box-shadow:0 0 0 3px #01CEC9,0 0 30px rgba(1,206,201,.6);overflow:hidden;opacity:0;background:#000}
+.gs div{position:absolute;inset:0;opacity:0}
+.gs .c0{opacity:1}
+.c1{background:linear-gradient(135deg,#ff3b9a,#7F00FF)}.c2{background:linear-gradient(135deg,#01CEC9,#036b9a)}.c3{background:linear-gradient(135deg,#7F00FF,#4a00a0);display:flex;align-items:center;justify-content:center}.c3 img{height:90px}
+#hubb{position:absolute;left:410px;top:580px;width:260px;height:180px;border-radius:26px;background:#7F00FF;border:8px solid #fff;box-shadow:0 0 60px #7F00FF;display:flex;align-items:center;justify-content:center;opacity:0}
+#hubb img{height:110px}
+#wave{position:absolute;left:340px;top:470px;width:400px;height:400px;border-radius:50%;border:8px solid #01CEC9;opacity:0}
+.t{position:absolute;left:0;right:0;text-align:center;direction:rtl;color:#fff;white-space:nowrap;font-weight:900}
+#ttl{top:1150px}#ttl .a{font-size:112px;display:block}#ttl .b{font-size:150px;color:#01CEC9;display:block;line-height:1.1;text-shadow:0 0 40px rgba(1,206,201,.7)}#ttl .d{font-size:84px;display:block;margin-top:10px}
+#ttl .w{display:inline-block;margin:0 10px;opacity:0}
+#e1{top:470px;font-size:150px}#e2{top:640px;font-size:260px;color:#01CEC9;text-shadow:0 0 50px rgba(1,206,201,.7)}
+#lock{position:absolute;top:1100px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:28px;direction:ltr}
+#lock .s{height:140px}#lock .e{height:86px}#lock .a{height:94px}#lock .bv{width:5px;height:104px;background:#01CEC9;border-radius:3px}
+#ct{position:absolute;top:1300px;left:150px;right:150px;display:flex;flex-direction:column;gap:24px}
+.c{display:flex;align-items:center;justify-content:center;gap:22px;direction:rtl;background:rgba(127,0,255,.3);border:2px solid rgba(1,206,201,.6);border-radius:26px;padding:18px 30px;color:#fff;font-size:52px;font-weight:800}
+.c img{width:54px;height:54px}.c b{direction:ltr;font-weight:900}
+#h{top:1600px;font-size:44px;font-weight:800;color:#bfefff;direction:ltr}
+</style></head><body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="22.5" data-width="1080" data-height="1920">
+ <div id="ov" class="clip" style="position:absolute;inset:0" data-start="0" data-duration="22.5" data-track-index="0">
+  <div id="stop"></div>
+  <div class="br" id="b1"></div><div class="br" id="b2"></div><div class="br" id="b3"></div><div class="br" id="b4"></div>
+  <div id="ba"><div id="scr"><div class="hd"></div><div class="lg"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"></div>
+    <div class="tl" style="left:30px;width:300px"></div><div class="tl" style="left:360px;width:300px"></div><div class="tl" style="left:690px;width:290px"></div></div><div id="hd"></div></div>
+  <div class="lb" id="lbB">قبل</div><div class="lb" id="lbA">بعد</div>
+  <div class="num" id="n1">01</div><div class="num" id="n2">02</div><div class="num" id="n3">03</div>
+  <div class="ico" id="i1"><img src="ruler.svg"></div><div class="ico" id="i2"><img src="hammer.svg"></div><div class="ico" id="i3"><img src="cable.svg"></div>
+  <div class="cnt" id="k1"><small>×</small>1</div><div class="cnt" id="k2"><small>×</small>2</div><div class="cnt" id="k3"><small>×</small>3</div>
+  <div class="dark" id="net"><div class="gs" style="left:90px;top:330px"><div class="c0"></div><div class="c1"></div><div class="c2"></div><div class="c3"><img src="logo_symbol_white.png"></div></div><div class="gs" style="left:410px;top:330px"><div class="c0"></div><div class="c1"></div><div class="c2"></div><div class="c3"><img src="logo_symbol_white.png"></div></div><div class="gs" style="left:730px;top:330px"><div class="c0"></div><div class="c1"></div><div class="c2"></div><div class="c3"><img src="logo_symbol_white.png"></div></div><div class="gs" style="left:90px;top:580px"><div class="c0"></div><div class="c1"></div><div class="c2"></div><div class="c3"><img src="logo_symbol_white.png"></div></div><div class="gs" style="left:730px;top:580px"><div class="c0"></div><div class="c1"></div><div class="c2"></div><div class="c3"><img src="logo_symbol_white.png"></div></div><div class="gs" style="left:90px;top:830px"><div class="c0"></div><div class="c1"></div><div class="c2"></div><div class="c3"><img src="logo_symbol_white.png"></div></div><div class="gs" style="left:410px;top:830px"><div class="c0"></div><div class="c1"></div><div class="c2"></div><div class="c3"><img src="logo_symbol_white.png"></div></div><div class="gs" style="left:730px;top:830px"><div class="c0"></div><div class="c1"></div><div class="c2"></div><div class="c3"><img src="logo_symbol_white.png"></div></div><div id="wave"></div><div id="hubb"><img src="logo_symbol_white.png"></div>
+   <div id="ttl" class="t"><span class="a"><span class="w" data-t="12.93">أول</span><span class="w" data-t="13.13">نظام</span><span class="w" data-t="13.67">مبتكر</span></span><span class="b"><span class="w" data-t="14.25">في</span><span class="w" data-t="14.53">السلطنة</span></span><span class="d"><span class="w" data-t="15.35">لإدارة</span><span class="w" data-t="16.07">المحتوى</span></span></div>
+  </div>
+  <div class="dark" id="end">
+   <div id="e1" class="t">ترقّبوا…</div><div id="e2" class="t">قريبًا</div>
+   <div id="lock"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"><div class="bv"></div><img class="a" src="logo_wordmark_ar.png"></div>
+   <div id="ct"><div class="c"><img src="message-circle.svg"><span>واتساب</span><b>96946416</b></div><div class="c"><img src="phone-call.svg"><span>اتصال</span><b>77721144</b></div></div>
+   <div id="h" class="t">@Bviro.1</div>
+  </div>
+  <div class="ow" data-t="0.0" data-e="0.24"><span>لا</span></div><div class="ow k" data-t="0.24" data-e="1.12"><span>تمرّر!</span></div><div class="ow" data-t="1.12" data-e="1.38"><span>شايف</span></div><div class="ow k" data-t="1.38" data-e="1.9"><span>هالفتحة</span></div><div class="ow" data-t="1.9" data-e="2.0"><span>في</span></div><div class="ow k" data-t="2.0" data-e="2.7"><span>الجدار؟</span></div><div class="ow k" data-t="2.7" data-e="3.32"><span>هنا…</span></div><div class="ow" data-t="3.32" data-e="3.7"><span>بتصير</span></div><div class="ow" data-t="3.7" data-e="4.14"><span>شاشة</span></div><div class="ow k" data-t="4.14" data-e="4.88"><span>ذكية!</span></div><div class="ow k" data-t="4.88" data-e="5.58"><span>قياس!</span></div><div class="ow k" data-t="5.58" data-e="6.48"><span>تجهيز!</span></div><div class="ow k" data-t="6.48" data-e="7.33"><span>تمديد!</span></div><div class="ow" data-t="7.33" data-e="8.19"><span>شاشة</span></div><div class="ow" data-t="8.19" data-e="8.47"><span>ورا</span></div><div class="ow k" data-t="8.47" data-e="9.15"><span>شاشة!</span></div><div class="ow k" style="font-size:138px" data-t="9.15" data-e="10.05"><span>والمفاجأة؟</span></div><div class="ow" data-t="10.05" data-e="10.47"><span>نظام</span></div><div class="ow k" data-t="10.47" data-e="11.33"><span>واحد…</span></div><div class="ow" data-t="11.33" data-e="11.73"><span>يدير</span></div><div class="ow" data-t="11.73" data-e="12.03"><span>كل</span></div><div class="ow k" style="font-size:138px" data-t="12.03" data-e="12.9"><span>الشاشات!</span></div>
+  <div id="bars"><div><i></i></div><div><i></i></div><div><i></i></div><div><i></i></div><div><i></i></div></div>
+  <div id="tag"><b></b>من موقع العمل</div>
+  <div id="fl"></div>
+ </div>
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+// one giant word at a time
+document.querySelectorAll(".ow").forEach((w, i) => { const t = +w.dataset.t, e = +w.dataset.e;
+  tl.fromTo(w, { opacity: 0, scale: 1.9, rotation: i % 2 ? 5 : -5 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.12, ease: "power4.out" }, t)
+    .to(w, { scale: 1.06, duration: Math.max(0.05, e - t - 0.14), ease: "none" }, t + 0.12)
+    .set(w, { opacity: 0 }, e - 0.01); });
+const flash = (t, a = 0.8) => tl.fromTo("#fl", { opacity: a }, { opacity: 0, duration: 0.22, ease: "power2.out" }, t);
+const shake = (t) => tl.to("#ov", { x: 18, y: -10, duration: 0.04, yoyo: true, repeat: 5, ease: "none" }, t).set("#ov", { x: 0, y: 0 }, t + 0.26);
+// story bars: 5 segments
+[[0, 2.7], [2.7, 4.85], [4.85, 9.1], [9.1, 16.85], [16.85, 22.5]].forEach(([a, b], i) => tl.fromTo(`#bars div:nth-child(${i + 1}) i`, { scaleX: 0 }, { scaleX: 1, duration: b - a, ease: "none" }, a));
+tl.fromTo("#tag b", { opacity: 1 }, { opacity: 0.2, duration: 0.4, yoyo: true, repeat: 22, ease: "none" }, 0).to("#tag", { opacity: 0, duration: 0.1 }, 9.95);
+// 0: don't scroll
+flash(0, 1); shake(0.24);
+tl.fromTo("#stop", { opacity: 0, scale: 2.2 }, { opacity: 1, scale: 1, duration: 0.18, ease: "power4.in" }, 0.06).to("#stop", { opacity: 0, scale: 1.3, duration: 0.12 }, 1.0);
+// 1.1 opening
+flash(1.1);
+tl.fromTo(".br", { opacity: 0, scale: 1.8 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power3.out" }, 1.38).to(".br", { opacity: 0, duration: 0.1 }, 2.65);
+// 2.7 before / after wipe
+flash(2.7);
+tl.set("#ba", { opacity: 1 }, 2.7)
+  .fromTo("#scr", { clipPath: "inset(0 0 0 100%)" }, { clipPath: "inset(0 0 0 0%)", duration: 0.9, ease: "power2.inOut" }, 3.25)
+  .fromTo("#hd", { x: 0 }, { x: -1060, duration: 0.9, ease: "power2.inOut" }, 3.25)
+  .fromTo("#lbB", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.2 }, 2.8)
+  .fromTo("#lbA", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.2 }, 4.1)
+  .to("#hd", { opacity: 0, duration: 0.1 }, 4.2)
+  .to("#scr", { scale: 1.04, duration: 0.15, yoyo: true, repeat: 1 }, 4.14)
+  .to(["#ba", ".lb"], { opacity: 0, duration: 0.08 }, 4.78);
+// steps 01 02 03
+[["#n1", "#i1", 4.88, 5.55], ["#n2", "#i2", 5.58, 6.45], ["#n3", "#i3", 6.48, 7.3]].forEach(([n, ic, a, b]) => { flash(a - 0.03, 0.6);
+  tl.fromTo(n, { opacity: 0, x: -200 }, { opacity: 1, x: 0, duration: 0.18, ease: "power4.out" }, a).fromTo(ic, { opacity: 0, scale: 0, rotation: -90 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.25, ease: "back.out(2.5)" }, a)
+    .set([n, ic], { opacity: 0 }, b - 0.03); });
+// screen after screen x1 x2 x3
+[["#k1", 7.33, 7.9], ["#k2", 7.9, 8.5], ["#k3", 8.5, 9.1]].forEach(([k, a, b]) => { flash(a - 0.02, 0.6);
+  tl.fromTo(k, { opacity: 0, scale: 2.4 }, { opacity: 1, scale: 1, duration: 0.14, ease: "power4.out" }, a).set(k, { opacity: 0 }, b - 0.03); });
+shake(9.15); flash(9.1, 0.7);
+// 10.0 one system, all screens
+flash(10.0, 1);
+tl.set("#net", { opacity: 1 }, 10.0)
+  .fromTo(".gs", { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.22, stagger: 0.04, ease: "back.out(2)" }, 10.02)
+  .fromTo("#hubb", { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2.5)" }, 10.05);
+[[10.47, ".c1"], [11.33, ".c2"], [12.03, ".c3"]].forEach(([t, c]) => { 
+  tl.fromTo("#hubb", { scale: 1 }, { scale: 0.86, duration: 0.07, yoyo: true, repeat: 1 }, t - 0.05)
+    .fromTo("#wave", { opacity: 0.9, scale: 0.4 }, { opacity: 0, scale: 2.6, duration: 0.5, ease: "power2.out" }, t)
+    .to(".gs " + c, { opacity: 1, duration: 0.06 }, t + 0.08)
+    .fromTo(".gs", { scale: 1.12 }, { scale: 1, duration: 0.25, ease: "power2.out" }, t + 0.08); });
+shake(12.03);
+tl.to([".gs", "#hubb"], { y: -110, scale: 0.9, duration: 0.4, ease: "power3.inOut" }, 12.6);
+document.querySelectorAll("#ttl .w").forEach(w => tl.fromTo(w, { opacity: 0, scale: 0.4, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.2, ease: "back.out(2.6)" }, +w.dataset.t));
+shake(14.53);
+// end
+flash(16.85, 1);
+tl.set("#net", { opacity: 0 }, 16.85).set("#end", { opacity: 1 }, 16.85)
+  .fromTo("#e1", { opacity: 0, scale: 1.5 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power3.out" }, 16.89)
+  .fromTo("#e2", { opacity: 0, scale: 3.2 }, { opacity: 1, scale: 1, duration: 0.25, ease: "power4.in" }, 17.55);
+shake(17.8);
+tl.to("#e2", { scale: 1.05, duration: 1.1, yoyo: true, repeat: 3, ease: "sine.inOut" }, 18.1)
+  .fromTo("#lock", { opacity: 0, y: 60, scale: 0.7 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(2)" }, 18.55)
+  .fromTo(".c", { opacity: 0, x: 120 }, { opacity: 1, x: 0, duration: 0.35, stagger: 0.15, ease: "power3.out" }, 19.4)
+  .fromTo("#h", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 19.9);
+window.__timelines["main"] = tl; tl.seek(0);
+</script></body></html>

@@ -1,0 +1,23 @@
+{
+ "width": 1080, "height": 1920, "fps": 30, "duration": 22.5, "output": "basegraded.mp4",
+ "shots": [
+  {"src": "v6.mp4", "in": 0.2, "dur": 1.1, "zoom": 1.1},
+  {"src": "v5.mp4", "in": 0.2, "dur": 1.6, "tin": "flash"},
+  {"src": "p5.png", "dur": 2.15, "kb_zoom": 0.0001, "tin": "flash"},
+  {"src": "v1slow.mp4", "in": 0.4, "dur": 0.7, "tin": "whip"},
+  {"src": "v2.mp4", "in": 6.0, "dur": 0.9, "tin": "whip"},
+  {"src": "v3.mp4", "in": 2.4, "dur": 0.85, "tin": "whip"},
+  {"src": "p1.jpg", "dur": 0.6, "kb": "in", "kb_zoom": 0.3, "tin": "flash"},
+  {"src": "p5b.png", "dur": 0.6, "kb": "in", "kb_zoom": 0.3, "tin": "flash"},
+  {"src": "p3.jpg", "dur": 0.6, "kb": "in", "kb_zoom": 0.3, "tin": "flash"},
+  {"src": "p2.jpg", "dur": 0.9, "kb": "in", "kb_zoom": 0.4, "tin": "zoom"},
+  {"src": "endbg.mp4", "in": 3.0, "dur": 2.5, "tin": "flash"},
+  {"src": "endbg.mp4", "in": 3.0, "dur": 2.5, "tin": "cut"},
+  {"src": "endbg.mp4", "in": 3.0, "dur": 2.5, "tin": "cut"},
+  {"src": "endbg.mp4", "in": 3.0, "dur": 2.5, "tin": "cut"},
+  {"src": "endbg.mp4", "in": 3.0, "dur": 2.5, "tin": "cut"}
+ ],
+ "transitions": {"default": "whip"},
+ "grade": {"lut": "brand/bviro_look.cube", "grain": 6},
+ "audio": {"pad": false, "whoosh_on_cuts": false, "impact_at_end": false, "duck": false}
+}
