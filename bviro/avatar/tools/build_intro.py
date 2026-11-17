@@ -57,7 +57,7 @@ def draw_line(img, segs, font, cy, stroke=10):
         x -= gap
 
 
-def caption(name, lines, size=92, cy=1400, lead=1.36):
+def caption(name, lines, size=92, cy=1465, lead=1.36):
     font = cairo(size)
     layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     step = int(size * lead)
@@ -80,7 +80,7 @@ def handle():
     txt = "@bviro.1"
     t = d.textlength(txt, font=f)
     pw, ph = int(sym.size[0] + 16 + t + 56), 80
-    x, y = (W - pw) // 2, 150
+    x, y = (W - pw) // 2, 44
     d.rounded_rectangle([x, y, x + pw, y + ph], radius=ph // 2, fill=(*DARK, 215))
     layer.alpha_composite(sym, (x + 24, y + (ph - sh) // 2))
     d.text((x + 24 + sym.size[0] + 14, y + ph / 2 + 1), txt, font=f, fill=WHITE, anchor="lm")
