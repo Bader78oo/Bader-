@@ -34,3 +34,9 @@
 Clearly cartoon 3D animated movie character, not photorealistic; large head, big expressive eyes with glossy irises,
 smooth stylized skin, sculpted short boxed beard with thin moustache and small soul patch, thick eyebrows; plain white
 Omani dishdasha with white tassel; low compact purple massar close to the skull with turquoise paisley embroidery, diagonal folds meeting in a flowing triangle at the front, small triangular folded corner above each ear; no text, logos, weapons or flags.
+
+## دروس من أول فيديو (17 نوفمبر 2026)
+- بدر يقول «واجد» لا «وايد». لا تُستخدم «وايد» في أي نص له.
+- Higgsfield Intone لا يستخدم التسجيل المرفوع كما هو: يعيد توليد الصوت، فيطلع صوت غير صوت بدر. لا يُسلَّم فيديو منه قبل
+  مقارنة صوته بتسجيل ElevenLabs. الطريقة الصحيحة: الصوت من ElevenLabs (صوت Bader) ثم مطابقة الشفاه بـ sync_so على الفيديو.
+- صوت الفيديو النهائي يُركَّب دائماً من ملف ElevenLabs الأصلي في المونتاج، لا من مخرج أداة الفيديو.
