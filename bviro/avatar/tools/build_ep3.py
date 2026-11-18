@@ -33,7 +33,7 @@ T_MERGE = (9.55, 10.45)
 T_WORLD = (10.45, 14.75)
 T_E = (14.75, 18.90)    # closing, lipsynced
 D_OFF = 6.30            # world clip time = video time - D_OFF
-E_IN, E_OUT = 3.00, 4.95  # stable part of cE, played forward then backward
+E_IN, E_OUT = 3.20, 4.95  # stable part of cE, played forward then backward
 TOTAL = T_E[1]
 
 # close-up keyframe geometry at 1080x1920
@@ -41,6 +41,7 @@ LENS_L, LENS_R, LENS_R0 = (298.0, 955.0), (783.0, 955.0), 186.0
 MID = (540.5, 955.0)
 # lens centres in B's last frame (1080x1920), measured by lens_probe() below
 B_LENS = None
+SUBS = 14
 
 
 def run(cmd):
@@ -48,7 +49,8 @@ def run(cmd):
 
 
 def n_frames(t0, t1):
-    return int(round((t1 - t0) * FPS))
+    """Frames between two timeline points, counted on the frame grid so segments always add up."""
+    return int(round(t1 * FPS)) - int(round(t0 * FPS))
 
 
 def read_frames(path, t0, n, vf=""):
@@ -135,7 +137,15 @@ def draw_line(img, segs, font, cy, stroke=10):
         x -= gap
 
 
+def line_width(segs, font):
+    d = ImageDraw.Draw(Image.new("RGBA", (8, 8)))
+    gap, pad = int(font.size * 0.26), int(font.size * 0.20)
+    return sum(tw(d, t, font) + (2 * pad if c in (CHIP, TCHIP) else 0) for t, c in segs) + gap * (len(segs) - 1)
+
+
 def caption(lines, size=92, cy=1465, lead=1.36):
+    while max(line_width(segs, cairo(size)) for segs in lines) > W - 130:  # shrink a card that would touch the edges
+        size -= 4
     font = cairo(size)
     layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     step = int(size * lead)
@@ -192,38 +202,47 @@ def lens_block(world):
     nz = n_frames(*T_ZOOM)
     for i in range(nz):
         acc = np.zeros((H, W, 3), np.float32)
-        for sub in range(4):  # motion blur
-            p = ease((i + sub / 4) / nz) ** 1.6
+        for sub in range(SUBS):  # motion blur: many small steps so it reads as a smooth push, not a double image
+            p = ease((i + sub / SUBS) / nz) ** 1.6
             s = 1.0 * (s_end ** p)
             dst = (b_mid[0] + (MID[0] - b_mid[0]) * p, b_mid[1] + (MID[1] - b_mid[1]) * p)
             acc += np.asarray(zoomed(b_last, s, b_mid, dst), np.float32)
-        fr = acc / 4
+        fr = acc / SUBS
         a = ease((i / nz - 0.55) / 0.45)
         out.append((fr * (1 - a) + k2c_np * a).astype(np.uint8))
-    # 2) + 3) close-up with the world inside both lenses, then merge to full screen
+    # 2) close-up with the world inside both lenses, 3) the two pictures slide together, fuse, and open to full screen
     nl, nm = n_frames(*T_LENS), n_frames(*T_MERGE)
+    centre = (W / 2, H / 2)
+    backdrop = np.array(DARK, np.float32) * 0.55
     for j in range(nl + nm):
         t = T_LENS[0] + j / FPS
-        pm = ease((t - T_MERGE[0]) / (T_MERGE[1] - T_MERGE[0])) if t >= T_MERGE[0] else 0.0
-        k = 1.0 + 0.06 * (t - T_LENS[0]) / (T_LENS[1] - T_LENS[0]) if pm == 0 else 1.06 + 0.5 * pm
+        pm = (t - T_MERGE[0]) / (T_MERGE[1] - T_MERGE[0]) if t >= T_MERGE[0] else 0.0
+        sl, ex = ease(pm / 0.45), ease((pm - 0.45) / 0.55)  # slide together, then expand
+        k = 1.0 + 0.06 * min(1.0, (t - T_LENS[0]) / (T_LENS[1] - T_LENS[0]))
         bg = np.asarray(zoomed(k2c, k, MID, MID), np.float32)
         wf = Image.fromarray(world[n_frames(T_ZOOM[1], T_LENS[0]) + j])
         fade = ease((t - T_LENS[0]) / 0.30)
-        fr = bg.copy()
-        r = LENS_R0 * k * (1 - pm) + 1180.0 * pm
-        s_lens = 2 * LENS_R0 * k * 1.30 / W
-        s_c = s_lens * (1 - pm) + 1.0 * pm
+        r_a = LENS_R0 * k * (1 + 0.15 * sl)
+        r = r_a + (1180.0 - r_a) * ex
+        s_c = min(1.0, 2 * r * 1.30 / W)
+        acc = np.zeros((H, W, 3), np.float32)
+        wsum = np.zeros((H, W, 1), np.float32)
+        cover = np.zeros((H, W, 1), np.float32)
         for sign, c0 in ((+1, LENS_L), (-1, LENS_R)):
-            cx = MID[0] + (c0[0] - MID[0]) * k
-            cy = MID[1] + (c0[1] - MID[1]) * k
-            c = (cx + (W / 2 - cx) * pm, cy + (H / 2 - cy) * pm)
-            par = sign * 9.0 * (1 - pm)  # each eye gets a slightly shifted picture
+            cx, cy = MID[0] + (c0[0] - MID[0]) * k, MID[1] + (c0[1] - MID[1]) * k
+            c = (cx + (centre[0] - cx) * sl, cy + (centre[1] - cy) * sl)
+            par = sign * 9.0 * (1 - sl)  # each eye gets a slightly shifted picture until they fuse
             content = np.asarray(zoomed(wf, s_c, (W / 2 + par / s_c, H / 2), c), np.float32)
-            m = disc(c, r)[..., None] * fade
-            glass = np.clip(bg, 0, 255) * (1 - pm) * 0.9  # keep the lens highlight over the picture (screen blend)
-            lit = 255 - (255 - content) * (255 - glass) / 255
-            fr = fr * (1 - m) + lit * m
-        out.append(np.clip(fr, 0, 255).astype(np.uint8))
+            m = disc(c, r)[..., None]
+            acc += content * m
+            wsum += m
+            cover = np.maximum(cover, m)
+        picture = acc / np.maximum(wsum, 1e-6)
+        glass = bg * (1 - sl) * 0.9  # lens highlight stays over the picture while it is still inside the lens
+        picture = 255 - (255 - picture) * (255 - glass) / 255
+        base = bg * (1 - 0.85 * sl) + backdrop * (0.85 * sl)  # the headset dims away as the pictures leave the lenses
+        m = cover * fade
+        out.append(np.clip(base * (1 - m) + picture * m, 0, 255).astype(np.uint8))
     return out
 
 
