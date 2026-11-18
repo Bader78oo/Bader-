@@ -1,0 +1,71 @@
+<!doctype html><html lang="ar"><head><meta charset="UTF-8" /><meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{width:1080px;height:1920px;position:relative;font-family:Cairo;overflow:hidden}
+#shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,0,42,.55) 0%,rgba(18,0,42,.35) 45%,rgba(18,0,42,.8) 100%)}
+.big{position:absolute;left:30px;right:30px;text-align:center;direction:rtl;font-weight:900;color:#fff;line-height:1.22;
+  -webkit-text-stroke:11px #12002a;paint-order:stroke fill;text-shadow:0 10px 0 rgba(18,0,42,.5),0 0 34px rgba(127,0,255,.8)}
+.big .w{display:inline-block;margin:0 10px;opacity:0}
+#next{top:640px;font-size:140px}
+#nx{position:absolute;left:440px;top:400px;width:200px;height:200px;border-radius:50%;background:#7F00FF;border:8px solid #fff;display:flex;align-items:center;justify-content:center;opacity:0;box-shadow:0 0 50px #7F00FF}
+#nx img{width:110px;height:110px}
+#q{top:300px;font-size:128px}
+#chips{position:absolute;left:90px;right:90px;top:690px;display:grid;grid-template-columns:1fr 1fr;gap:26px;direction:rtl}
+.cp{height:120px;border-radius:30px;background:rgba(18,0,42,.85);border:3px solid #01CEC9;display:flex;align-items:center;justify-content:center;gap:18px;color:#fff;font-weight:900;font-size:56px;direction:rtl;opacity:0}
+.cp img{width:58px;height:58px}
+#btn{position:absolute;left:70px;top:1040px;width:800px;height:190px;border-radius:95px;background:#01CEC9;color:#12002a;font-weight:900;font-size:84px;display:flex;align-items:center;justify-content:center;gap:26px;direction:rtl;opacity:0;box-shadow:0 0 0 8px #fff,0 0 70px rgba(1,206,201,.9),12px 14px 0 #7F00FF;white-space:nowrap}
+#btn img{width:96px;height:96px}
+.ring{position:absolute;left:70px;top:1040px;width:800px;height:190px;border-radius:95px;border:8px solid #01CEC9;opacity:0}
+#arr{position:absolute;left:880px;top:1075px;width:120px;height:120px;opacity:0}
+#arr img{width:120px;height:120px}
+#now{direction:rtl;position:absolute;left:310px;top:1265px;background:#7F00FF;color:#fff;font-weight:900;font-size:64px;border-radius:26px;padding:0 44px;transform:rotate(-5deg);opacity:0;border:4px solid #fff}
+#brand{position:absolute;left:0;right:0;top:1420px;opacity:0}
+#lock{display:flex;align-items:center;justify-content:center;gap:20px;direction:ltr}
+#lock .s{height:84px}#lock .e{height:52px}#lock .a{height:58px}#lock .bv{width:4px;height:64px;background:#01CEC9;border-radius:2px}
+#ct{margin-top:22px;display:flex;justify-content:center;gap:34px;direction:rtl;color:#fff;font-weight:800;font-size:40px;text-shadow:0 2px 10px #000}
+#ct span{display:flex;align-items:center;gap:12px}#ct img{width:42px;height:42px}#ct b{direction:ltr;font-weight:900}
+#fl{position:absolute;inset:0;background:#fff;opacity:0}
+</style></head><body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="8.2" data-width="1080" data-height="1920">
+ <div id="ov" class="clip" style="position:absolute;inset:0" data-start="0" data-duration="8.2" data-track-index="0">
+  <div id="shade"></div>
+  <div id="nx"><img src="monitor-play.svg"></div>
+  <div class="big" id="next"><span class="w" data-t="0.36">في</span><span class="w" data-t="0.52">الفيديو</span><br><span class="w" data-t="0.82" style="color:#01CEC9">الجاي!</span></div>
+  <div class="big" id="q"><span class="w" data-t="1.8">تعرف</span><span class="w" data-t="2.6">أحد</span><br><span class="w" data-t="2.84" style="color:#01CEC9">عنده</span><span class="w" data-t="3.14" style="color:#01CEC9">شاشات؟</span></div>
+  <div id="chips"><div class="cp"><img src="store.svg">محل</div><div class="cp"><img src="utensils.svg">مطعم</div><div class="cp"><img src="stethoscope.svg">عيادة</div><div class="cp"><img src="building-2.svg">شركة</div></div>
+  <div class="ring" id="r1"></div><div class="ring" id="r2"></div>
+  <div id="btn"><img src="send_dark.svg">أرسل له الفيديو</div>
+  <div id="arr"><img src="arrow-right.svg"></div>
+  <div id="now">الحين!</div>
+  <div id="brand"><div id="lock"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"><div class="bv"></div><img class="a" src="logo_wordmark_ar.png"></div>
+   <div id="ct"><span><img src="message-circle.svg">واتساب <b>96946416</b></span><span><img src="phone-call.svg">اتصال <b>77721144</b></span></div></div>
+  <div id="fl"></div>
+ </div>
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+const pop = sel => document.querySelectorAll(sel + " .w").forEach(w => tl.fromTo(w, { opacity: 0, scale: 0.6, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.28, ease: "back.out(2)" }, +w.dataset.t));
+tl.fromTo("#fl", { opacity: 1 }, { opacity: 0, duration: 0.35, ease: "power2.out" }, 0);
+// 1) answer: in the next video
+tl.fromTo("#nx", { opacity: 0, scale: 0, rotation: -90 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.35, ease: "back.out(2.2)" }, 0.3);
+pop("#next");
+tl.to(["#next", "#nx"], { opacity: 0, y: -60, duration: 0.2, ease: "power2.in" }, 1.55);
+// 2) question + who
+pop("#q");
+tl.fromTo(".cp", { opacity: 0, scale: 0.5, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.28, stagger: 0.16, ease: "back.out(2.2)" }, 3.3);
+// 3) call to action: send it
+tl.fromTo("#btn", { opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2.4)" }, 4.25)
+  .fromTo("#btn img", { x: 0, y: 0 }, { x: -18, y: -14, duration: 0.35, yoyo: true, repeat: 9, ease: "sine.inOut" }, 4.7)
+  .to("#btn", { scale: 1.05, duration: 0.4, yoyo: true, repeat: 7, ease: "sine.inOut" }, 4.75)
+  .fromTo("#r1", { opacity: 0.9, scale: 1 }, { opacity: 0, scale: 1.25, duration: 0.9, repeat: 3, ease: "power1.out", immediateRender: false }, 4.6)
+  .fromTo("#r2", { opacity: 0.9, scale: 1 }, { opacity: 0, scale: 1.25, duration: 0.9, repeat: 3, ease: "power1.out", immediateRender: false }, 5.05)
+  .fromTo("#arr", { opacity: 0, x: -60 }, { opacity: 1, x: 0, duration: 0.3, ease: "power3.out" }, 4.6)
+  .to("#arr", { x: 34, duration: 0.3, yoyo: true, repeat: 11, ease: "sine.inOut" }, 4.9)
+  .fromTo("#now", { opacity: 0, scale: 2.2 }, { opacity: 1, scale: 1, duration: 0.22, ease: "power4.in" }, 5.2)
+  .fromTo("#brand", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 5.9);
+window.__timelines["main"] = tl; tl.seek(0);
+</script></body></html>
