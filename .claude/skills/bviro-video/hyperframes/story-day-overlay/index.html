@@ -1,0 +1,196 @@
+<!doctype html><html lang="ar"><head><meta charset="UTF-8" /><meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+@font-face{font-family:Cairo;font-weight:600;src:url(fonts/Cairo-600.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{width:1080px;height:1920px;position:relative;font-family:Cairo;overflow:hidden}
+.cap{position:absolute;left:50px;right:50px;top:1290px;text-align:center;direction:rtl;font-weight:900;font-size:88px;line-height:1.3;color:#fff;
+  -webkit-text-stroke:9px #12002a;paint-order:stroke fill;text-shadow:0 8px 0 rgba(18,0,42,.5),0 0 30px rgba(18,0,42,.9)}
+.cap .w,.big .w{display:inline-block;margin:0 10px;opacity:0}
+.big{position:absolute;left:30px;right:30px;text-align:center;direction:rtl;font-weight:900;color:#fff;line-height:1.2;
+  -webkit-text-stroke:11px #12002a;paint-order:stroke fill;text-shadow:0 10px 0 rgba(18,0,42,.5),0 0 34px rgba(127,0,255,.8)}
+#hook{top:620px;font-size:128px}#hook .l1{font-size:104px;color:#01CEC9}
+#tagD{position:absolute;left:50%;top:470px;transform:translateX(-50%);background:#7F00FF;color:#fff;font-weight:800;font-size:46px;border-radius:40px;padding:6px 36px;direction:rtl;white-space:nowrap;opacity:0;border:3px solid #fff}
+/* rewind */
+#rw{position:absolute;inset:0;opacity:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 3px,transparent 3px 9px),rgba(43,1,87,.28)}
+#rwi{position:absolute;left:390px;top:560px;width:300px;height:300px;border-radius:50%;background:rgba(18,0,42,.8);border:8px solid #01CEC9;display:flex;align-items:center;justify-content:center;box-shadow:0 0 50px #01CEC9}
+#rwi img{width:170px;height:170px}
+#rwt{position:absolute;left:0;right:0;top:900px;text-align:center;direction:rtl;font-weight:900;font-size:64px;color:#01CEC9;text-shadow:0 4px 16px #000}
+/* timeline */
+#tlb{position:absolute;left:70px;right:70px;top:150px;height:120px;direction:rtl;opacity:0}
+#tlb .ln{position:absolute;left:60px;right:60px;top:26px;height:8px;border-radius:4px;background:rgba(255,255,255,.35);overflow:hidden;direction:rtl}
+#tlb .fl{height:100%;width:100%;background:linear-gradient(270deg,#7F00FF,#01CEC9);transform-origin:100% 50%;transform:scaleX(0)}
+.nd{position:absolute;top:0;width:120px;text-align:center}
+.nd .d{width:60px;height:60px;margin:0 auto;border-radius:50%;background:#12002a;border:5px solid rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center}
+.nd .d img{width:32px;height:32px;opacity:.75}
+.nd .t{margin-top:6px;font-weight:800;font-size:30px;color:#fff;text-shadow:0 2px 8px #000;white-space:nowrap}
+#d1{right:0}#d2{right:273px}#d3{right:547px}#d4{right:820px}
+/* chapter card */
+.ch{position:absolute;right:60px;top:330px;height:150px;border-radius:34px;background:rgba(18,0,42,.86);border:3px solid #01CEC9;display:flex;align-items:center;direction:rtl;gap:22px;padding:0 34px 0 44px;color:#fff;opacity:0;box-shadow:0 14px 40px rgba(0,0,0,.4)}
+.ch .n{font-weight:900;font-size:96px;color:#01CEC9;direction:ltr;line-height:1}
+.ch .tt{font-weight:900;font-size:66px;white-space:nowrap}
+.ch img{width:70px;height:70px}
+/* cables */
+#cab{position:absolute;inset:0;opacity:0}
+#cab path{fill:none;stroke-width:10;stroke-linecap:round;stroke-dasharray:1400;stroke-dashoffset:1400}
+.chip{position:absolute;height:120px;border-radius:60px;display:flex;align-items:center;gap:18px;direction:rtl;padding:0 40px 0 46px;color:#fff;font-weight:900;font-size:60px;opacity:0;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.chip img{width:64px;height:64px}
+#chE{right:70px;top:560px;background:#7F00FF;border:4px solid #fff}
+#chN{left:70px;top:760px;background:#019c98;border:4px solid #fff}
+#walls{position:absolute;left:80px;right:80px;top:600px;display:flex;justify-content:space-between;direction:rtl}
+.wl{width:200px;height:130px;border:8px solid #01CEC9;border-radius:14px;background:rgba(1,206,201,.12);box-shadow:0 0 26px rgba(1,206,201,.7);opacity:0;position:relative}
+.wl:after{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px;border-radius:50%;background:#fff}
+/* speech bubble */
+#bub{position:absolute;right:70px;top:540px;background:#fff;color:#12002a;border-radius:44px 44px 10px 44px;padding:26px 44px;direction:rtl;opacity:0;box-shadow:0 14px 40px rgba(0,0,0,.45)}
+#bub .who{font-weight:800;font-size:40px;color:#7F00FF}
+#bub .dots{font-weight:900;font-size:90px;line-height:.6;letter-spacing:8px;direction:ltr;text-align:right}
+#bub .dots i{display:inline-block;font-style:normal;opacity:.25}
+/* dark power scene */
+.dark{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,#3a0080 0%,#12002a 55%,#05000d 100%);opacity:0;overflow:hidden}
+#pwb{position:absolute;left:370px;top:560px;width:340px;height:340px;border-radius:50%;background:#12002a;border:10px solid #01CEC9;display:flex;align-items:center;justify-content:center;box-shadow:0 0 70px rgba(1,206,201,.8)}
+#pwb img{width:180px;height:180px}
+#pwr{position:absolute;left:330px;top:520px;width:420px;height:420px;border-radius:50%;border:5px solid rgba(1,206,201,.6)}
+#try{top:1050px;font-size:160px}
+#onring{position:absolute;left:340px;top:760px;width:400px;height:400px;border-radius:50%;border:10px solid #fff;opacity:0}
+.ok{position:absolute;height:74px;border-radius:37px;background:rgba(18,0,42,.85);border:3px solid #3dffb0;color:#fff;font-weight:800;font-size:38px;display:flex;align-items:center;gap:12px;padding:0 26px;direction:rtl;opacity:0;white-space:nowrap}
+.ok b{width:22px;height:22px;border-radius:50%;background:#3dffb0;box-shadow:0 0 14px #3dffb0;display:inline-block}
+#ok1{left:90px;top:430px}#ok2{right:110px;top:700px}#ok3{left:150px;top:1020px}
+#chS{left:50%;top:480px;background:#7F00FF;border:4px solid #fff;margin-left:-330px;width:660px;justify-content:center}
+#first{position:absolute;right:90px;top:660px;background:#01CEC9;color:#12002a;font-weight:900;font-size:58px;border-radius:24px;padding:6px 36px;transform:rotate(-7deg);opacity:0;box-shadow:8px 8px 0 #7F00FF;white-space:nowrap}
+#dim{position:absolute;inset:0;background:rgba(5,0,13,.6);opacity:0}
+#res{top:800px;font-size:150px}
+#fl{position:absolute;inset:0;background:#fff;opacity:0}
+.glow{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,rgba(127,0,255,.8) 0%,rgba(127,0,255,0) 46%)}
+.p{position:absolute;border-radius:50%;background:#01CEC9;box-shadow:0 0 12px #01CEC9}
+.t{position:absolute;left:0;right:0;text-align:center;direction:rtl;color:#fff;white-space:nowrap;font-weight:900}
+#e1{top:470px;font-size:150px}#e2{top:640px;font-size:260px;color:#01CEC9;text-shadow:0 0 50px rgba(1,206,201,.7)}
+#lock{position:absolute;top:1100px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:28px;direction:ltr}
+#lock .s{height:140px}#lock .e{height:86px}#lock .a{height:94px}#lock .bv{width:5px;height:104px;background:#01CEC9;border-radius:3px}
+#ct{position:absolute;top:1300px;left:150px;right:150px;display:flex;flex-direction:column;gap:24px}
+.cc{display:flex;align-items:center;justify-content:center;gap:22px;direction:rtl;background:rgba(127,0,255,.3);border:2px solid rgba(1,206,201,.6);border-radius:26px;padding:18px 30px;color:#fff;font-size:52px;font-weight:800}
+.cc img{width:54px;height:54px}.cc b{direction:ltr;font-weight:900}
+#h{top:1600px;font-size:44px;font-weight:800;color:#bfefff;direction:ltr}
+</style></head><body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="32.5" data-width="1080" data-height="1920">
+ <div id="ov" class="clip" style="position:absolute;inset:0" data-start="0" data-duration="32.5" data-track-index="0">
+  <div id="tagD">يوميات بيفيرو</div>
+  <div class="big" id="hook"><span class="w l1" data-t="0.02">اليوم…</span><br><span class="w" data-t="0.84">شغّلنا</span><span class="w" data-t="1.3">الشاشات</span><br><span class="w" data-t="1.76">لأول</span><span class="w" data-t="2.14">مرة!</span></div>
+  <div id="rw"><div id="rwi"><img src="rewind.svg"></div><div id="rwt">نرجع لبداية اليوم</div></div>
+  <div id="tlb"><div class="ln"><div class="fl"></div></div>
+   <div class="nd" id="d1"><div class="d"><img src="shopping-cart.svg"></div><div class="t">الشراء</div></div>
+   <div class="nd" id="d2"><div class="d"><img src="truck.svg"></div><div class="t">النقل</div></div>
+   <div class="nd" id="d3"><div class="d"><img src="cable.svg"></div><div class="t">التجهيز</div></div>
+   <div class="nd" id="d4"><div class="d"><img src="monitor-play.svg"></div><div class="t">التجربة</div></div></div>
+  <div class="ch" id="ch1"><span class="n">01</span><span class="tt">الشراء</span><img src="shopping-cart.svg"></div>
+  <div class="ch" id="ch2"><span class="n">02</span><span class="tt">النقل</span><img src="truck.svg"></div>
+  <div class="ch" id="ch3"><span class="n">03</span><span class="tt">التجهيز</span><img src="cable.svg"></div>
+  <div class="ch" id="ch4"><span class="n">04</span><span class="tt">أول تجربة</span><img src="monitor-play.svg"></div>
+  <svg id="cab" viewBox="0 0 1080 1920"><path id="pE" stroke="#7F00FF" d="M1080 640 C 800 640, 700 900, 420 880 S 120 1050, 0 1000"/><path id="pN" stroke="#01CEC9" d="M0 830 C 260 830, 380 1010, 660 990 S 960 1120, 1080 1090"/></svg>
+  <div class="chip" id="chE"><img src="zap.svg">كهرباء</div><div class="chip" id="chN"><img src="wifi.svg">إنترنت</div>
+  <div id="walls"><div class="wl"></div><div class="wl"></div><div class="wl"></div><div class="wl"></div></div>
+  <div id="bub"><div class="who">الفريق الرقمي</div><div class="dots"><i>•</i><i>•</i><i>•</i></div></div>
+  <div id="onring"></div>
+  <div class="ok" id="ok1"><b></b>متصلة</div><div class="ok" id="ok2"><b></b>متصلة</div><div class="ok" id="ok3"><b></b>متصلة</div>
+  <div class="chip" id="chS"><img src="monitor-play.svg">نظام إدارة المحتوى</div>
+  <div id="first">لأول مرة ★</div>
+  <div class="cap" id="c1" data-out="4.85"><span class="w" data-t="2.86">بس</span><span class="w" data-t="2.98">خلّوني</span><span class="w" data-t="3.36">أرجع</span><span class="w" data-t="3.66">لكم</span><br><span class="w" data-t="3.84">من</span><span class="w" data-t="4.02">البداية</span></div>
+  <div class="cap" id="c2" data-out="6.6"><span class="w" data-t="5.04">الصبح</span><span class="w" data-t="5.28">اشترينا</span><span class="w" data-t="5.8">الشاشات</span></div>
+  <div class="cap" id="c3" data-out="8.6"><span class="w" data-t="6.7">وحمّلناها</span><br><span class="w" data-t="7.44">لموقع</span><span class="w" data-t="7.88">العمل</span></div>
+  <div class="cap" id="c4" data-out="9.5"><span class="w" data-t="8.72">وهناك…</span></div>
+  <div class="cap" id="c5" data-out="11.45"><span class="w" data-t="9.56">الفريق</span><span class="w" data-t="9.94">الفني</span><br><span class="w" data-t="10.34">مكمّل</span><span class="w" data-t="10.92">شغله</span></div>
+  <div class="cap" id="c6" data-out="14.05"><span class="w" data-t="11.52">تمديد</span><span class="w" data-t="11.9">كيبلات</span><br><span class="w" data-t="12.34">الكهرباء</span><span class="w" data-t="12.92">والإنترنت</span></div>
+  <div class="cap" id="c7" data-out="15.7"><span class="w" data-t="14.12">لكل</span><span class="w" data-t="14.3">مساحة</span><span class="w" data-t="14.8">جدارية</span></div>
+  <div class="cap" id="c8" data-out="17.68"><span class="w" data-t="15.76">وبعدها</span><span class="w" data-t="16.18">قال</span><br><span class="w" data-t="16.42">الفريق</span><span class="w" data-t="16.88">الرقمي:</span></div>
+  <div class="cap" id="c9" data-out="20.1"><span class="w" data-t="19.06">وصّلنا</span><span class="w" data-t="19.5">الشاشات</span></div>
+  <div class="cap" id="c10" data-out="22.2"><span class="w" data-t="20.18">وجرّبنا</span><span class="w" data-t="20.78">نظام</span><br><span class="w" data-t="21.14">إدارة</span><span class="w" data-t="21.66">المحتوى</span></div>
+  <div class="cap" id="c11" data-out="23.4"><span class="w" data-t="22.24">لأول</span><span class="w" data-t="22.66">مرة</span></div>
+  <div class="dark" id="pw"><div id="pwr"></div><div id="pwb"><img src="power.svg"></div>
+   <div class="big" id="try"><span class="w" data-t="17.76">لازم</span><span class="w" data-t="18.22" style="color:#01CEC9">نجرّب!</span></div></div>
+  <div id="dim"></div>
+  <div class="big" id="res"><span class="w" data-t="23.48" style="color:#01CEC9">والنتيجة؟</span></div>
+  <div class="dark" id="end"><div class="glow"></div><div class="parts"></div>
+   <div id="e1" class="t">ترقّبوا…</div><div id="e2" class="t">قريبًا</div>
+   <div id="lock"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"><div class="bv"></div><img class="a" src="logo_wordmark_ar.png"></div>
+   <div id="ct"><div class="cc"><img src="message-circle.svg"><span>واتساب</span><b>96946416</b></div><div class="cc"><img src="phone-call.svg"><span>اتصال</span><b>77721144</b></div></div>
+   <div id="h" class="t">@Bviro.1</div></div>
+  <div id="fl"></div>
+ </div>
+</div>
+<script>
+let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+document.querySelectorAll(".parts").forEach(parts => { for (let i = 0; i < 34; i++) { const d = document.createElement("div"); d.className = "p"; const s = 3 + rnd() * 7;
+  d.style.cssText = `left:${rnd() * 1080}px;top:${rnd() * 1920}px;width:${s}px;height:${s}px;opacity:${0.25 + rnd() * 0.6}`; parts.appendChild(d); } });
+const tl = gsap.timeline({ paused: true });
+const flash = (t, a = 0.8) => tl.fromTo("#fl", { opacity: a }, { opacity: 0, duration: 0.35, ease: "power2.out" }, t);
+// subtitles: words rise in softly; the spoken word is teal until the next one
+document.querySelectorAll(".cap").forEach(c => { const ws = [...c.querySelectorAll(".w")], out = +c.dataset.out;
+  ws.forEach((w, i) => { const t = +w.dataset.t, n = i + 1 < ws.length ? +ws[i + 1].dataset.t : out;
+    tl.fromTo(w, { opacity: 0, y: 26, color: "#01CEC9" }, { opacity: 1, y: 0, color: "#01CEC9", duration: 0.2, ease: "power2.out" }, t)
+      .to(w, { color: "#ffffff", duration: 0.15 }, Math.max(t + 0.2, n - 0.02)); });
+  tl.to(c, { opacity: 0, y: -14, duration: 0.14, ease: "power2.in" }, out - 0.14); });
+const bigIn = (sel, out) => { document.querySelectorAll(sel + " .w").forEach(w => tl.fromTo(w, { opacity: 0, scale: 0.6, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.28, ease: "back.out(2)" }, +w.dataset.t));
+  tl.to(sel, { opacity: 0, scale: 0.9, duration: 0.15, ease: "power2.in" }, out - 0.15); };
+// hook
+flash(0, 1);
+tl.fromTo("#tagD", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.35, ease: "back.out(2)" }, 0.1).to("#tagD", { opacity: 0, duration: 0.15 }, 2.6);
+bigIn("#hook", 2.72);
+// rewind
+tl.fromTo("#rw", { opacity: 0 }, { opacity: 1, duration: 0.15 }, 2.75)
+  .fromTo("#rwi", { scale: 0, rotation: 90 }, { scale: 1, rotation: 0, duration: 0.35, ease: "back.out(2)" }, 2.8)
+  .to("#rwi img", { x: -26, duration: 0.22, yoyo: true, repeat: 7, ease: "power1.inOut" }, 3.1)
+  .fromTo("#rwt", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.3 }, 3.0)
+  .to("#rw", { opacity: 0, duration: 0.2 }, 4.72);
+// day timeline
+tl.fromTo("#tlb", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 4.9);
+[["#d1", 5.04, 0.04], ["#d2", 6.7, 0.36], ["#d3", 9.56, 0.68], ["#d4", 19.06, 1]].forEach(([d, t, f]) => {
+  tl.to(d + " .d", { backgroundColor: "#7F00FF", borderColor: "#01CEC9", scale: 1.25, duration: 0.25, ease: "back.out(3)" }, t).to(d + " .d", { scale: 1, duration: 0.2 }, t + 0.3)
+    .to(d + " .d img", { opacity: 1, duration: 0.2 }, t).to("#tlb .fl", { scaleX: f, duration: 0.6, ease: "power2.out" }, t); });
+tl.to("#tlb", { opacity: 0, duration: 0.2 }, 23.3);
+// chapter cards
+[["#ch1", 4.95, 6.5], ["#ch2", 6.7, 8.5], ["#ch3", 9.56, 11.4], ["#ch4", 19.1, 20.7]].forEach(([c, a, b]) =>
+  tl.fromTo(c, { opacity: 0, x: 360 }, { opacity: 1, x: 0, duration: 0.4, ease: "back.out(1.5)" }, a).to(c, { opacity: 0, x: 360, duration: 0.25, ease: "power2.in" }, b));
+// cables: power + internet
+tl.set("#cab", { opacity: 1 }, 11.5)
+  .to("#pE", { strokeDashoffset: 0, duration: 0.9, ease: "power2.inOut" }, 11.6).to("#pN", { strokeDashoffset: 0, duration: 0.9, ease: "power2.inOut" }, 12.2)
+  .fromTo("#chE", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2.4)" }, 12.34)
+  .fromTo("#chN", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2.4)" }, 12.92)
+  .to(["#cab", "#chE", "#chN"], { opacity: 0, duration: 0.2 }, 13.95);
+tl.fromTo(".wl", { opacity: 0, scale: 0, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.3, stagger: 0.2, ease: "back.out(2.2)" }, 14.15).to(".wl", { opacity: 0, duration: 0.15 }, 15.55);
+// digital team bubble
+tl.fromTo("#bub", { opacity: 0, scale: 0.5, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: "back.out(2)" }, 16.4)
+  .to("#bub .dots i", { opacity: 1, duration: 0.18, stagger: { each: 0.16, repeat: 2, yoyo: true } }, 16.7)
+  .to("#bub", { opacity: 0, duration: 0.12 }, 17.6);
+// power button scene
+tl.set("#pw", { opacity: 1 }, 17.7)
+  .fromTo("#pwb", { scale: 0.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(2)" }, 17.72)
+  .fromTo("#pwr", { scale: 1, opacity: 0.9 }, { scale: 1.5, opacity: 0, duration: 0.6, repeat: 1, ease: "power1.out" }, 17.8)
+  .to("#pwb", { scale: 0.82, duration: 0.1, yoyo: true, repeat: 1 }, 18.78)
+  .to("#pwb", { backgroundColor: "#01CEC9", duration: 0.08 }, 18.86);
+bigIn("#try", 19.0);
+flash(19.0, 1);
+tl.set("#pw", { opacity: 0 }, 19.0)
+  .fromTo("#onring", { opacity: 1, scale: 0.2 }, { opacity: 0, scale: 4, duration: 0.8, ease: "power2.out" }, 19.02)
+  .fromTo(".ok", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.25, stagger: 0.25, ease: "back.out(2.5)" }, 19.55)
+  .to(".ok", { opacity: 0, duration: 0.15 }, 20.7)
+  .fromTo("#chS", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" }, 20.78)
+  .fromTo("#first", { opacity: 0, scale: 2.2 }, { opacity: 1, scale: 1, duration: 0.25, ease: "power4.in" }, 22.24)
+  .to(["#chS", "#first"], { opacity: 0, duration: 0.15 }, 23.3);
+// the result?
+tl.fromTo("#dim", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 23.4);
+bigIn("#res", 24.3);
+// end
+flash(24.3, 1);
+tl.set("#dim", { opacity: 0 }, 24.3).set("#end", { opacity: 1 }, 24.3)
+  .fromTo("#end .p", { y: 0 }, { y: -170, duration: 8.2, ease: "none" }, 24.3)
+  .fromTo("#e1", { opacity: 0, scale: 1.4, filter: "blur(14px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.45, ease: "power3.out" }, 24.38)
+  .fromTo("#e2", { opacity: 0, scale: 3 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power4.in" }, 25.34)
+  .to("#end", { x: 12, duration: 0.05, yoyo: true, repeat: 5, ease: "none" }, 25.64).set("#end", { x: 0 }, 25.96)
+  .to("#e2", { scale: 1.05, duration: 1.3, yoyo: true, repeat: 3, ease: "sine.inOut" }, 26.0)
+  .fromTo("#lock", { opacity: 0, y: 60, scale: 0.7 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(2)" }, 26.4)
+  .fromTo(".cc", { opacity: 0, x: 120 }, { opacity: 1, x: 0, duration: 0.4, stagger: 0.18, ease: "power3.out" }, 27.5)
+  .fromTo("#h", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 28.1);
+window.__timelines["main"] = tl; tl.seek(0);
+</script></body></html>

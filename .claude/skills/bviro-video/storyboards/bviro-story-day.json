@@ -1,0 +1,25 @@
+{
+ "width": 1080, "height": 1920, "fps": 30, "duration": 32.5, "output": "basegraded.mp4",
+ "shots": [
+  {"src": "screens_slow.mp4", "in": 0.3, "dur": 2.75, "zoom": 1.06},
+  {"src": "rewind.mp4", "in": 0.0, "dur": 2.15, "tin": "flash"},
+  {"src": "buy.mp4", "in": 0.3, "dur": 1.75, "tin": "flash"},
+  {"src": "trolley_f.mp4", "in": 0.2, "dur": 1.95, "tin": "whip"},
+  {"src": "boxes_c.mp4", "in": 0.6, "dur": 0.95, "tin": "zoom"},
+  {"src": "team.mp4", "in": 0.5, "dur": 1.95, "tin": "zoom"},
+  {"src": "cable.mp4", "in": 1.5, "dur": 2.6, "tin": "zoom"},
+  {"src": "team.mp4", "in": 4.2, "dur": 1.6, "tin": "whip"},
+  {"src": "boxes_c.mp4", "in": 1.8, "dur": 2.0, "tin": "zoom"},
+  {"src": "endbg.mp4", "in": 3.0, "dur": 1.3, "tin": "flash"},
+  {"src": "screens.mp4", "in": 5.5, "dur": 2.0, "tin": "flash"},
+  {"src": "screens_slow.mp4", "in": 12.0, "dur": 2.4, "tin": "zoom"},
+  {"src": "screens_slow.mp4", "in": 19.0, "dur": 0.9, "tin": "zoom", "zoom": 1.2},
+  {"src": "endbg.mp4", "in": 3.0, "dur": 2.5, "tin": "flash"},
+  {"src": "endbg.mp4", "in": 3.0, "dur": 2.5, "tin": "cut"},
+  {"src": "endbg.mp4", "in": 3.0, "dur": 2.5, "tin": "cut"},
+  {"src": "endbg.mp4", "in": 3.0, "dur": 0.7, "tin": "cut"}
+ ],
+ "transitions": {"default": "zoom"},
+ "grade": {"lut": "brand/bviro_look.cube", "grain": 4},
+ "audio": {"pad": false, "whoosh_on_cuts": false, "impact_at_end": false, "duck": false}
+}
