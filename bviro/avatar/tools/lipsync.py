@@ -59,13 +59,15 @@ def align(words, env):
     centres = np.array(centres)
     t_env = np.arange(len(env)) * HOP / SR
     for i, p in enumerate(phs):
-        if p not in VOWELS:
+        closure = viseme(p) == "MBP"
+        if p not in VOWELS and not closure:
             continue
-        lo = max(centres[i] - 0.07, centres[i - 1] + 0.02 if i else 0)
-        hi = min(centres[i] + 0.07, centres[i + 1] - 0.02 if i + 1 < len(phs) else 1e9)
+        reach = 0.05 if closure else 0.07
+        lo = max(centres[i] - reach, centres[i - 1] + 0.02 if i else 0)
+        hi = min(centres[i] + reach, centres[i + 1] - 0.02 if i + 1 < len(phs) else 1e9)
         m = (t_env >= lo) & (t_env <= hi)
-        if m.any():
-            centres[i] = t_env[m][np.argmax(env[m])]
+        if m.any():  # a vowel sits on a loudness peak, a lip closure (m, b) on a dip
+            centres[i] = t_env[m][np.argmin(env[m]) if closure else np.argmax(env[m])]
     cuts = [words[0][0]] + [float((centres[i] + centres[i + 1]) / 2) for i in range(len(phs) - 1)] + [words[-1][1]]
     # keep word-internal silences out of it: the first and last phoneme of the line touch the speech edges
     return [(cuts[i], cuts[i + 1], phs[i]) for i in range(len(phs))]
@@ -107,6 +109,58 @@ def frame_weights(track, n_frames, fps=24, t_offset=0.0, lead=0.04, snap=0.62):
             other = max((s for s in out[j] if s != "MBP"), key=lambda s: out[j][s], default="REST")
             out[j] = {"MBP": 0.7, other: 0.3}
     return out
+
+
+SALIENCE = {"MBP": 1.6, "FV": 1.5, "OO": 1.3, "EE": 1.15, "A": 1.15, "AA": 1.15, "L": 1.0, "C": 0.9, "REST": 1.0}
+SOFT = ("C", "L", "REST")
+
+
+def frame_shapes(track, n_frames, fps=24, t_offset=0.0, lead=0.04):
+    """One mouth shape per frame, no cross-fades, the way drawn lip-sync is done: a cross-faded frame shows
+    see-through teeth when the video is paused. Shapes are held two frames where the speech allows it, a lip
+    closure always gets two frames, and a one-frame vowel takes a frame from a neighbouring soft consonant."""
+    raw = []
+    for k in range(n_frames):
+        a, b = k / fps + t_offset + lead, (k + 1) / fps + t_offset + lead
+        w = {}
+        for t0, t1, p in track:
+            ov = min(b, t1) - max(a, t0)
+            if ov > 0:
+                w[viseme(p)] = w.get(viseme(p), 0.0) + ov * fps
+        w["REST"] = max(0.0, 1.0 - sum(w.values()))
+        raw.append(w)
+    shapes = [max(w, key=lambda s: w[s] * SALIENCE[s]) for w in raw]
+    locked = set()
+    for t0, t1, p in track:  # closures and the f-shape own the frame holding their middle (closures: two frames)
+        v = viseme(p)
+        if v not in ("MBP", "FV"):
+            continue
+        mid = ((t0 + t1) / 2 - t_offset - lead) * fps
+        k = int(mid)
+        if 0 <= k < n_frames:
+            shapes[k] = v
+            locked.add(k)
+            j = k + 1 if mid - k >= 0.5 else k - 1
+            if v == "MBP" and 0 <= j < n_frames and j not in locked:
+                shapes[j] = v
+                locked.add(j)
+    for _ in range(2):  # remove one-frame flickers
+        for k in range(n_frames):
+            alone = (k == 0 or shapes[k - 1] != shapes[k]) and (k == n_frames - 1 or shapes[k + 1] != shapes[k])
+            if not alone or k in locked:
+                continue
+            nb = [j for j in (k - 1, k + 1) if 0 <= j < n_frames]
+            if shapes[k] in SOFT:  # a lone soft consonant or pause joins the neighbour that fills more of this frame
+                j = max(nb, key=lambda j: raw[k].get(shapes[j], 0.0))
+                shapes[k] = shapes[j]
+            else:  # a lone vowel takes over a neighbouring soft frame, if that leaves the neighbour its own two frames
+                take = [j for j in nb if shapes[j] in SOFT and j not in locked
+                        and 0 <= 2 * j - k < n_frames and shapes[2 * j - k] == shapes[j]
+                        and 0 <= 3 * j - 2 * k < n_frames and shapes[3 * j - 2 * k] == shapes[j]]
+                if take:
+                    j = max(take, key=lambda j: raw[j].get(shapes[k], 0.0))
+                    shapes[j] = shapes[k]
+    return shapes
 
 
 # ---------------- mouth library ----------------
