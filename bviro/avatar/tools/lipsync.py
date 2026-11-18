@@ -18,7 +18,9 @@ import numpy as np
 from PIL import Image, ImageFilter
 
 SHAPES = ["MBP", "A", "AA", "EE", "OO", "FV", "L", "C"]
-VOWELS = {"a": ("A", 1.0), "aa": ("AA", 1.7), "i": ("EE", 0.9), "ii": ("EE", 1.6), "u": ("OO", 0.9), "uu": ("OO", 1.6)}
+# In running speech the long «aa» uses the half-open shape too: the wide AA shape drops the jaw, and cross-fading a
+# dropped jaw with any other shape shows a double chin. AA is kept for a held exclamation or laugh, shown on its own.
+VOWELS = {"a": ("A", 1.0), "aa": ("A", 1.7), "i": ("EE", 0.9), "ii": ("EE", 1.6), "u": ("OO", 0.9), "uu": ("OO", 1.6)}
 CONS = {**{c: "MBP" for c in ("m", "b", "p")}, **{c: "FV" for c in ("f", "v")}, "w": "OO", "y": "EE",
         **{c: "L" for c in ("l", "n", "t", "d", "th", "dh", "T", "D")}}
 SR, HOP = 16000, 80  # envelope: 5 ms hop
@@ -69,9 +71,10 @@ def align(words, env):
     return [(cuts[i], cuts[i + 1], phs[i]) for i in range(len(phs))]
 
 
-def frame_weights(track, n_frames, fps=24, t_offset=0.0, lead=0.04, min_closure=2):
+def frame_weights(track, n_frames, fps=24, t_offset=0.0, lead=0.04, snap=0.62):
     """Per frame: {shape: weight}; REST fills whatever is not speech. `track` times are in voice-file seconds,
-    frame k covers [k/fps, (k+1)/fps) + t_offset on that clock; the mouth leads the sound by `lead` seconds."""
+    frame k covers [k/fps, (k+1)/fps) + t_offset on that clock; the mouth leads the sound by `lead` seconds.
+    A shape that fills most of a frame is shown alone (crisp); only real transitions are cross-faded."""
     out = []
     for k in range(n_frames):
         a, b = k / fps + t_offset + lead, (k + 1) / fps + t_offset + lead
@@ -81,14 +84,28 @@ def frame_weights(track, n_frames, fps=24, t_offset=0.0, lead=0.04, min_closure=
             if ov > 0:
                 v = viseme(p)
                 w[v] = w.get(v, 0.0) + ov * fps
-        top = dict(sorted(w.items(), key=lambda kv: -kv[1])[:2])  # at most two shapes are mixed in one frame
-        rest = max(0.0, 1.0 - sum(top.values()))
-        out.append({**top, **({"REST": rest} if rest > 1e-3 else {})})
-    # a lip closure must be seen: stretch any M/B shorter than min_closure frames
-    for k, w in enumerate(out):
-        if w.get("MBP", 0) >= 0.5 and not any(out[j].get("MBP", 0) >= 0.5 for j in (k - 1, k + 1) if 0 <= j < n_frames) and min_closure > 1:
-            j = k + 1 if k + 1 < n_frames else k - 1
-            out[j] = {"MBP": 0.7, **{s: v * 0.3 for s, v in out[j].items() if s != "MBP"}}
+        rest = max(0.0, 1.0 - sum(w.values()))
+        if rest > 1e-3:
+            w["REST"] = rest
+        top = sorted(w.items(), key=lambda kv: -kv[1])[:2]  # at most two shapes are mixed in one frame
+        if top[0][1] >= snap or len(top) == 1:
+            out.append({top[0][0]: 1.0})
+        else:
+            s = top[0][1] + top[1][1]
+            out.append({top[0][0]: top[0][1] / s, top[1][0]: top[1][1] / s})
+    # a lip closure must be seen: every M/B gets the frame holding its middle, fully closed, plus the fuller neighbour
+    for t0, t1, p in track:
+        if viseme(p) != "MBP":
+            continue
+        mid = ((t0 + t1) / 2 - t_offset - lead) * fps
+        k = int(mid)
+        if not 0 <= k < n_frames:
+            continue
+        out[k] = {"MBP": 1.0}
+        j = k + 1 if mid - k >= 0.5 else k - 1
+        if 0 <= j < n_frames and out[j].get("MBP", 0) < 0.7:
+            other = max((s for s in out[j] if s != "MBP"), key=lambda s: out[j][s], default="REST")
+            out[j] = {"MBP": 0.7, other: 0.3}
     return out
 
 
@@ -102,9 +119,18 @@ def _shift(base, img, box):
     return (dy - r.shape[0] if dy > r.shape[0] // 2 else dy), (dx - r.shape[1] if dx > r.shape[1] // 2 else dx)
 
 
-def build_library(base_path, shape_paths, out_dir, mouth_box, eye_box, anchor_box, thr=14.0):
-    """shape_paths: {"MBP": path, ..., "BLINK": path}. Writes one RGBA patch per shape plus geometry.json.
-    A patch keeps only the pixels that really differ from the base inside its box, with a feathered edge."""
+def _mask(d, thr, grow, feather):
+    m = Image.fromarray((d > thr).astype(np.uint8) * 255).filter(ImageFilter.MaxFilter(grow)).filter(ImageFilter.GaussianBlur(feather))
+    return np.clip(np.asarray(m, np.float32) / 255 * 1.5, 0, 1)
+
+
+def build_library(base_path, shape_paths, out_dir, mouth_box, eye_box, anchor_box, blur=7):
+    """shape_paths: {"MBP": path, ..., "BLINK": path}. Writes <shape>.png (RGB + halo mask), <shape>_core.png and
+    geometry.json. Every shape image is a re-render, so hair strands differ everywhere at pixel level. So:
+      core  - where the mouth (or eyelid) really changed shape: these pixels are taken from the shape image;
+      halo  - a wider soft ring around it: only the smooth shading change is added there, and the hair strands
+              of the approved pose stay, so the beard does not shimmer when the shapes alternate.
+    Outside the halo the approved pose is untouched."""
     os.makedirs(out_dir, exist_ok=True)
     base = Image.open(base_path).convert("RGB")
     report = {}
@@ -113,25 +139,40 @@ def build_library(base_path, shape_paths, out_dir, mouth_box, eye_box, anchor_bo
         dy, dx = _shift(base, img, anchor_box)
         img = Image.fromarray(np.roll(np.roll(np.asarray(img), dy, 0), dx, 1))
         box = eye_box if name == "BLINK" else mouth_box
-        a = np.asarray(base.crop(box), np.float32)
-        b = np.asarray(img.crop(box), np.float32)
-        diff = Image.fromarray((np.abs(a - b).mean(2) > thr).astype(np.uint8) * 255)
-        m = diff.filter(ImageFilter.MaxFilter(31)).filter(ImageFilter.GaussianBlur(10))
-        m = np.asarray(m, np.float32) / 255
-        yy, xx = np.mgrid[0:m.shape[0], 0:m.shape[1]]
-        edge = np.minimum.reduce([xx, yy, m.shape[1] - 1 - xx, m.shape[0] - 1 - yy]) / 24.0  # never reach the box border
-        m = np.clip(m * 1.6, 0, 1) * np.clip(edge, 0, 1)
-        Image.fromarray(np.dstack([b, m * 255]).astype(np.uint8), "RGBA").save(f"{out_dir}/{name}.png")
-        report[name] = {"shift": [int(dy), int(dx)], "coverage": round(float(m.mean()), 3)}
-    json.dump({"base_size": base.size, "mouth_box": mouth_box, "eye_box": eye_box, "shapes": report}, open(f"{out_dir}/geometry.json", "w"), indent=1)
+        a_img, b_img = base.crop(box), img.crop(box)
+        g = ImageFilter.GaussianBlur(blur)
+        d = np.abs(np.asarray(a_img.filter(g), np.float32) - np.asarray(b_img.filter(g), np.float32)).mean(2)
+        yy, xx = np.mgrid[0:d.shape[0], 0:d.shape[1]]
+        edge = np.clip(np.minimum.reduce([xx, yy, d.shape[1] - 1 - xx, d.shape[0] - 1 - yy]) / 30.0, 0, 1)  # fade before the box border
+        core = _mask(d, 24.0, 17, 7) * edge
+        halo = np.maximum(_mask(d, 9.0, 41, 14) * edge, core)
+        Image.fromarray(np.dstack([np.asarray(b_img, np.float32), halo * 255]).astype(np.uint8), "RGBA").save(f"{out_dir}/{name}.png")
+        Image.fromarray((core * 255).astype(np.uint8), "L").save(f"{out_dir}/{name}_core.png")
+        report[name] = {"shift": [int(dy), int(dx)], "core": round(float(core.mean()), 3), "halo": round(float(halo.mean()), 3)}
+    json.dump({"base": os.path.relpath(base_path, out_dir), "base_size": base.size, "mouth_box": mouth_box, "eye_box": eye_box, "shapes": report},
+              open(f"{out_dir}/geometry.json", "w"), indent=1)
     return report
 
 
 class Mouth:
-    def __init__(self, lib_dir):
+    def __init__(self, lib_dir, smooth=6):
         g = json.load(open(f"{lib_dir}/geometry.json"))
         self.size, self.mouth_box, self.eye_box = tuple(g["base_size"]), tuple(g["mouth_box"]), tuple(g["eye_box"])
-        self.patch = {n: np.asarray(Image.open(f"{lib_dir}/{n}.png").convert("RGBA"), np.float32) for n in g["shapes"]}
+        lib_base = Image.open(os.path.join(lib_dir, g["base"])).convert("RGB")
+        self.shape = {}
+        for n in g["shapes"]:
+            rgba = np.asarray(Image.open(f"{lib_dir}/{n}.png").convert("RGBA"), np.float32)
+            core = np.asarray(Image.open(f"{lib_dir}/{n}_core.png").convert("L"), np.float32)[..., None] / 255
+            box = self.eye_box if n == "BLINK" else self.mouth_box
+            delta = rgba[..., :3] - np.asarray(lib_base.crop(box), np.float32)
+            # smooth part of the change (PIL blurs 8-bit only: halve the signed difference around 128, blur, undo)
+            packed = Image.fromarray(np.clip(delta / 2 + 128, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(smooth))
+            low = (np.asarray(packed, np.float32) - 128) * 2
+            self.shape[n] = (rgba[..., :3], core, np.clip(rgba[..., 3:4] / 255 - core, 0, 1), low)
+
+    def _apply(self, region, name, amount=1.0):
+        rgb, core, halo, low = self.shape[name]
+        return region + amount * (core * (rgb - region) + halo * low)
 
     def render(self, pose, weights, blink=0.0):
         """pose: PIL image of an approved pose at the library's size. Returns the pose with the blended mouth."""
@@ -139,17 +180,12 @@ class Mouth:
         out = np.asarray(pose.convert("RGB"), np.float32).copy()
         x0, y0, x1, y1 = self.mouth_box
         base = out[y0:y1, x0:x1].copy()
-        acc = base * weights.get("REST", 0.0)
+        total = sum(weights.values())
+        acc = np.zeros_like(base)
         for name, w in weights.items():
-            if name == "REST":
-                continue
-            p = self.patch[name]
-            a = p[..., 3:4] / 255
-            acc += (base * (1 - a) + p[..., :3] * a) * w
-        out[y0:y1, x0:x1] = acc / max(1e-6, sum(weights.values()))
+            acc += (base if name == "REST" else self._apply(base, name)) * (w / total)
+        out[y0:y1, x0:x1] = acc
         if blink > 0:
             x0, y0, x1, y1 = self.eye_box
-            p = self.patch["BLINK"]
-            a = p[..., 3:4] / 255 * blink
-            out[y0:y1, x0:x1] = out[y0:y1, x0:x1] * (1 - a) + p[..., :3] * a
+            out[y0:y1, x0:x1] = self._apply(out[y0:y1, x0:x1].copy(), "BLINK", blink)
         return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))

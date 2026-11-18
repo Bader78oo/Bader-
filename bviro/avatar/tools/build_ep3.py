@@ -3,16 +3,13 @@ Shots: A headset on, reaching (hook) -> B shows the lenses, speaking -> match-zo
 the virtual world plays inside both lenses (one image per eye) -> the two images slide together, fuse and fill
 the screen -> full-screen virtual world -> E closing line + «احفظه».
 
-B is built from the approved still keyframe with a slow camera push-in, and only the mouth is animated by the
-lipsync. Animated versions of this shot kept changing the face, tilting the headset or growing a turban tail.
-E uses the stable part of its clip, played forward then backward.
+The two talking shots (B, E) follow ../CHARACTER.md: each is the approved pose image, untouched, with a slow camera
+push-in; the mouth is animated with the character's own drawn mouth shapes (lipsync.py) timed to the voice, plus a
+drawn blink. No tool that redraws the face is used anywhere.
 
-usage: python3 -I build_ep3.py WORKDIR STEP
-  base  : lipsync base for B then E   -> WORKDIR/sync_base.mp4, sync_audio.mp3
-  baseB : lipsync base for B only     -> WORKDIR/syncB_base.mp4, syncB_audio.mp3
-  joinB : WORKDIR/syncB_out.mp4 (new B) + the E half of the old WORKDIR/sync_out.mp4 -> WORKDIR/sync_out.mp4
-  final : WORKDIR/out/bviro_vr_ep3.mp4 (needs WORKDIR/sync_out.mp4 = lipsynced B then E)
-WORKDIR holds: cA.mp4 cD.mp4 cE.mp4 k2_lenses.png k2c_closeup.png vo_b.mp3
+usage: python3 -I build_ep3.py WORKDIR            -> WORKDIR/out/bviro_vr_ep3.mp4
+WORKDIR holds: cA.mp4 (opening shot), cD.mp4 (virtual world), vo_b.mp3 (voice). Poses and mouth shapes come from
+bviro/avatar/poses and bviro/avatar/mouth.
 """
 import os
 import subprocess
@@ -22,8 +19,12 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import lipsync  # noqa: E402
+
 BV = os.path.dirname(os.path.dirname(HERE))  # bviro/
-WD, STEP = sys.argv[1], sys.argv[2]
+AV = os.path.dirname(HERE)  # bviro/avatar
+WD = sys.argv[1]
 W, H, FPS = 1080, 1920, 24
 PURPLE, TURQ, DARK, WHITE = (127, 2, 254), (0, 205, 200), (43, 1, 87), (255, 255, 255)
 CHIP, TCHIP = "chip", "tchip"
@@ -32,23 +33,30 @@ CHIP, TCHIP = "chip", "tchip"
 VO_LEN = 16.88
 T_A = (0.00, 2.25)      # cA local A_IN..
 A_IN = 0.30
-T_B = (2.25, 6.40)      # lens shot, lipsynced
+T_B = (2.25, 6.40)      # lens shot, he speaks
 T_ZOOM = (6.40, 7.10)   # match-zoom from B's last frame into the close-up
 T_LENS = (7.10, 9.55)   # close-up, world inside both lenses
 T_MERGE = (9.55, 10.45)
 T_WORLD = (10.45, 14.75)
-T_E = (14.75, 18.90)    # closing, lipsynced
+T_E = (14.75, 18.90)    # closing, he speaks
 D_OFF = 6.30            # world clip time = video time - D_OFF
-E_IN, E_OUT = 3.20, 4.95  # stable part of cE, played forward then backward
 TOTAL = T_E[1]
 
 # close-up keyframe geometry at 1080x1920
 LENS_L, LENS_R, LENS_R0 = (298.0, 955.0), (783.0, 955.0), 186.0
 MID = (540.5, 955.0)
-# B: still keyframe, pushed in from B_PUSH[0] to B_PUSH[1] about B_C; lens centres in the keyframe at 1080x1920
+# talking shots: approved pose, pushed in from PUSH[0] to PUSH[1] about a fixed point (1080x1920 coordinates)
 B_PUSH, B_C = (1.00, 1.12), (540.0, 1000.0)
-K2_LENS = ((462.5, 1197.5), (625.0, 1197.5))
+E_PUSH, E_C = (1.00, 1.07), (540.0, 760.0)
+K2_LENS = ((462.5, 1197.5), (625.0, 1197.5))  # lens centres in pose_lenses at 1080x1920
 B_LENS = tuple((B_C[0] + (x - B_C[0]) * B_PUSH[1], B_C[1] + (y - B_C[1]) * B_PUSH[1]) for x, y in K2_LENS)  # in B's last frame
+# what he says on camera: runs of (word start, word end, phonemes) in voice-file seconds; a new run after each pause
+SPEECH_B = [[(2.40, 2.74, "i s s i r"), (2.74, 3.03, "h i n aa")],
+            [(3.28, 3.78, "d aa x i l"), (3.78, 4.38, "i n n a dh dh aa r a"), (4.38, 5.01, "3 a d a s t ii n")],
+            [(5.26, 5.68, "w a H d a"), (5.68, 6.00, "l i k u l l"), (6.00, 6.23, "3 ii n")]]
+SPEECH_E = [[(14.94, 15.12, "b a s"), (15.12, 15.45, "h i n aa")],
+            [(15.67, 16.10, "i l 3 aa l a m"), (16.10, 16.63, "m a r s uu m")]]
+BLINKS_B, BLINKS_E = (0.86, 2.86), (0.06, 2.45, 3.70)  # seconds into the shot, placed in the pauses
 SUBS = 14
 
 
@@ -98,45 +106,30 @@ def disc(c, r, feather=2.0):
 
 
 # ---------------- steps ----------------
-def e_frames():
-    n = n_frames(*T_E)
-    fwd = read_frames(f"{WD}/cE.mp4", E_IN, n_frames(E_IN, E_OUT))
-    seq = list(fwd) + list(fwd[-2:0:-1])
-    return np.stack([seq[i % len(seq)] for i in range(n)])
+def zoomed_hi(img, s, c):
+    """Like zoomed(), for a pose image larger than the output: scale s about point c given in 1080x1920 coordinates."""
+    r = img.size[0] / W
+    a = r / s
+    return img.transform((W, H), Image.AFFINE, (a, 0, c[0] * r - c[0] * a, 0, a, c[1] * r - c[1] * a), resample=Image.BICUBIC)
 
 
-def b_frames():
-    k2 = Image.open(f"{WD}/k2_lenses.png").convert("RGB").resize((W, H), Image.LANCZOS)
-    n = n_frames(*T_B)
-    return [np.asarray(zoomed(k2, B_PUSH[0] + (B_PUSH[1] - B_PUSH[0]) * i / (n - 1), B_C, B_C)) for i in range(n)]
+def blink_amount(t, starts):
+    """Eyelids fully closed for three frames, then open: a clean cartoon blink. A half-closed frame made by
+    cross-fading shows see-through eyes, so there is none."""
+    return 1.0 if any(0 <= t - s < 3 / FPS - 1e-6 for s in starts) else 0.0
 
 
-def step_baseb():
-    write_video(b_frames(), f"{WD}/syncB_base.mp4")
-    db = T_B[1] - T_B[0]
-    run(["ffmpeg", "-v", "error", "-y", "-i", f"{WD}/vo_b.mp3", "-af", f"atrim={T_B[0]}:{T_B[1]},asetpts=PTS-STARTPTS,apad=whole_dur={db}",
-         "-ar", "44100", "-ac", "1", "-b:a", "192k", f"{WD}/syncB_audio.mp3"])
-    print("baseB ok", n_frames(*T_B), "frames")
-
-
-def step_joinb():
-    nb, ne = n_frames(*T_B), n_frames(*T_E)
-    b = read_frames(f"{WD}/syncB_out.mp4", 0.0, nb)
-    e = read_frames(f"{WD}/sync_out.mp4", nb / FPS, ne)
-    write_video(list(b) + list(e), f"{WD}/sync_out_new.mp4")
-    os.replace(f"{WD}/sync_out_new.mp4", f"{WD}/sync_out.mp4")
-    print("joinB ok")
-
-
-def step_base():
-    write_video(b_frames() + list(e_frames()), f"{WD}/sync_base.mp4")
-    nb = n_frames(*T_B)
-    db, de = T_B[1] - T_B[0], T_E[1] - T_E[0]
-    run(["ffmpeg", "-v", "error", "-y", "-i", f"{WD}/vo_b.mp3", "-filter_complex",
-         f"[0:a]atrim={T_B[0]}:{T_B[1]},asetpts=PTS-STARTPTS,apad=whole_dur={db}[a0];"
-         f"[0:a]atrim={T_E[0]}:{VO_LEN},asetpts=PTS-STARTPTS,apad=whole_dur={de}[a1];[a0][a1]concat=n=2:v=0:a=1[a]",
-         "-map", "[a]", "-ar", "44100", "-ac", "1", "-b:a", "192k", f"{WD}/sync_audio.mp3"])
-    print("base ok", nb + n_frames(*T_E), "frames")
+def talking_shot(pose_name, span, speech, push, centre, blinks, env, mouth):
+    pose = Image.open(f"{AV}/poses/{pose_name}").convert("RGB")
+    n = n_frames(*span)
+    track = [seg for run_ in speech for seg in lipsync.align(run_, env)]
+    weights = lipsync.frame_weights(track, n, fps=FPS, t_offset=span[0])
+    frames = []
+    for i in range(n):
+        w = weights[i]
+        img = mouth.render(pose, w, blink=blink_amount(i / FPS, blinks))
+        frames.append(np.asarray(zoomed_hi(img, push[0] + (push[1] - push[0]) * i / (n - 1), centre)))
+    return frames
 
 
 def cairo(size, weight=900):
@@ -219,11 +212,10 @@ CARDS = [
 END_CARD = (17.05, TOTAL)
 
 
-def lens_block(world):
+def lens_block(world, b_last):
     """Frames for T_ZOOM + T_LENS + T_MERGE (returns list of uint8 arrays)."""
-    k2c = Image.open(f"{WD}/k2c_closeup.png").convert("RGB").resize((W, H), Image.LANCZOS)
+    k2c = Image.open(f"{AV}/poses/prop_lenses_closeup.png").convert("RGB").resize((W, H), Image.LANCZOS)
     k2c_np = np.asarray(k2c).astype(np.float32)
-    b_last = Image.fromarray(read_frames(f"{WD}/sync_out.mp4", (T_B[1] - T_B[0]) - 1.0 / FPS, 1)[0])
     (blx, bly), (brx, bry) = B_LENS
     b_mid = ((blx + brx) / 2, (bly + bry) / 2)
     s_end = (LENS_R[0] - LENS_L[0]) / (brx - blx)
@@ -279,14 +271,16 @@ def lens_block(world):
 def step_final():
     os.makedirs(f"{WD}/out", exist_ok=True)
     os.makedirs(f"{WD}/ov", exist_ok=True)
-    frames = []
-    frames += list(read_frames(f"{WD}/cA.mp4", A_IN, n_frames(*T_A)))
-    nb, ne = n_frames(*T_B), n_frames(*T_E)
-    frames += list(read_frames(f"{WD}/sync_out.mp4", 0.0, nb))
+    env = lipsync.envelope(f"{WD}/vo_b.mp3")
+    mouth = lipsync.Mouth(f"{AV}/mouth")
+    shot_b = talking_shot("pose_lenses.png", T_B, SPEECH_B, B_PUSH, B_C, BLINKS_B, env, mouth)
+    shot_e = talking_shot("pose_holding.png", T_E, SPEECH_E, E_PUSH, E_C, BLINKS_E, env, mouth)
     world = read_frames(f"{WD}/cD.mp4", T_ZOOM[1] - D_OFF, n_frames(T_ZOOM[1], T_WORLD[1]))
-    frames += lens_block(world)
+    frames = list(read_frames(f"{WD}/cA.mp4", A_IN, n_frames(*T_A)))
+    frames += shot_b
+    frames += lens_block(world, Image.fromarray(shot_b[-1]))
     frames += list(world[n_frames(T_ZOOM[1], T_WORLD[0]):])
-    frames += list(read_frames(f"{WD}/sync_out.mp4", nb / FPS, ne))
+    frames += shot_e
     assert len(frames) == n_frames(0, TOTAL), (len(frames), n_frames(0, TOTAL))
     write_video(frames, f"{WD}/out/_silent.mp4")
     # overlays
@@ -309,4 +303,4 @@ def step_final():
 
 
 if __name__ == "__main__":
-    {"base": step_base, "baseB": step_baseb, "joinB": step_joinb, "final": step_final}[STEP]()
+    step_final()
