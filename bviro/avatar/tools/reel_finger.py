@@ -29,7 +29,10 @@ CHIP, TCHIP = "chip", "tchip"
 PRE = 0.10  # seconds of picture before the first word
 HOLD = 0.60  # seconds held after the last word
 LEAD = 0.25  # silence in front of each talking clip's audio
-CUTS = [0.0, 2.39, 7.52, 9.34, 12.09, 14.54, 16.10, 18.28, 19.84]  # every cut sits in the middle of a pause
+CUTS = [0.0, 2.39, 7.52, 9.34, 12.28, 14.54, 16.10, 18.28, 19.84]  # every cut sits inside a pause
+# voice time at which each talking clip's audio segment starts (segment index -> seconds). The headset shot is cut
+# 0.19 s later than its audio starts so that it does not open on a blink.
+AUDIO_T0 = {0: 0.0, 2: 7.52, 4: 12.09, 6: 16.10, 7: 18.28}
 SEGS = [("A1", "talk", "W1_hook"), ("B1", "pov", None), ("A2", "talk", "W2_eye"), ("B2", "merge", None),
         ("A3", "talk", "W3_lenses"), ("B3", "lens", None), ("A4", "talk", "W4_wearing"), ("A5", "talk", "W1_hook")]
 TOTAL = PRE + CUTS[-1] + HOLD
@@ -45,7 +48,7 @@ CARDS = [
     ("p5", [[("تحرك!", CHIP)]], 6.90, 7.52, {"size": 120}),
     ("e1", [[("كل عين تشوفه", WHITE)], [("من مكان", TCHIP)]], 7.61, 9.34, {}),
     ("m1", [[("مخك يدمج", WHITE)], [("الصورتين", CHIP)]], 9.41, 10.85, {}),
-    ("m2", [[("ويعرف", WHITE), ("المسافة", TCHIP)]], 10.90, 12.09, {}),
+    ("m2", [[("ويعرف", WHITE), ("المسافة", TCHIP)]], 10.90, 12.28, {}),
     ("v1", [[("نظارة الـVR", WHITE), ("نفس الحيلة", CHIP)]], 12.32, 14.54, {"size": 78, "cy": 1492}),
     ("v2", [[("تعطي كل عين", WHITE)], [("صورتها", TCHIP)]], 14.68, 16.10, {}),
     ("f1", [[("عشان كذا", WHITE)], [("تحس الشي قدامك", CHIP)]], 16.23, 18.28, {}),
@@ -334,13 +337,14 @@ def scene_merge(t):
         for view, x_far, name in ((left_view, 278, "يسار"), (right_view, 802, "يمين")):
             x_in = x_far + (-640 if x_far < 540 else 640) * (1 - slide)
             cx = x_in + (540 - x_in) * mg
+            cyc = cy + 7 * math.sin(2 * math.pi * 0.9 * u + (0 if x_far < 540 else 2.2)) * (1 - mg)  # the cards float, never sit still
             tile = card(view, w, h, alpha=1.0 if x_far < 540 else 1.0 - 0.5 * mg)
-            paste_clip(fr, tile, int(cx - tile.size[0] / 2), int(cy - tile.size[1] / 2))
+            paste_clip(fr, tile, int(cx - tile.size[0] / 2), int(cyc - tile.size[1] / 2))
             if mg < 0.6:
                 tag = eye_tag(name)
                 if mg > 0:
                     tag.putalpha(tag.getchannel("A").point(lambda v: int(v * (1 - mg / 0.6))))
-                paste_clip(fr, tag, int(cx - tag.size[0] / 2), int(cy - h / 2 - 64))
+                paste_clip(fr, tag, int(cx - tag.size[0] / 2), int(cyc - h / 2 - 64))
     else:
         v = u - m1
         pop = 1 + 0.07 * (1 - ease_out(v / 0.22))
@@ -416,7 +420,7 @@ class Clip:
     def __init__(self, path, start):
         self.p = subprocess.Popen(["ffmpeg", "-v", "error", "-ss", f"{max(start, 0):.4f}", "-i", path, "-vf",
                                    f"fps={FPS},scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos,crop={W}:{H}",
-                                   "-pix_fmt", "rgb24", "-f", "rawvideo", "-"], stdout=subprocess.PIPE)
+                                   "-pix_fmt", "rgb24", "-f", "rawvideo", "-"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         self.last = None
 
     def read(self):
@@ -427,6 +431,7 @@ class Clip:
         return self.last
 
     def close(self):
+        self.p.kill()
         self.p.stdout.close()
         self.p.wait()
 
@@ -479,7 +484,7 @@ def main():
                 if DRAFT:
                     still = load(pose).resize((W, H), Image.LANCZOS)
                 else:
-                    clip = Clip(f"{WORK}/clips/{name}.mp4", LEAD + (t - CUTS[seg]))
+                    clip = Clip(f"{WORK}/clips/{name}.mp4", LEAD + (t - AUDIO_T0[seg]))
         if kind == "talk":
             fr = punch(still if DRAFT else clip.read(), talk_zoom(seg, t))
         elif kind == "pov":
