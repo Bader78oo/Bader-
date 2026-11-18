@@ -284,5 +284,6 @@ with fine turquoise paisley embroidery. No text, no logos, no weapons, no flags.
 | `mouth/` | أشكال الفم والرمشة (بعد اعتمادها) |
 | `tools/build_intro.py`، `build_intro_v2.py` | مونتاج فيديو التعريف |
 | `tools/build_ep3.py` | مونتاج حلقة «صورة لكل عين»: الزوم إلى العدستين وتركيب العالم داخلهما |
+| `tools/lipsync.py` | حركة الشفاه المرسومة: توقيت الحروف من الصوت، مكتبة أشكال الفم، وتركيبها على صورة الوضعية |
 | `../captions/` | الكابشنات المعتمدة |
 | `../fonts/`، `../logo/` | الخطوط والشعار |
