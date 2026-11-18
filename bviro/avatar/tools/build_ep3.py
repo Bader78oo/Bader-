@@ -1,12 +1,18 @@
 """«صورة لكل عين» (الـVR من الصفر، حلقة 3) — avatar reel builder.
 Shots: A headset on, reaching (hook) -> B shows the lenses, speaking -> match-zoom into the lenses ->
-the virtual world plays inside both lenses (one image per eye) -> the two images merge and fill the screen ->
-full-screen virtual world -> E closing line + «احفظه».
+the virtual world plays inside both lenses (one image per eye) -> the two images slide together, fuse and fill
+the screen -> full-screen virtual world -> E closing line + «احفظه».
+
+B is built from the approved still keyframe with a slow camera push-in, and only the mouth is animated by the
+lipsync. Animated versions of this shot kept changing the face, tilting the headset or growing a turban tail.
+E uses the stable part of its clip, played forward then backward.
 
 usage: python3 -I build_ep3.py WORKDIR STEP
-  STEP = base  : write lipsync base video + audio (B then E) into WORKDIR/sync_base.mp4, sync_audio.mp3
-  STEP = final : build WORKDIR/out/bviro_vr_ep3.mp4 (needs WORKDIR/sync_out.mp4 from the lipsync job)
-WORKDIR holds: cA.mp4 cB2.mp4 cD.mp4 cE.mp4 k2c_closeup.png vo_b.mp3
+  base  : lipsync base for B then E   -> WORKDIR/sync_base.mp4, sync_audio.mp3
+  baseB : lipsync base for B only     -> WORKDIR/syncB_base.mp4, syncB_audio.mp3
+  joinB : WORKDIR/syncB_out.mp4 (new B) + the E half of the old WORKDIR/sync_out.mp4 -> WORKDIR/sync_out.mp4
+  final : WORKDIR/out/bviro_vr_ep3.mp4 (needs WORKDIR/sync_out.mp4 = lipsynced B then E)
+WORKDIR holds: cA.mp4 cD.mp4 cE.mp4 k2_lenses.png k2c_closeup.png vo_b.mp3
 """
 import os
 import subprocess
@@ -39,8 +45,10 @@ TOTAL = T_E[1]
 # close-up keyframe geometry at 1080x1920
 LENS_L, LENS_R, LENS_R0 = (298.0, 955.0), (783.0, 955.0), 186.0
 MID = (540.5, 955.0)
-# lens centres in B's last frame (1080x1920), measured by lens_probe() below
-B_LENS = None
+# B: still keyframe, pushed in from B_PUSH[0] to B_PUSH[1] about B_C; lens centres in the keyframe at 1080x1920
+B_PUSH, B_C = (1.00, 1.12), (540.0, 1000.0)
+K2_LENS = ((462.5, 1197.5), (625.0, 1197.5))
+B_LENS = tuple((B_C[0] + (x - B_C[0]) * B_PUSH[1], B_C[1] + (y - B_C[1]) * B_PUSH[1]) for x, y in K2_LENS)  # in B's last frame
 SUBS = 14
 
 
@@ -97,10 +105,32 @@ def e_frames():
     return np.stack([seq[i % len(seq)] for i in range(n)])
 
 
+def b_frames():
+    k2 = Image.open(f"{WD}/k2_lenses.png").convert("RGB").resize((W, H), Image.LANCZOS)
+    n = n_frames(*T_B)
+    return [np.asarray(zoomed(k2, B_PUSH[0] + (B_PUSH[1] - B_PUSH[0]) * i / (n - 1), B_C, B_C)) for i in range(n)]
+
+
+def step_baseb():
+    write_video(b_frames(), f"{WD}/syncB_base.mp4")
+    db = T_B[1] - T_B[0]
+    run(["ffmpeg", "-v", "error", "-y", "-i", f"{WD}/vo_b.mp3", "-af", f"atrim={T_B[0]}:{T_B[1]},asetpts=PTS-STARTPTS,apad=whole_dur={db}",
+         "-ar", "44100", "-ac", "1", "-b:a", "192k", f"{WD}/syncB_audio.mp3"])
+    print("baseB ok", n_frames(*T_B), "frames")
+
+
+def step_joinb():
+    nb, ne = n_frames(*T_B), n_frames(*T_E)
+    b = read_frames(f"{WD}/syncB_out.mp4", 0.0, nb)
+    e = read_frames(f"{WD}/sync_out.mp4", nb / FPS, ne)
+    write_video(list(b) + list(e), f"{WD}/sync_out_new.mp4")
+    os.replace(f"{WD}/sync_out_new.mp4", f"{WD}/sync_out.mp4")
+    print("joinB ok")
+
+
 def step_base():
+    write_video(b_frames() + list(e_frames()), f"{WD}/sync_base.mp4")
     nb = n_frames(*T_B)
-    b = read_frames(f"{WD}/cB2.mp4", 0.0, nb)
-    write_video(list(b) + list(e_frames()), f"{WD}/sync_base.mp4")
     db, de = T_B[1] - T_B[0], T_E[1] - T_E[0]
     run(["ffmpeg", "-v", "error", "-y", "-i", f"{WD}/vo_b.mp3", "-filter_complex",
          f"[0:a]atrim={T_B[0]}:{T_B[1]},asetpts=PTS-STARTPTS,apad=whole_dur={db}[a0];"
@@ -279,7 +309,4 @@ def step_final():
 
 
 if __name__ == "__main__":
-    if os.path.exists(f"{WD}/b_lens.txt"):
-        v = [float(x) for x in open(f"{WD}/b_lens.txt").read().split()]
-        B_LENS = ((v[0], v[1]), (v[2], v[3]))
-    {"base": step_base, "final": step_final}[STEP]()
+    {"base": step_base, "baseB": step_baseb, "joinB": step_joinb, "final": step_final}[STEP]()
