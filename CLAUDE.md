@@ -24,6 +24,18 @@ viewer UI is Arabic-first (RTL).
   can be driven through MCP servers when the session runs on that PC (see `.mcp.json` and
   `docs/desktop-setup-ar.md`).
 
+## bviro/ (Instagram content for @bviro.1)
+
+`bviro/` holds the editing scripts, captions, brand assets and the digital presenter for the owner's Instagram
+account. It is separate from the Next.js app.
+
+**The presenter character «بدر الريسي» is locked.** Before generating, animating or editing anything that shows
+the character, read `bviro/avatar/CHARACTER.md` and follow it exactly: it is the owner's mandatory reference for the
+character's look, voice, lip movement, allowed and forbidden tools, and the checks to run before delivering a video.
+Never change the character's face, body, smile or clothing, and never use a tool that redraws the face (automatic
+lip-sync, talking-head generators). Any change needs the owner's explicit approval in the conversation and an entry
+in that file's decision log. Any paid generation (Higgsfield, ElevenLabs) needs his approval with the cost first.
+
 ## Commands
 
 Package manager is pnpm (there's a `pnpm-lock.yaml`; no other lockfile should be added).
