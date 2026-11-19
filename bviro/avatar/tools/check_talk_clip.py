@@ -1,8 +1,9 @@
 """Check one talking clip made with the approved lip method (CHARACTER.md section 8) before it goes into an edit.
 
-usage: python3 -I check_talk_clip.py CLIP_MP4 POSE_PNG SEGMENT_AUDIO OUT_SHEET_JPG [face box x0,y0,x1,y1 in 1080x1920]
+usage: python3 -I check_talk_clip.py CLIP_MP4 POSE_PNG SEGMENT_AUDIO OUT_SHEET_JPG [face box] [eyes box | none]
+       (boxes are x0,y0,x1,y1 in 1080x1920; "none" skips the blink check for shots where a headset covers the eyes)
 Prints: size / fps / frames, decode errors, audio match against the voice segment, how far the last frame is from
-the pose, and writes a sheet of 15 face close-ups next to the approved pose for the eye check.
+the pose, the length of every blink, and writes a sheet of 15 face close-ups next to the approved pose.
 """
 import subprocess
 import sys
@@ -12,6 +13,7 @@ from PIL import Image, ImageDraw
 
 clip, pose, seg, out = sys.argv[1:5]
 box = tuple(int(v) for v in sys.argv[5].split(",")) if len(sys.argv) > 5 else (235, 90, 845, 830)
+eyes = None if (len(sys.argv) > 6 and sys.argv[6] == "none") else (tuple(int(v) for v in sys.argv[6].split(",")) if len(sys.argv) > 6 else (360, 415, 730, 525))
 W, H = 1080, 1920
 
 
@@ -44,6 +46,22 @@ d0 = float(np.abs(fr[0].astype(int) - ref).mean())
 d1 = float(np.abs(fr[-1].astype(int) - ref).mean())
 mid = max(float(np.abs(f.astype(int) - ref).mean()) for f in fr[:: max(1, len(fr) // 30)])
 print("frames %d | mean abs diff to pose: first %.1f, last %.1f, max along clip %.1f" % (len(fr), d0, d1, mid))
+
+if eyes:
+    def white(f):  # visible eye-white: bright, unsaturated pixels inside the eyes box
+        r = f[eyes[1]:eyes[3], eyes[0]:eyes[2]].astype(int)
+        return int(((r.max(2) > 205) & (r.max(2) - r.min(2) < 38)).sum())
+    sc = np.array([white(f) for f in fr], float)
+    sc /= max(sc[0], 1.0)
+    runs = []
+    for i in np.where(sc < 0.45)[0]:
+        if runs and i == runs[-1][1] + 1:
+            runs[-1][1] = i
+        else:
+            runs.append([i, i])
+    blinks = [(int(a), int(b - a + 1)) for a, b in runs]
+    worst = max([n for _, n in blinks] or [0])
+    print("blinks (start frame, length in frames):", blinks, "| longest", worst, "frames ->", "OK" if worst <= 6 else "TOO LONG (limit 6)")
 
 dur = float(run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", clip]).stdout.decode().strip())
 tw, th = 244, int(244 * (box[3] - box[1]) / (box[2] - box[0]))
