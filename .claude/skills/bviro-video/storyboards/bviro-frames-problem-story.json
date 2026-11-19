@@ -1,0 +1,28 @@
+{
+ "width": 1080, "height": 1920, "fps": 30, "duration": 44.0, "output": "basegraded.mp4",
+ "shots": [
+  {"src": "peel3.mp4", "in": 1.0, "dur": 1.8},
+  {"src": "gap.mp4", "in": 2.0, "dur": 1.6, "tin": "flash"},
+  {"src": "rewind.mp4", "in": 0.0, "dur": 1.6, "tin": "flash"},
+  {"src": "ph1.jpg", "dur": 2.3, "kb": "in", "kb_zoom": 0.14, "tin": "flash"},
+  {"src": "ph2.jpg", "dur": 1.6, "kb": "in", "kb_zoom": 0.16, "tin": "zoom"},
+  {"src": "ph4.jpg", "dur": 1.15, "kb": "in", "kb_zoom": 0.16, "tin": "whip"},
+  {"src": "ph3.jpg", "dur": 1.85, "kb": "out", "kb_zoom": 0.16, "tin": "zoom"},
+  {"src": "row.mp4", "in": 0.3, "dur": 3.7, "tin": "zoom"},
+  {"src": "tape1.mp4", "in": 0.5, "dur": 1.7, "tin": "whip"},
+  {"src": "tape1.mp4", "in": 6.0, "dur": 2.65, "tin": "zoom", "zoom": 1.08},
+  {"src": "unbox.mp4", "in": 1.0, "dur": 1.35, "tin": "flash"},
+  {"src": "row.mp4", "in": 5.0, "dur": 1.45, "tin": "whip"},
+  {"src": "floor.mp4", "in": 2.5, "dur": 1.5, "tin": "zoom"},
+  {"src": "peel1.mp4", "in": 0.3, "dur": 1.45, "tin": "zoom"},
+  {"src": "peel2.mp4", "in": 0.3, "dur": 1.5, "tin": "whip"},
+  {"src": "gap.mp4", "in": 4.9, "dur": 1.05, "tin": "cut"},
+  {"src": "gap.mp4", "in": 6.0, "dur": 3.55, "tin": "flash", "zoom": 1.12},
+  {"src": "team.mp4", "in": 0.3, "dur": 3.15, "tin": "zoom"},
+  {"src": "peel3.mp4", "in": 4.5, "dur": 2.65, "tin": "whip"},
+  {"src": "gapend.mp4", "in": 0.0, "dur": 6.4, "tin": "flash"}
+ ],
+ "transitions": {"default": "zoom"},
+ "grade": {"lut": "brand/bviro_look.cube", "grain": 4},
+ "audio": {"pad": false, "whoosh_on_cuts": false, "impact_at_end": false, "duck": false}
+}

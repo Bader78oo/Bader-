@@ -1,0 +1,261 @@
+<!doctype html><html lang="ar"><head><meta charset="UTF-8" /><meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script><style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+@font-face{font-family:Cairo;font-weight:600;src:url(fonts/Cairo-600.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{width:1080px;height:1920px;position:relative;font-family:Cairo;overflow:hidden}
+.cap{position:absolute;left:50px;right:50px;top:1290px;text-align:center;direction:rtl;font-weight:900;font-size:88px;line-height:1.3;color:#fff;
+  -webkit-text-stroke:9px #12002a;paint-order:stroke fill;text-shadow:0 8px 0 rgba(18,0,42,.5),0 0 30px rgba(18,0,42,.9)}
+.cap .w,.big .w{display:inline-block;margin:0 10px;opacity:0}
+.big{position:absolute;left:30px;right:30px;text-align:center;direction:rtl;font-weight:900;color:#fff;line-height:1.2;
+  -webkit-text-stroke:11px #12002a;paint-order:stroke fill;text-shadow:0 10px 0 rgba(18,0,42,.5),0 0 34px rgba(127,0,255,.8)}
+#hook{top:620px;font-size:128px}#hook .l1{font-size:104px;color:#01CEC9}
+#tagD{position:absolute;left:50%;top:470px;transform:translateX(-50%);background:#7F00FF;color:#fff;font-weight:800;font-size:46px;border-radius:40px;padding:6px 36px;direction:rtl;white-space:nowrap;opacity:0;border:3px solid #fff}
+/* rewind */
+#rw{position:absolute;inset:0;opacity:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 3px,transparent 3px 9px),rgba(43,1,87,.28)}
+#rwi{position:absolute;left:390px;top:560px;width:300px;height:300px;border-radius:50%;background:rgba(18,0,42,.8);border:8px solid #01CEC9;display:flex;align-items:center;justify-content:center;box-shadow:0 0 50px #01CEC9}
+#rwi img{width:170px;height:170px}
+#rwt{position:absolute;left:0;right:0;top:900px;text-align:center;direction:rtl;font-weight:900;font-size:64px;color:#01CEC9;text-shadow:0 4px 16px #000}
+/* timeline */
+#tlb{position:absolute;left:70px;right:70px;top:150px;height:120px;direction:rtl;opacity:0}
+#tlb .ln{position:absolute;left:60px;right:60px;top:26px;height:8px;border-radius:4px;background:rgba(255,255,255,.35);overflow:hidden;direction:rtl}
+#tlb .fl{height:100%;width:100%;background:linear-gradient(270deg,#7F00FF,#01CEC9);transform-origin:100% 50%;transform:scaleX(0)}
+.nd{position:absolute;top:0;width:120px;text-align:center}
+.nd .d{width:60px;height:60px;margin:0 auto;border-radius:50%;background:#12002a;border:5px solid rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center}
+.nd .d img{width:32px;height:32px;opacity:.75}
+.nd .t{margin-top:6px;font-weight:800;font-size:30px;color:#fff;text-shadow:0 2px 8px #000;white-space:nowrap}
+#d1{right:0}#d2{right:273px}#d3{right:547px}#d4{right:820px}
+/* chapter card */
+.ch{position:absolute;right:60px;top:330px;height:150px;border-radius:34px;background:rgba(18,0,42,.86);border:3px solid #01CEC9;display:flex;align-items:center;direction:rtl;gap:22px;padding:0 34px 0 44px;color:#fff;opacity:0;box-shadow:0 14px 40px rgba(0,0,0,.4)}
+.ch .n{font-weight:900;font-size:96px;color:#01CEC9;direction:ltr;line-height:1}
+.ch .tt{font-weight:900;font-size:66px;white-space:nowrap}
+.ch img{width:70px;height:70px}
+/* cables */
+#cab{position:absolute;inset:0;opacity:0}
+#cab path{fill:none;stroke-width:10;stroke-linecap:round;stroke-dasharray:1400;stroke-dashoffset:1400}
+.chip{position:absolute;height:120px;border-radius:60px;display:flex;align-items:center;gap:18px;direction:rtl;padding:0 40px 0 46px;color:#fff;font-weight:900;font-size:60px;opacity:0;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.chip img{width:64px;height:64px}
+#chE{right:70px;top:560px;background:#7F00FF;border:4px solid #fff}
+#chN{left:70px;top:760px;background:#019c98;border:4px solid #fff}
+#walls{position:absolute;left:80px;right:80px;top:600px;display:flex;justify-content:space-between;direction:rtl}
+.wl{width:200px;height:130px;border:8px solid #01CEC9;border-radius:14px;background:rgba(1,206,201,.12);box-shadow:0 0 26px rgba(1,206,201,.7);opacity:0;position:relative}
+.wl:after{content:"";position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px;border-radius:50%;background:#fff}
+/* speech bubble */
+#bub{position:absolute;right:70px;top:540px;background:#fff;color:#12002a;border-radius:44px 44px 10px 44px;padding:26px 44px;direction:rtl;opacity:0;box-shadow:0 14px 40px rgba(0,0,0,.45)}
+#bub .who{font-weight:800;font-size:40px;color:#7F00FF}
+#bub .dots{font-weight:900;font-size:90px;line-height:.6;letter-spacing:8px;direction:ltr;text-align:right}
+#bub .dots i{display:inline-block;font-style:normal;opacity:.25}
+/* dark power scene */
+.dark{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,#3a0080 0%,#12002a 55%,#05000d 100%);opacity:0;overflow:hidden}
+#pwb{position:absolute;left:370px;top:560px;width:340px;height:340px;border-radius:50%;background:#12002a;border:10px solid #01CEC9;display:flex;align-items:center;justify-content:center;box-shadow:0 0 70px rgba(1,206,201,.8)}
+#pwb img{width:180px;height:180px}
+#pwr{position:absolute;left:330px;top:520px;width:420px;height:420px;border-radius:50%;border:5px solid rgba(1,206,201,.6)}
+#try{top:1050px;font-size:160px}
+#onring{position:absolute;left:340px;top:760px;width:400px;height:400px;border-radius:50%;border:10px solid #fff;opacity:0}
+.ok{position:absolute;height:74px;border-radius:37px;background:rgba(18,0,42,.85);border:3px solid #3dffb0;color:#fff;font-weight:800;font-size:38px;display:flex;align-items:center;gap:12px;padding:0 26px;direction:rtl;opacity:0;white-space:nowrap}
+.ok b{width:22px;height:22px;border-radius:50%;background:#3dffb0;box-shadow:0 0 14px #3dffb0;display:inline-block}
+#ok1{left:90px;top:430px}#ok2{right:110px;top:700px}#ok3{left:150px;top:1020px}
+#chS{left:50%;top:480px;background:#7F00FF;border:4px solid #fff;margin-left:-330px;width:660px;justify-content:center}
+#first{position:absolute;right:90px;top:660px;background:#01CEC9;color:#12002a;font-weight:900;font-size:58px;border-radius:24px;padding:6px 36px;transform:rotate(-7deg);opacity:0;box-shadow:8px 8px 0 #7F00FF;white-space:nowrap}
+#dim{position:absolute;inset:0;background:rgba(5,0,13,.6);opacity:0}
+#res{top:800px;font-size:150px}
+#fl{position:absolute;inset:0;background:#fff;opacity:0}
+.glow{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,rgba(127,0,255,.8) 0%,rgba(127,0,255,0) 46%)}
+.p{position:absolute;border-radius:50%;background:#01CEC9;box-shadow:0 0 12px #01CEC9}
+.t{position:absolute;left:0;right:0;text-align:center;direction:rtl;color:#fff;white-space:nowrap;font-weight:900}
+#e1{top:470px;font-size:150px}#e2{top:640px;font-size:260px;color:#01CEC9;text-shadow:0 0 50px rgba(1,206,201,.7)}
+#lock{position:absolute;top:1100px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:28px;direction:ltr}
+#lock .s{height:140px}#lock .e{height:86px}#lock .a{height:94px}#lock .bv{width:5px;height:104px;background:#01CEC9;border-radius:3px}
+#ct{position:absolute;top:1300px;left:150px;right:150px;display:flex;flex-direction:column;gap:24px}
+.cc{display:flex;align-items:center;justify-content:center;gap:22px;direction:rtl;background:rgba(127,0,255,.3);border:2px solid rgba(1,206,201,.6);border-radius:26px;padding:18px 30px;color:#fff;font-size:52px;font-weight:800}
+.cc img{width:54px;height:54px}.cc b{direction:ltr;font-weight:900}
+#h{top:1600px;font-size:44px;font-weight:800;color:#bfefff;direction:ltr}
+
+.red{color:#ff4d6d !important}
+#gp{position:absolute;opacity:0;display:flex;align-items:center;gap:14px;direction:ltr}
+#gp .lb{background:#ff3b5c;color:#fff;font-weight:900;font-size:72px;border-radius:24px;padding:0 34px;border:5px solid #fff;direction:rtl;box-shadow:0 0 40px rgba(255,59,92,.8)}
+#gp img{width:110px;height:110px;filter:drop-shadow(0 0 10px #ff3b5c)}
+#cnt{position:absolute;left:60px;top:520px;font-weight:900;font-size:230px;color:#01CEC9;-webkit-text-stroke:10px #12002a;paint-order:stroke fill;direction:ltr;opacity:0;line-height:1;text-shadow:0 0 40px rgba(1,206,201,.6)}
+#cnt small{font-size:80px;color:#fff;direction:rtl;display:block;-webkit-text-stroke:8px #12002a}
+#chW{right:70px;top:560px;background:#6b4423;border:4px solid #fff}
+#stamp{position:absolute;left:90px;top:600px;border:10px solid #01CEC9;color:#01CEC9;background:rgba(18,0,42,.78);font-weight:900;font-size:84px;border-radius:30px;padding:10px 40px;display:flex;align-items:center;gap:20px;direction:rtl;transform:rotate(-7deg);opacity:0;box-shadow:0 0 40px rgba(1,206,201,.5);white-space:nowrap}
+#stamp img{width:90px;height:90px}
+#chT{right:60px;top:560px;background:#7F00FF;border:4px solid #fff}#chI{left:60px;top:760px;background:#6b4423;border:4px solid #fff}
+#plus{position:absolute;left:490px;top:650px;width:100px;height:100px;border-radius:50%;background:#01CEC9;color:#12002a;font-weight:900;font-size:90px;line-height:92px;text-align:center;opacity:0}
+#dimL{position:absolute;left:140px;top:640px;width:800px;height:130px;opacity:0}
+#dimL .l{position:absolute;left:0;top:62px;width:100%;height:8px;background:#01CEC9;box-shadow:0 0 18px #01CEC9}
+#dimL .a,#dimL .b{position:absolute;top:20px;width:8px;height:92px;background:#01CEC9;box-shadow:0 0 18px #01CEC9}#dimL .a{left:0}#dimL .b{right:0}
+#cm{position:absolute;left:50%;top:500px;transform:translateX(-50%);background:#01CEC9;color:#12002a;font-weight:900;font-size:76px;border-radius:26px;padding:0 44px;opacity:0;white-space:nowrap;direction:rtl}
+#xx{position:absolute;left:420px;top:780px;width:240px;height:240px;opacity:0}
+#xx:before,#xx:after{content:"";position:absolute;left:105px;top:-10px;width:30px;height:260px;background:#ff3b5c;border-radius:15px;box-shadow:0 0 30px #ff3b5c}
+#xx:before{transform:rotate(45deg)}#xx:after{transform:rotate(-45deg)}
+#rowi{position:absolute;left:70px;right:70px;top:640px;display:flex;justify-content:space-between;direction:rtl}
+.fi{width:170px;height:110px;border-radius:10px;border:14px solid #b98a4e;background:#0b0018;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0}
+.fi.on{background:linear-gradient(135deg,#7F00FF,#01CEC9)}
+#chP{left:50%;top:500px;margin-left:-300px;width:600px;justify-content:center;background:#7F00FF;border:4px solid #fff}
+#sud{top:760px;font-size:190px}
+#chF{right:60px;top:480px;background:#7F00FF;border:4px solid #fff}#chD{right:60px;top:480px;background:#019c98;border:4px solid #fff}
+#scn{position:absolute;left:120px;top:660px;width:230px;height:230px;border-radius:50%;border:10px solid #01CEC9;background:rgba(1,206,201,.14);display:flex;align-items:center;justify-content:center;opacity:0;box-shadow:0 0 40px rgba(1,206,201,.6)}
+#scn img{width:130px;height:130px}
+#shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,0,42,.6) 0%,rgba(18,0,42,.4) 45%,rgba(18,0,42,.82) 100%);opacity:0}
+#qq{top:280px;font-size:124px}
+#opts{position:absolute;left:80px;right:80px;top:650px;display:grid;grid-template-columns:1fr 1fr;gap:26px;direction:rtl}
+.op{height:130px;border-radius:30px;background:rgba(18,0,42,.88);border:3px solid #01CEC9;display:flex;align-items:center;gap:18px;padding:0 24px;color:#fff;font-weight:900;font-size:50px;direction:rtl;opacity:0;white-space:nowrap}
+.op b{width:78px;height:78px;border-radius:50%;background:#7F00FF;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:52px;flex:none}
+#btn{position:absolute;left:60px;top:1010px;width:830px;height:180px;border-radius:90px;background:#01CEC9;color:#12002a;font-weight:900;font-size:54px;display:flex;align-items:center;justify-content:center;gap:20px;direction:rtl;opacity:0;box-shadow:0 0 0 8px #fff,0 0 70px rgba(1,206,201,.9),12px 14px 0 #7F00FF;white-space:nowrap}
+#btn img{width:70px;height:70px}
+.ring{position:absolute;left:60px;top:1010px;width:830px;height:180px;border-radius:90px;border:8px solid #01CEC9;opacity:0}
+#arr{position:absolute;left:900px;top:1040px;width:120px;height:120px;opacity:0}#arr img{width:120px;height:120px}
+#help{position:absolute;left:330px;top:1225px;background:#7F00FF;color:#fff;font-weight:900;font-size:68px;border-radius:26px;padding:0 44px;transform:rotate(-5deg);opacity:0;border:4px solid #fff;direction:rtl}
+#brand{position:absolute;left:0;right:0;top:1410px;opacity:0}
+#blk{display:flex;align-items:center;justify-content:center;gap:20px;direction:ltr}
+#blk .s{height:84px}#blk .e{height:52px}#blk .a{height:58px}#blk .bv{width:4px;height:64px;background:#01CEC9;border-radius:2px}
+#bct{margin-top:22px;display:flex;justify-content:center;gap:34px;direction:rtl;color:#fff;font-weight:800;font-size:40px;text-shadow:0 2px 10px #000}
+#bct span{display:flex;align-items:center;gap:12px}#bct img{width:42px;height:42px}#bct b{direction:ltr;font-weight:900}
+#d1{right:0}#d2{right:273px}#d3{right:547px}#d4{right:820px}
+</style></head><body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="44" data-width="1080" data-height="1920">
+ <div id="ov" class="clip" style="position:absolute;inset:0" data-start="0" data-duration="44" data-track-index="0">
+  <div id="tagD">يوميات بيفيرو</div>
+  <div class="big" id="hook" style="font-size:112px"><span class="w" data-t="0.02">كل شي</span><span class="w" data-t="0.62">كان</span><br><span class="w l1" data-t="0.82">ماشي</span><span class="w l1" data-t="1.16">تمام…</span></div>
+  <div class="big" id="hook2" style="top:1180px;font-size:118px"><span class="w" data-t="1.82">لين</span><span class="w" data-t="2.36">شفنا</span><br><span class="w red" data-t="2.72">هالفراغ!</span></div>
+  <div id="gp"><div class="lb">فراغ!</div><img src="arrow-right.svg"></div>
+  <div id="rw"><div id="rwi"><img src="rewind.svg"></div><div id="rwt">نرجع لبداية اليوم</div></div>
+  <div id="tlb"><div class="ln"><div class="fl"></div></div>
+   <div class="nd" id="d1"><div class="d"><img src="hammer.svg"></div><div class="t">الورشة</div></div>
+   <div class="nd" id="d2"><div class="d"><img src="ruler.svg"></div><div class="t">القياس</div></div>
+   <div class="nd" id="d3"><div class="d"><img src="monitor-play.svg"></div><div class="t">التركيب</div></div>
+   <div class="nd" id="d4"><div class="d"><img src="triangle-alert.svg"></div><div class="t">المفاجأة</div></div></div>
+  <div class="ch" id="ch1"><span class="n">01</span><span class="tt">الورشة</span><img src="hammer.svg"></div>
+  <div class="ch" id="ch2"><span class="n">02</span><span class="tt">القياس</span><img src="ruler.svg"></div>
+  <div class="ch" id="ch3"><span class="n">03</span><span class="tt">التركيب</span><img src="monitor-play.svg"></div>
+  <div id="cnt"><span id="cn">+0</span><small>إطار خشبي</small></div>
+  <div class="chip" id="chW"><img src="leaf.svg">خشب طبيعي</div>
+  <div id="stamp"><img src="hand-heart.svg">بأيادي عمانية</div>
+  <div class="chip" id="chT"><img src="cpu.svg">تقنية</div><div id="plus">+</div><div class="chip" id="chI"><img src="map-pin.svg">هوية المكان</div>
+  <div id="dimL"><div class="l"></div><div class="a"></div><div class="b"></div></div><div id="cm">1 سم</div><div id="xx"></div>
+  <div id="rowi"><div class="fi"></div><div class="fi"></div><div class="fi"></div><div class="fi"></div><div class="fi"></div></div>
+  <div class="chip" id="chP"><img src="sparkles.svg">شاشة جديدة</div>
+  <div id="dim"></div>
+  <div class="big" id="sud"><span class="w red" data-t="27.24">وفجأة…</span></div>
+  <div class="chip" id="chF"><img src="wrench.svg">الفريق الفني</div><div id="scn"><img src="search.svg"></div>
+  <div class="chip" id="chD"><img src="monitor.svg">الفريق الرقمي</div>
+  <div class="cap" id="c2" data-out="4.95"><span class="w" data-t="3.46">خلّوني</span><span class="w" data-t="3.96">أحكي لكم</span><br><span class="w" data-t="4.4">من</span><span class="w" data-t="4.52">أول</span></div>
+  <div class="cap" id="c3" data-out="7.3"><span class="w" data-t="5.06">اليوم</span><span class="w" data-t="5.7">استلمنا</span><br><span class="w" data-t="6.2">من</span><span class="w" data-t="6.36">ورشة</span><span class="w" data-t="6.74">النجارة</span></div>
+  <div class="cap" id="c4" data-out="8.9"><span class="w" data-t="7.36">أكثر</span><span class="w" data-t="7.7">من</span><br><span class="w" data-t="7.86">ثلاثين</span><span class="w" data-t="8.36">إطار</span></div>
+  <div class="cap" id="c5" data-out="10.05"><span class="w" data-t="8.96">خشب</span><span class="w" data-t="9.44">طبيعي</span></div>
+  <div class="cap" id="c6" data-out="11.8"><span class="w" data-t="10.1">بأيادي</span><span class="w" data-t="10.68">عمانية</span></div>
+  <div class="cap" id="c7" data-out="12.48"><span class="w" data-t="12.0">الفكرة؟</span></div>
+  <div class="cap" id="c8" data-out="14.8"><span class="w" data-t="12.52">التقنية</span><span class="w" data-t="13.12">تلبس</span><br><span class="w" data-t="13.64">هوية</span><span class="w" data-t="14.04">المكان</span></div>
+  <div class="cap" id="c9" data-out="15.62"><span class="w" data-t="14.84">مو</span><span class="w" data-t="15.02">العكس</span></div>
+  <div class="cap" id="c10" data-out="17.28"><span class="w" data-t="15.7">وأصعب</span><span class="w" data-t="16.36">شي</span><span class="w" data-t="16.58">القياس</span></div>
+  <div class="cap" id="c11" data-out="18.8"><span class="w" data-t="17.34">سانتي</span><span class="w" data-t="17.94">واحد</span><span class="w" data-t="18.28">غلط…</span></div>
+  <div class="cap" id="c12" data-out="19.95"><span class="w" data-t="18.84">يخرب</span><span class="w" data-t="19.34">كل</span><span class="w" data-t="19.66">شي</span></div>
+  <div class="cap" id="c13" data-out="21.28"><span class="w" data-t="20.0">وبدأ</span><span class="w" data-t="20.56">الحماس!</span></div>
+  <div class="cap" id="c14" data-out="22.75"><span class="w" data-t="21.34">إطار</span><span class="w" data-t="21.9">ورا</span><span class="w" data-t="22.18">إطار</span></div>
+  <div class="cap" id="c15" data-out="24.22"><span class="w" data-t="22.8">وشاشة</span><span class="w" data-t="23.4">ورا</span><span class="w" data-t="23.66">شاشة</span></div>
+  <div class="cap" id="c16" data-out="25.25"><span class="w" data-t="24.26">وأحلى</span><span class="w" data-t="24.62">لحظة؟</span></div>
+  <div class="cap" id="c17" data-out="27.2"><span class="w" data-t="25.3">لما</span><span class="w" data-t="25.44">نشيل</span><span class="w" data-t="25.72">الستيكر</span><br><span class="w" data-t="26.2">عن</span><span class="w" data-t="26.36">شاشة</span><span class="w" data-t="26.72">جديدة</span></div>
+  <div class="cap" id="c18" data-out="30.1"><span class="w" data-t="28.28">فراغ</span><span class="w" data-t="28.8">بين</span><br><span class="w" data-t="29.02">الإطار</span><span class="w" data-t="29.44">والجدار!</span></div>
+  <div class="cap" id="c19" data-out="31.78"><span class="w" data-t="30.14">كم</span><span class="w" data-t="30.58">سانتي</span><span class="w" data-t="30.96">زيادة</span></div>
+  <div class="cap" id="c20" data-out="33.8"><span class="w" data-t="31.84">الفريق</span><span class="w" data-t="32.16">الفني</span><span class="w" data-t="32.54">فكّ</span><br><span class="w" data-t="32.9">الشاشة</span><span class="w" data-t="33.4">والجبس</span></div>
+  <div class="cap" id="c21" data-out="34.95"><span class="w" data-t="33.82">عشان</span><span class="w" data-t="34.14">يعرف</span><span class="w" data-t="34.4">السبب</span></div>
+  <div class="cap" id="c22" data-out="37.6"><span class="w" data-t="35.0">والفريق</span><span class="w" data-t="35.55">الرقمي</span><br><span class="w" data-t="36.2">كمّل</span><span class="w" data-t="36.55">باقي</span><span class="w" data-t="36.9">الشاشات</span></div>
+  <div id="shade"></div>
+  <div class="big" id="qq"><span class="w" data-t="37.72">وين</span><span class="w" data-t="38.02">تتوقعون</span><br><span class="w red" data-t="38.58">الغلط؟</span></div>
+  <div id="opts"><div class="op"><b>أ</b>الإطار</div><div class="op"><b>ب</b>حامل الشاشة</div><div class="op"><b>ج</b>الجبس</div><div class="op"><b>د</b>القياس</div></div>
+  <div class="ring" id="r1"></div><div class="ring" id="r2"></div>
+  <div id="btn"><img src="msg_dark.svg">اكتب توقّعك في التعليقات</div>
+  <div id="arr"><img src="arrow-right.svg"></div>
+  <div id="help">ساعدونا!</div>
+  <div id="brand"><div id="blk"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"><div class="bv"></div><img class="a" src="logo_wordmark_ar.png"></div>
+   <div id="bct"><span><img src="message-circle.svg">واتساب <b>96946416</b></span><span><img src="phone-call.svg">اتصال <b>77721144</b></span></div></div>
+  <div id="fl"></div>
+ </div>
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+const flash = (t, a = 0.8) => tl.fromTo("#fl", { opacity: a }, { opacity: 0, duration: 0.35, ease: "power2.out", immediateRender: t === 0 }, t);
+document.querySelectorAll(".cap").forEach(c => { const ws = [...c.querySelectorAll(".w")], out = +c.dataset.out;
+  ws.forEach((w, i) => { const t = +w.dataset.t, n = i + 1 < ws.length ? +ws[i + 1].dataset.t : out;
+    tl.fromTo(w, { opacity: 0, y: 26, color: "#01CEC9" }, { opacity: 1, y: 0, color: "#01CEC9", duration: 0.2, ease: "power2.out" }, t)
+      .to(w, { color: "#ffffff", duration: 0.15 }, Math.max(t + 0.2, n - 0.02)); });
+  tl.to(c, { opacity: 0, y: -14, duration: 0.14, ease: "power2.in" }, out - 0.14); });
+const bigIn = (sel, out) => { document.querySelectorAll(sel + " .w").forEach(w => tl.fromTo(w, { opacity: 0, scale: 0.6, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.28, ease: "back.out(2)" }, +w.dataset.t));
+  if (out) tl.to(sel, { opacity: 0, scale: 0.9, duration: 0.15, ease: "power2.in" }, out - 0.15); };
+const show = (sel, a, b, from = { opacity: 0, scale: 0.5 }) => { tl.fromTo(sel, from, { opacity: 1, scale: 1, x: 0, y: 0, duration: 0.3, ease: "back.out(2.2)", immediateRender: false }, a); if (b) tl.to(sel, { opacity: 0, duration: 0.15 }, b); };
+const shake = t => tl.to("#ov", { x: 14, duration: 0.05, yoyo: true, repeat: 5, ease: "none" }, t).set("#ov", { x: 0 }, t + 0.32);
+// hook
+flash(0, 1);
+show("#tagD", 0.1, 1.7, { opacity: 0, y: -30 });
+bigIn("#hook", 1.78); bigIn("#hook2", 3.38);
+flash(1.8, 0.7); shake(2.72);
+tl.set("#gp", { left: 250, top: 620 }, 0);
+show("#gp", 2.5, 3.36, { opacity: 0, x: -80 });
+tl.to("#gp img", { x: 26, duration: 0.2, yoyo: true, repeat: 3, ease: "sine.inOut" }, 2.6);
+// rewind
+tl.fromTo("#rw", { opacity: 0 }, { opacity: 1, duration: 0.15 }, 3.4)
+  .fromTo("#rwi", { scale: 0, rotation: 90 }, { scale: 1, rotation: 0, duration: 0.3, ease: "back.out(2)" }, 3.45)
+  .to("#rwi img", { x: -26, duration: 0.2, yoyo: true, repeat: 5, ease: "power1.inOut" }, 3.7)
+  .fromTo("#rwt", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.25 }, 3.6)
+  .to("#rw", { opacity: 0, duration: 0.18 }, 4.84);
+// timeline + chapters
+tl.fromTo("#tlb", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 5.0);
+[["#d1", 5.06, 0.04], ["#d2", 15.7, 0.36], ["#d3", 20.0, 0.68], ["#d4", 27.24, 1]].forEach(([d, t, f]) => {
+  tl.to(d + " .d", { backgroundColor: d === "#d4" ? "#ff3b5c" : "#7F00FF", borderColor: "#01CEC9", scale: 1.25, duration: 0.25, ease: "back.out(3)" }, t).to(d + " .d", { scale: 1, duration: 0.2 }, t + 0.3)
+    .to(d + " .d img", { opacity: 1, duration: 0.2 }, t).to("#tlb .fl", { scaleX: f, duration: 0.6, ease: "power2.out" }, t); });
+tl.to("#tlb", { opacity: 0, duration: 0.2 }, 37.5);
+[["#ch1", 5.1, 7.1], ["#ch2", 15.72, 17.2], ["#ch3", 20.02, 21.25]].forEach(([c, a, b]) =>
+  tl.fromTo(c, { opacity: 0, x: 360 }, { opacity: 1, x: 0, duration: 0.4, ease: "back.out(1.5)" }, a).to(c, { opacity: 0, x: 360, duration: 0.25, ease: "power2.in" }, b));
+// +30 frames, natural wood, Omani hands
+const cn = { v: 0 }, cnEl = document.getElementById("cn");
+show("#cnt", 7.36, 8.86, { opacity: 0, x: -200 });
+tl.fromTo(cn, { v: 0 }, { v: 30, duration: 1.0, ease: "power2.out", immediateRender: false, onUpdate: () => cnEl.textContent = "+" + Math.round(cn.v) }, 7.4);
+show("#chW", 8.96, 10.0); 
+tl.fromTo("#stamp", { opacity: 0, scale: 2.6 }, { opacity: 1, scale: 1, duration: 0.25, ease: "power4.in", immediateRender: false }, 10.1).to("#stamp", { opacity: 0, duration: 0.15 }, 11.75);
+shake(10.35);
+// tech wears the place's identity
+show("#chT", 12.52, 15.5, { opacity: 0, x: 300 }); show("#chI", 13.64, 15.5, { opacity: 0, x: -300 }); show("#plus", 14.04, 15.5);
+// measuring: one cm wrong
+tl.fromTo("#dimL", { opacity: 0 }, { opacity: 1, duration: 0.1, immediateRender: false }, 17.3)
+  .fromTo("#dimL .l", { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: "power3.out", immediateRender: false }, 17.3);
+show("#cm", 17.34, 19.9);
+tl.to(["#dimL .l", "#dimL .a", "#dimL .b"], { backgroundColor: "#ff3b5c", boxShadow: "0 0 22px #ff3b5c", duration: 0.12 }, 18.28)
+  .to("#cm", { backgroundColor: "#ff3b5c", color: "#ffffff", duration: 0.12 }, 18.28)
+  .fromTo("#xx", { opacity: 0, scale: 2.4 }, { opacity: 1, scale: 1, duration: 0.2, ease: "power4.in", immediateRender: false }, 18.84)
+  .to(["#dimL", "#xx"], { opacity: 0, duration: 0.15 }, 19.85);
+shake(18.3); shake(19.0);
+// frame after frame, screen after screen
+flash(19.97, 0.6);
+tl.fromTo(".fi", { opacity: 0, scale: 0, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.25, stagger: 0.24, ease: "back.out(2.5)", immediateRender: false }, 21.34)
+  .to(".fi", { className: "fi on", duration: 0.01, stagger: 0.22 }, 22.8)
+  .to(".fi", { opacity: 0, duration: 0.15 }, 24.15);
+show("#chP", 25.72, 27.15, { opacity: 0, y: -40 });
+// suddenly
+tl.fromTo("#dim", { opacity: 0 }, { opacity: 1, duration: 0.15, immediateRender: false }, 27.2);
+bigIn("#sud", 28.22);
+flash(28.25, 0.9); shake(28.3);
+tl.set("#dim", { opacity: 0 }, 28.25).set("#gp", { left: 60, top: 560 }, 28.2);
+show("#gp", 28.5, 31.7, { opacity: 0, x: -80 });
+tl.to("#gp img", { x: 26, duration: 0.25, yoyo: true, repeat: 9, ease: "sine.inOut" }, 28.7);
+// teams
+show("#chF", 31.9, 34.9, { opacity: 0, x: 300 }); show("#scn", 32.54, 34.9);
+tl.to("#scn", { x: 420, y: 160, duration: 1.1, yoyo: true, repeat: 1, ease: "sine.inOut" }, 32.7);
+show("#chD", 35.05, 37.5, { opacity: 0, x: 300 });
+// end: the question
+flash(37.6, 0.9);
+tl.fromTo("#shade", { opacity: 0 }, { opacity: 1, duration: 0.3, immediateRender: false }, 37.6);
+bigIn("#qq", 0);
+tl.fromTo(".op", { opacity: 0, scale: 0.5, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.28, stagger: 0.18, ease: "back.out(2.2)", immediateRender: false }, 38.6)
+  .fromTo("#btn", { opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2.4)", immediateRender: false }, 39.26)
+  .to("#btn", { scale: 1.05, duration: 0.4, yoyo: true, repeat: 9, ease: "sine.inOut" }, 39.8)
+  .fromTo("#r1", { opacity: 0.9, scale: 1 }, { opacity: 0, scale: 1.25, duration: 0.9, repeat: 3, ease: "power1.out", immediateRender: false }, 39.6)
+  .fromTo("#r2", { opacity: 0.9, scale: 1 }, { opacity: 0, scale: 1.25, duration: 0.9, repeat: 3, ease: "power1.out", immediateRender: false }, 40.05)
+  .fromTo("#arr", { opacity: 0, x: -60 }, { opacity: 1, x: 0, duration: 0.3, ease: "power3.out", immediateRender: false }, 39.6)
+  .to("#arr", { x: 34, duration: 0.3, yoyo: true, repeat: 11, ease: "sine.inOut" }, 39.9)
+  .fromTo("#help", { opacity: 0, scale: 2.2 }, { opacity: 1, scale: 1, duration: 0.22, ease: "power4.in", immediateRender: false }, 40.52)
+  .fromTo("#brand", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", immediateRender: false }, 41.3);
+window.__timelines["main"] = tl; tl.seek(0);
+</script></body></html>
