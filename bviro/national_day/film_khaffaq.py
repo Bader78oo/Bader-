@@ -18,61 +18,79 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "avatar", "tools"))
-from reel_kit import DARK, WHITE, cairo, draw_line, ease_io, ease_out, faded, handle_layer, paste_clip  # noqa: E402
+from reel_kit import WHITE, cairo, ease_io, ease_out, faded, handle_layer  # noqa: E402
 
 WORK, OUT = sys.argv[1], sys.argv[2]
 SAMPLE = "--sample" in sys.argv[3:]
 W, H, FPS = 1080, 1920, 24  # 24 fps: the animated shots are native 24, and it is the cinema frame rate
 GOLD = (244, 214, 140)
 PRE = 0.25  # picture before the first word
-VOICE_END = 37.95
-END = 42.40  # film end, in voice time
-MUSIC_SKIP = 1.20  # seconds trimmed from the start of the score so that its final hit lands as the voice ends
+VOICE_END = 39.15
+END = 43.40  # film end, in voice time
+MUSIC_SKIP = 0.0  # the score's final hit (39.2 s) already lands as the voice ends
 SR = 48000
 
 # name, kind, source, start, end (voice time), clip in-point (s), zoom from/to, focus (x, y), dissolve-in frames
+# FLAG_A / FLAG_B: the exact flag artwork on simulated cloth (flag_sim.py). AERIAL: the owner's own photograph of the
+# Al Khuwair flagpole, shown as it is with a slow camera move (no AI animation, so the real flag is never redrawn).
 SHOTS = [
-    ("S1", "clip", "S1.mp4", -PRE, 4.10, 0.20, (1.00, 1.10), (560, 330), 0),
-    ("S2", "clip", "S2.mp4", 4.10, 8.82, 0.10, (1.00, 1.03), (540, 800), 5),
-    ("S3", "clip", "S3.mp4", 8.82, 11.64, 0.30, (1.00, 1.04), (540, 800), 5),
-    ("S4", "clip", "S4.mp4", 11.64, 12.95, 0.60, (1.00, 1.03), (540, 760), 4),
-    ("S5", "clip", "S5.mp4", 12.95, 16.50, 0.30, (1.00, 1.04), (540, 900), 0),
-    ("S6", "clip", "S6.mp4", 16.50, 17.95, 1.00, (1.00, 1.03), (540, 900), 0),
-    ("S9", "clip", "S9.mp4", 17.95, 19.36, 1.00, (1.00, 1.03), (540, 900), 0),
-    ("S7", "clip", "S7.mp4", 19.36, 20.94, 0.20, (1.02, 1.06), (520, 700), 0),
-    ("S8", "clip", "S8.mp4", 20.94, 22.62, 1.00, (1.00, 1.03), (540, 900), 0),
-    ("S10a", "clip", "S10a.mp4", 22.62, 25.42, 0.40, (1.00, 1.04), (540, 900), 4),
-    ("S10b", "clip", "S10b.mp4", 25.42, 26.66, 1.00, (1.00, 1.03), (540, 800), 0),
-    ("S11", "clip", "S11.mp4", 26.66, 27.90, 1.00, (1.00, 1.03), (540, 760), 0),
-    ("S12", "clip", "S12.mp4", 27.90, 30.88, 0.40, (1.00, 1.04), (540, 760), 4),
-    ("SULTAN", "photo", "sultan.jpg", 30.88, 34.70, 0.0, (1.00, 1.07), (560, 560), 6),
-    ("S14", "clip", "S14.mp4", 34.70, END, 0.10, (1.00, 1.05), (540, 620), 6),
+    ("FLAG_A", "clip", "FLAG_A.mp4", -PRE, 2.86, 0.0, (1.00, 1.06), (480, 700), 0),
+    ("AERIAL1", "photo", "flag_aerial_9x16.png", 2.86, 4.20, 0.0, (1.10, 1.17), (560, 330), 6),
+    ("S2", "clip", "S2.mp4", 4.20, 9.02, 0.0, (1.00, 1.03), (540, 800), 5),
+    ("S3", "clip", "S3.mp4", 9.02, 12.38, 0.0, (1.00, 1.04), (430, 560), 5),
+    ("S4", "clip", "S4.mp4", 12.38, 13.60, 0.5, (1.00, 1.03), (540, 620), 4),
+    ("S5", "clip", "S5.mp4", 13.60, 17.24, 0.9, (1.00, 1.04), (540, 1000), 0),
+    ("S6", "clip", "S6.mp4", 17.24, 18.99, 0.5, (1.00, 1.03), (540, 900), 0),
+    ("S9", "clip", "S9.mp4", 18.99, 20.24, 0.6, (1.00, 1.03), (540, 900), 0),
+    ("S7", "clip", "S7.mp4", 20.24, 21.92, 0.2, (1.02, 1.06), (520, 700), 0),
+    ("S8", "clip", "S8.mp4", 21.92, 23.58, 0.6, (1.00, 1.03), (600, 700), 0),
+    ("S10a", "clip", "S10a.mp4", 23.58, 26.38, 0.0, (1.00, 1.04), (540, 900), 4),
+    ("S10b", "clip", "S10b.mp4", 26.38, 27.62, 0.8, (1.00, 1.03), (540, 800), 0),
+    ("S11", "clip", "S11.mp4", 27.62, 28.92, 0.6, (1.00, 1.03), (540, 760), 0),
+    ("S12", "clip", "S12.mp4", 28.92, 31.95, 0.4, (1.00, 1.04), (540, 760), 4),
+    ("SULTAN", "photo", "sultan.jpg", 31.95, 35.52, 0.0, (1.00, 1.07), (580, 620), 6),
+    ("AERIAL2", "photo", "flag_aerial_9x16.png", 35.52, 37.76, 0.0, (1.17, 1.06), (560, 330), 6),
+    ("FLAG_B", "clip", "FLAG_B.mp4", 37.76, END, 0.0, (1.00, 1.05), (500, 640), 8),
 ]
-SAMPLE_SHOTS = [("S1", -PRE, 4.10), ("S2", 4.10, 8.82), ("S7", 8.82, 11.80)]
-SAMPLE_VOICE_END = 8.80
+SAMPLE_SHOTS = [("FLAG_A", -PRE, 2.86), ("AERIAL1", 2.86, 4.20), ("S2", 4.20, 9.02), ("FLAG_B", 9.02, 12.4)]
+SAMPLE_VOICE_END = 8.95
 
 # captions: lines of (text, colour), start, end, size
 CAPS = [
-    ([[("هذا العلم..", WHITE)], [("ما يرفعه الهوا بس", WHITE)]], -PRE, 2.52, 76),
-    ([[("يرفعه تاريخ", GOLD)]], 2.56, 4.02, 104),
-    ([[("بحّار عُماني شقّ البحر", WHITE)]], 4.30, 6.48, 66),
-    ([[("لين الهند والصين وأفريقيا", WHITE)]], 6.52, 8.74, 66),
-    ([[("ولبان عطّر الدنيا", WHITE)], [("من قديم الزمان", GOLD)]], 8.92, 11.50, 66),
-    ([[("قلاع وقفت", WHITE)]], 11.80, 12.92, 66),
-    ([[("وأفلاج سقت", WHITE)]], 12.98, 14.00, 66),
-    ([[("وأهل ما تركوا أرضهم يوم", GOLD)]], 14.06, 16.40, 66),
-    ([[("من خيران مسندم", WHITE)]], 16.60, 17.92, 66),
-    ([[("لين خريف ظفار", WHITE)]], 17.98, 19.30, 66),
-    ([[("من ورد الجبل الأخضر", WHITE)]], 19.42, 20.90, 66),
-    ([[("لين رمال الشرقية", WHITE)]], 20.98, 22.50, 66),
-    ([[("نفس اليد اللي بنت السفينة", WHITE)]], 23.00, 25.34, 66),
-    ([[("تبني الميناء والمصنع والتقنية", GOLD)]], 25.46, 27.80, 62),
-    ([[("شعب وفيّ", WHITE)]], 27.96, 28.80, 76),
-    ([[("وسلطان يقود المسيرة", WHITE)]], 28.88, 30.80, 66),
-    ([[("جلالة السلطان هيثم بن طارق", WHITE)], [("حفظه الله ورعاه", GOLD)]], 31.06, 34.56, 62),
-    ([[("كل عام وعُمان شامخة", WHITE)]], 34.96, 36.44, 70),
-    ([[("وعلمها خفّاق", GOLD)]], 36.50, 38.10, 92),
+    ([[("هذا العَلَم..", WHITE)], [("ما يرفعه الهوا بس", WHITE)]], -PRE, 2.66, 76),
+    ([[("يرفعه تاريخ", GOLD)]], 2.80, 4.10, 104),
+    ([[("بحّار عُماني شقّ البحر", WHITE)]], 4.40, 6.70, 66),
+    ([[("لين الهند والصين وأفريقيا", WHITE)]], 6.76, 8.86, 66),
+    ([[("ولُبان عطّر الدنيا", WHITE)], [("من قديم الزمان", GOLD)]], 9.14, 12.08, 66),
+    ([[("قلاع وقفت", WHITE)]], 12.62, 13.58, 66),
+    ([[("وأفلاج سقت", WHITE)]], 13.64, 14.90, 66),
+    ([[("وأهل ما تركوا أرضهم يوم", GOLD)]], 14.96, 17.00, 66),
+    ([[("من خيران مسندم", WHITE)]], 17.40, 18.92, 66),
+    ([[("لين خريف ظفار", WHITE)]], 19.02, 20.10, 66),
+    ([[("من ورد الجبل الأخضر", WHITE)]], 20.40, 21.88, 66),
+    ([[("لين رمال الشرقية", WHITE)]], 21.96, 23.36, 66),
+    ([[("واليوم..", WHITE)], [("نفس اليد اللي بنت السفينة", WHITE)]], 23.76, 26.24, 66),
+    ([[("تبني الميناء والمصنع والتقنية", GOLD)]], 26.50, 28.76, 62),
+    ([[("شعب وفيّ", WHITE)]], 29.04, 29.94, 76),
+    ([[("وسلطان يقود المسيرة", WHITE)]], 30.00, 31.80, 66),
+    ([[("جلالة السلطان هيثم بن طارق", WHITE)], [("حفظه الله ورعاه", GOLD)]], 32.06, 35.36, 62),
+    ([[("كل عام وعُمان شامخة", WHITE)]], 35.64, 37.58, 70),
+    ([[("وعَلَمها خفّاق", GOLD)]], 37.88, 39.30, 92),
 ]
+INK = (12, 10, 20)  # neutral dark outline: a film look, not the brand purple
+
+
+def text_line(layer, segs, font, cy, stroke):
+    d = ImageDraw.Draw(layer)
+    gap = int(font.size * 0.26)
+    widths = [d.textlength(t, font=font, direction="rtl", language="ar") for t, _ in segs]
+    total = sum(widths) + gap * (len(segs) - 1)
+    assert total < 1000, (segs, total)
+    x = W / 2 + total / 2
+    for (text, col), w in zip(segs, widths):
+        x -= w
+        d.text((x, cy), text, font=font, fill=col, anchor="lm", direction="rtl", language="ar", stroke_width=stroke, stroke_fill=INK)
+        x -= gap
 
 
 def caption_img(lines, size, cy=1490, lead=1.42):
@@ -81,8 +99,7 @@ def caption_img(lines, size, cy=1490, lead=1.42):
     step = int(size * lead)
     y0 = cy - step * (len(lines) - 1) / 2
     for i, segs in enumerate(lines):
-        draw_line(layer, segs, font, y0 + i * step, stroke=max(4, size // 12), max_w=980)
-    # the dark outline of reel_kit is brand purple; here it is replaced by a neutral soft black for a film look
+        text_line(layer, segs, font, y0 + i * step, max(3, size // 16))
     a = layer.getchannel("A")
     glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     glow.paste((0, 0, 0, 255), (0, 6), a.filter(ImageFilter.GaussianBlur(16)).point(lambda v: int(v * 0.75)))
@@ -95,13 +112,13 @@ def end_card(k):
     """«كل عام وعُمان بخير» with a thin tricolour rule; k = 0..1 appearance."""
     layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     f = cairo(104, 900)
-    draw_line(layer, [("كل عام وعُمان بخير", WHITE)], f, 1260, stroke=6, max_w=1000)
+    text_line(layer, [("كل عام وعُمان بخير", WHITE)], f, 1260, 5)
     d = ImageDraw.Draw(layer)
     wd = int(360 * k)
     x0, y0 = 540 - wd // 2, 1362
     for i, col in enumerate(((255, 255, 255), (219, 22, 27), (0, 128, 0))):
         d.rectangle([x0 + i * wd / 3, y0, x0 + (i + 1) * wd / 3, y0 + 8], fill=(*col, 255))
-    draw_line(layer, [("20 نوفمبر", GOLD)], cairo(54, 700), 1432, stroke=4, max_w=900)
+    text_line(layer, [("اليوم الوطني · 20 نوفمبر", GOLD)], cairo(50, 700), 1432, 3)
     a = layer.getchannel("A")
     glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     glow.paste((0, 0, 0, 255), (0, 6), a.filter(ImageFilter.GaussianBlur(18)).point(lambda v: int(v * 0.8)))
