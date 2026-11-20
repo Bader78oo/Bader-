@@ -140,11 +140,16 @@ class Renderer:
         out = self._pole(self.sky[:, off:off + W].copy(), P)
         a_img = Image.fromarray((alpha * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.GaussianBlur(0.9))
         a = np.asarray(a_img, np.float32)[..., None] / 255.0
-        rgb = np.asarray(Image.fromarray((np.clip(canvas.reshape(H, W, 3), 0, 1) * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.6)), np.float32)
-        # fill pin-holes inside the cloth from their neighbours before compositing
-        hole = (alpha < 0.5)[..., None] & (a > 0.5)
-        blur = np.asarray(Image.fromarray(rgb.astype(np.uint8)).filter(ImageFilter.MedianFilter(5)), np.float32)
-        rgb = np.where(hole, blur, rgb)
+        # blur the colours together with their coverage and divide, so that the empty pixels around the cloth do not
+        # darken its edge; the same step fills pin-holes inside the cloth from their neighbours
+        have = (cnt > 0).reshape(H, W)
+        pre = (np.clip(canvas.reshape(H, W, 3), 0, 1) * 255 * have[..., None]).astype(np.uint8)
+        cb = np.asarray(Image.fromarray(pre).filter(ImageFilter.GaussianBlur(1.2)), np.float32)
+        mb = np.asarray(Image.fromarray((have * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.2)), np.float32)[..., None]
+        spread = cb * 255.0 / np.maximum(mb, 1.0)
+        sharp = np.asarray(Image.fromarray(pre).filter(ImageFilter.GaussianBlur(0.6)), np.float32)
+        ms = np.asarray(Image.fromarray((have * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.6)), np.float32)[..., None]
+        rgb = np.where(ms > 250, sharp, spread)
         return np.clip(out * (1 - a) + rgb * a, 0, 255).astype(np.uint8)
 
     def _pole(self, img, P):

@@ -34,7 +34,7 @@ SR = 48000
 # FLAG_A / FLAG_B: the exact flag artwork on simulated cloth (flag_sim.py). AERIAL: the owner's own photograph of the
 # Al Khuwair flagpole, shown as it is with a slow camera move (no AI animation, so the real flag is never redrawn).
 SHOTS = [
-    ("FLAG_A", "clip", "FLAG_A.mp4", -PRE, 2.86, 0.0, (1.00, 1.06), (480, 700), 0),
+    ("FLAG_A", "clip", "FLAG_A.mp4", -PRE, 2.86, 0.0, (1.00, 1.07), (480, 960), 0),
     ("AERIAL1", "photo", "flag_aerial_9x16.png", 2.86, 4.20, 0.0, (1.10, 1.17), (560, 330), 6),
     ("S2", "clip", "S2.mp4", 4.20, 9.02, 0.0, (1.00, 1.03), (540, 800), 5),
     ("S3", "clip", "S3.mp4", 9.02, 12.38, 0.0, (1.00, 1.04), (430, 560), 5),
@@ -50,7 +50,7 @@ SHOTS = [
     ("S12", "clip", "S12.mp4", 28.92, 31.95, 0.4, (1.00, 1.04), (540, 760), 4),
     ("SULTAN", "photo", "sultan.jpg", 31.95, 35.52, 0.0, (1.00, 1.07), (580, 620), 6),
     ("AERIAL2", "photo", "flag_aerial_9x16.png", 35.52, 37.76, 0.0, (1.17, 1.06), (560, 330), 6),
-    ("FLAG_B", "clip", "FLAG_B.mp4", 37.76, END, 0.0, (1.00, 1.05), (500, 640), 8),
+    ("FLAG_B", "clip", "FLAG_B.mp4", 37.76, END, 0.0, (1.00, 1.06), (480, 820), 8),
 ]
 SAMPLE_SHOTS = [("FLAG_A", -PRE, 2.86), ("AERIAL1", 2.86, 4.20), ("S2", 4.20, 9.02), ("FLAG_B", 9.02, 12.4)]
 SAMPLE_VOICE_END = 8.95
@@ -206,13 +206,22 @@ def mix_audio(path, total, voice_end):
     music = np.zeros((n, 2), np.float32)
     music[: min(n, len(m))] = m[:n]
     t = np.arange(n) / SR - PRE  # voice time
-    duck, full = 0.30, 0.80
-    g = np.full(n, duck, np.float32)
-    g = np.where(t < 0.6, duck + (0.55 - duck) * np.clip(1 - t / 0.6, 0, 1), g)  # the opening note is a little louder
+    # Under the voice the score is held about 11 dB below the speech level, whatever it is doing: the quiet opening
+    # is kept, the full orchestra is pulled down. After the last word it rises to the front.
+    loud = np.abs(v[:, 0]) > 0.02
+    speech_rms = float(np.sqrt((v[loud, 0] ** 2).mean()))
+    win = int(0.5 * SR)
+    p2 = np.cumsum(np.concatenate([[0.0], (music[:, 0].astype(np.float64)) ** 2]))
+    lo, hi = np.clip(np.arange(n) - win, 0, n), np.clip(np.arange(n) + win, 0, n)
+    menv = np.sqrt((p2[hi] - p2[lo]) / np.maximum(hi - lo, 1)).astype(np.float32)
+    duck = np.minimum(0.5, speech_rms * 10 ** (-11 / 20) / np.maximum(menv, 1e-4))
+    k = int(0.4 * SR)
+    duck = np.convolve(np.pad(duck, k, mode="edge"), np.ones(2 * k + 1, np.float32) / (2 * k + 1), mode="valid")[:n]
+    full = 0.80
     rise = np.clip((t - (voice_end - 0.35)) / 0.9, 0, 1)
-    g = g + (full - duck) * rise
+    g = duck * (1 - rise) + full * rise
     fade = np.clip((total - PRE - t) / 1.6, 0, 1) if not SAMPLE else np.clip((total - PRE - t) / 0.8, 0, 1)
-    g = g * np.minimum(fade, np.clip((t + PRE) / 0.3, 0, 1))
+    g = (g * np.minimum(fade, np.clip((t + PRE) / 0.3, 0, 1))).astype(np.float32)
     out = voice + music * g[:, None]
     out = np.clip(out, -1, 1)
     w = wave.open(path, "wb")
