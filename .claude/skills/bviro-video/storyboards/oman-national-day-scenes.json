@@ -1,0 +1,77 @@
+{
+ "note": "Stills: gpt_image_2_6 9:16 (0.25 credit each). Motion: kling3_0 std 3 s sound off, start_image = still job id (3.75 credits each). Clip oNN.mp4 in oman-national-day.json = scene NN upscaled to 1080x1920.",
+ "scenes": [
+  {
+   "n": 1,
+   "name": "Nizwa Fort",
+   "still": "Aerial documentary photograph of Nizwa Fort in Nizwa, Oman: the huge cylindrical sand-coloured stone tower with crenellated rim, the adjoining castle with arched windows, the blue-and-gold dome and minaret of the Nizwa mosque beside it, the old souq and dense date-palm oasis around, the bare Hajar mountains behind, warm golden-hour light. Photorealistic, vertical, no text, no flags.",
+   "motion": "Slow cinematic aerial drone orbit to the right around the large round fort tower, gentle parallax, tiny people walking in the souq below, palm fronds moving slightly in the breeze, warm golden hour light. The architecture stays exactly the same. No new objects, no text."
+  },
+  {
+   "n": 2,
+   "name": "Frankincense tree, Dhofar",
+   "still": "Documentary photograph of frankincense trees (Boswellia sacra) in Wadi Dawkah, Dhofar, Oman: gnarled low trees with peeling papery bark on a dry stony plain, in the foreground a close view of a cut in the bark with white frankincense resin tears, sunrise light. Photorealistic, vertical, no people, no text.",
+   "motion": "Slow macro dolly-in toward the white frankincense resin drops on the tree bark, the sun flare shifts gently, small leaves tremble in the breeze. Nothing else changes. No text."
+  },
+  {
+   "n": 3,
+   "name": "Sur dhow + Al Ayjah",
+   "still": "Aerial documentary photograph of a traditional Omani wooden dhow (ghanjah) built in Sur, with a carved stern and a single white lateen sail, sailing in turquoise water in front of Al Ayjah village in Sur, Oman: white flat-roofed Omani houses, the white Al Ayjah lighthouse, a watchtower on a rocky hill, golden morning light. Photorealistic, vertical, no flags, no text.",
+   "motion": "The wooden dhow sails forward slowly, its sail full and gently rippling, a small wake and soft water ripples, the camera tracks slowly with the boat. The white houses and the lighthouse stay unchanged. No text."
+  },
+  {
+   "n": 4,
+   "name": "Nakhal Fort",
+   "still": "Documentary photograph of Nakhal Fort, Oman: a sand-coloured fortress with round towers and crenellated walls built on a rocky outcrop, surrounded by a sea of date palms, the jagged grey Hajar mountains towering behind, late afternoon light. Photorealistic, vertical, no flags, no text.",
+   "motion": "Slow aerial drone rise and push-in toward the fort on the rocky hill, palm fronds swaying gently in the foreground with parallax. The fort stays exactly the same. No text."
+  },
+  {
+   "n": 5,
+   "name": "Misfat Al Abriyeen falaj",
+   "still": "Documentary photograph in Misfat Al Abriyeen, Oman: an old mountain village of mud-and-stone houses with small wooden windows, a narrow stone alley with a falaj water channel flowing beside it, terraces of date palms and banana trees. An Omani man seen from behind walking along the falaj, wearing a white ankle-length Omani dishdasha with no collar and an embroidered kumma cap. Soft morning light. Photorealistic, vertical, no text.",
+   "motion": "The man in the white dishdasha and embroidered cap walks slowly away from the camera along the stone path, clear water flows in the narrow channel beside him, palm and banana leaves sway gently, a smooth steadicam follows slowly behind him. His clothing stays the same. No text."
+  },
+  {
+   "n": 6,
+   "name": "Jabal Al Akhdar terraces",
+   "still": "Documentary photograph of Jabal Al Akhdar, Oman: terraced farms with pink damask rose bushes and pomegranate trees stepping down a cliff, an old abandoned stone village on the rim of a deep dry limestone canyon, layers of barren Hajar mountain ridges in haze, morning light. Photorealistic, vertical, no text.",
+   "motion": "Slow drone glide forward over the terraced rose fields, pink roses sway in the breeze, light haze drifts in the deep canyon. The stone village stays unchanged. No text."
+  },
+  {
+   "n": 7,
+   "name": "Sultan Qaboos Grand Mosque",
+   "still": "Documentary photograph of the Sultan Qaboos Grand Mosque in Muscat, Oman: pale sandstone walls, the large central dome with golden lattice-work, the tall main minaret and smaller minarets, long arcades with pointed arches and a polished white marble courtyard, manicured gardens with palms, clear blue sky, golden hour. Photorealistic, vertical, no text.",
+   "motion": "Slow smooth dolly forward across the polished marble courtyard toward the mosque, palm fronds swaying gently, soft reflections shimmer on the marble. The architecture stays exactly the same. No people, no text."
+  },
+  {
+   "n": 8,
+   "name": "Mutrah Corniche",
+   "still": "Aerial documentary photograph of Mutrah Corniche in Muscat, Oman at golden hour: the curved seafront road, white low-rise merchant houses with wooden latticed balconies, the blue-tiled dome and minaret of the mosque on the waterfront, Mutrah Fort on the rocky hill, dark jagged volcanic mountains rising directly behind, wooden dhows anchored in the harbour. Photorealistic, vertical, no flags, no text.",
+   "motion": "Slow aerial drone glide along the curved seafront road, cars move slowly, wooden dhows bob gently on the water with soft ripples, palm fronds move in the breeze, warm sunset light. The buildings stay unchanged. No text."
+  },
+  {
+   "n": 9,
+   "name": "Razha sword dance",
+   "still": "Documentary photograph of Omani men performing the traditional razha sword dance at a celebration in an Omani fort courtyard: they wear white ankle-length dishdashas, colourful wrapped massar turbans, silver khanjar daggers on embroidered belts at the waist, and hold straight swords and thin camel sticks upright; proud happy expressions, warm sunlight. Authentic Omani dress, not Saudi or Emirati: no ghutra, no agal. Photorealistic, vertical, no flags, no text.",
+   "motion": "The men in white dishdasha and wrapped turbans step forward slowly in rhythm in a traditional sword dance, gently raising and shaking their straight swords and wooden canes, smiling and chanting, a slight handheld push-in. Faces, hands and clothing stay consistent and natural. No text."
+  },
+  {
+   "n": 10,
+   "name": "Qahwa, dates and halwa (spare, not animated)",
+   "still": "Close documentary photograph of Omani hospitality: the hands of an Omani man in a white dishdasha pouring Omani coffee from a brass dallah into a small handleless finjan cup, a plate of dates and a bowl of dark Omani halwa on a low table, red-and-black woven Omani cushions of a traditional majlis behind, a smoking clay incense burner with frankincense. Warm light, photorealistic, vertical, no text.",
+   "motion": null
+  },
+  {
+   "n": 11,
+   "name": "Salalah khareef, Wadi Darbat",
+   "still": "Documentary photograph of Salalah during the khareef monsoon in Dhofar, Oman: lush green misty hills, the turquoise pools and small waterfalls of Wadi Darbat, camels grazing on the grass, low drifting fog. Photorealistic, vertical, no text.",
+   "motion": "The waterfalls flow, mist drifts slowly over the green hills, the camels graze and move their heads slowly, soft ripples on the turquoise water, a slow push-in. No text."
+  },
+  {
+   "n": 12,
+   "name": "Sharqiyah Sands caravan",
+   "still": "Documentary photograph in the Sharqiyah Sands, Oman at sunset: high orange-gold dunes, an Omani Bedouin man in a white dishdasha and massar turban leading three camels along a dune ridge, seen from a distance, long shadows. Photorealistic, vertical, no text.",
+   "motion": "The camel caravan walks slowly along the dune ridge led by the man in white, fine sand blows gently off the ridge, the low sun shimmers, a slow aerial push-in. No text."
+  }
+ ]
+}
