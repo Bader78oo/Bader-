@@ -1,0 +1,101 @@
+<!doctype html><html lang="ar"><head><meta charset="UTF-8" /><meta name="viewport" content="width=1080, height=1920" />
+<script src="gsap.min.js"></script><style>
+@font-face{font-family:Cairo;font-weight:900;src:url(fonts/Cairo-900.ttf)}
+@font-face{font-family:Cairo;font-weight:800;src:url(fonts/Cairo-800.ttf)}
+@font-face{font-family:Cairo;font-weight:600;src:url(fonts/Cairo-600.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:transparent}
+#root{width:1080px;height:1920px;position:relative;font-family:Cairo;overflow:hidden}
+#vig{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.28) 0%,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 58%,rgba(0,0,0,.5) 100%)}
+#rib{position:absolute;left:0;top:0;width:100%;height:18px;display:flex;flex-direction:column;transform-origin:100% 50%}
+#rib i{flex:1}#rib i:nth-child(1){background:#fff}#rib i:nth-child(2){background:#DB161B}#rib i:nth-child(3){background:#008000}
+#chipT{position:absolute;right:50px;top:150px;display:flex;align-items:center;gap:18px;direction:rtl;background:rgba(20,12,0,.72);border:3px solid #E7C873;border-radius:44px;padding:8px 36px;color:#fff;font-weight:800;font-size:44px;opacity:0;white-space:nowrap}
+#chipT b{color:#E7C873;font-weight:900}
+.cap{position:absolute;left:50px;right:50px;top:1320px;text-align:center;direction:rtl;font-weight:900;font-size:88px;line-height:1.3;color:#fff;
+  -webkit-text-stroke:9px #140c00;paint-order:stroke fill;text-shadow:0 8px 0 rgba(20,12,0,.5),0 0 30px rgba(20,12,0,.9)}
+.cap .w,.big .w{display:inline-block;margin:0 10px;opacity:0}
+.big{position:absolute;left:30px;right:30px;text-align:center;direction:rtl;font-weight:900;line-height:1.2;color:#F4D68A;
+  -webkit-text-stroke:11px #140c00;paint-order:stroke fill;text-shadow:0 10px 0 rgba(20,12,0,.5),0 0 44px rgba(231,200,115,.75)}
+#ana{top:1200px;font-size:200px}
+#lt{position:absolute;left:60px;right:60px;top:1300px;background:rgba(20,12,0,.78);border:3px solid #E7C873;border-radius:30px;padding:26px 30px 30px;text-align:center;direction:rtl;opacity:0;box-shadow:0 14px 50px rgba(0,0,0,.5)}
+#lt .a{font-weight:800;font-size:46px;color:#E7C873}
+#lt .b{font-weight:900;font-size:64px;color:#fff;line-height:1.3;white-space:nowrap}
+#lt .c{font-weight:800;font-size:46px;color:#E7C873;opacity:0;margin-top:4px}
+#lt .ln{width:240px;height:4px;background:#E7C873;margin:10px auto 8px}
+#shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,5,20,0) 0%,rgba(8,5,20,.15) 40%,rgba(8,5,20,.86) 78%,rgba(8,5,20,.92) 100%);opacity:0}
+#g1{top:900px;font-size:128px;color:#fff}#g2{top:1060px;font-size:128px}
+#date{position:absolute;left:50%;top:1235px;transform:translateX(-50%);display:flex;align-items:center;gap:16px;direction:rtl;color:#fff;font-weight:800;font-size:46px;opacity:0;white-space:nowrap}
+#date i{display:block;width:70px;height:5px;background:#E7C873}
+#btn{position:absolute;left:110px;top:1335px;width:860px;height:150px;border-radius:75px;background:#E7C873;color:#1a0f00;font-weight:900;font-size:58px;display:flex;align-items:center;justify-content:center;gap:20px;direction:rtl;opacity:0;box-shadow:0 0 0 6px #fff,0 0 60px rgba(231,200,115,.8);white-space:nowrap}
+#btn img{width:66px;height:66px}
+.ring{position:absolute;left:110px;top:1335px;width:860px;height:150px;border-radius:75px;border:6px solid #E7C873;opacity:0}
+#brand{position:absolute;left:0;right:0;top:1520px;opacity:0;text-align:center;direction:rtl;color:#fff;font-weight:600;font-size:34px}
+#blk{display:flex;align-items:center;justify-content:center;gap:16px;direction:ltr;margin-bottom:6px}
+#blk .s{height:60px}#blk .e{height:38px}#blk .a{height:42px}#blk .bv{width:3px;height:46px;background:#E7C873}
+#fl{position:absolute;inset:0;background:#fff;opacity:0}
+</style></head><body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="40" data-width="1080" data-height="1920">
+ <div id="ov" class="clip" style="position:absolute;inset:0" data-start="0" data-duration="40" data-track-index="0">
+  <div id="vig"></div><div id="rib"><i></i><i></i><i></i></div>
+  <div id="chipT">اليوم الوطني العُماني <b>20 نوفمبر</b></div>
+  <div class="cap" id="c1" data-out="2.18"><span class="w" data-t="0.02">من</span><span class="w" data-t="0.24">هنا…</span><br><span class="w" data-t="0.66">من</span><span class="w" data-t="1.18">تحت</span><span class="w" data-t="1.6">هالعلم</span></div>
+  <div class="cap" id="c2" data-out="3.7"><span class="w" data-t="2.22">أقولها</span><span class="w" data-t="2.92">بفخر</span></div>
+  <div class="cap" id="c3" data-out="7.72"><span class="w" data-t="5.16">أرض</span><span class="w" data-t="5.56">عمرها</span><br><span class="w" data-t="6.4">آلاف</span><span class="w" data-t="6.98">السنين</span></div>
+  <div class="cap" id="c4" data-out="9.62"><span class="w" data-t="7.78">من</span><span class="w" data-t="8.0">مَجان</span><span class="w" data-t="8.64">واللُّبان</span></div>
+  <div class="cap" id="c5" data-out="11.8"><span class="w" data-t="9.7">لأشرعة</span><br><span class="w" data-t="10.52">جابت</span><span class="w" data-t="11.12">البحار</span></div>
+  <div class="cap" id="c6" data-out="13.26"><span class="w" data-t="11.86">قلاع</span><span class="w" data-t="12.4">تحكي</span></div>
+  <div class="cap" id="c7" data-out="14.86"><span class="w" data-t="13.32">وأفلاج</span><span class="w" data-t="14.0">تروي</span></div>
+  <div class="cap" id="c8" data-out="17.04"><span class="w" data-t="14.92">وجبال</span><br><span class="w" data-t="15.56">علّمتنا</span><span class="w" data-t="16.34">الثبات</span></div>
+  <div class="cap" id="c9" data-out="17.96"><span class="w" data-t="17.1">واليوم…</span></div>
+  <div class="cap" id="c10" data-out="19.52"><span class="w" data-t="18.02">نهضة</span><span class="w" data-t="18.7">متجدّدة</span></div>
+  <div class="cap" id="c11" data-out="20.3"><span class="w" data-t="19.58">بقيادة</span></div>
+  <div class="cap" id="c12" data-out="27.3"><span class="w" data-t="25.92">سلطان</span><span class="w" data-t="26.54">حكيم</span></div>
+  <div class="cap" id="c13" data-out="28.78"><span class="w" data-t="27.36">وشعب</span><span class="w" data-t="28.14">وفيّ</span></div>
+  <div class="cap" id="c14" data-out="31.3"><span class="w" data-t="28.82">ووطن</span><span class="w" data-t="29.66">يستاهل</span><br><span class="w" data-t="30.42">كل</span><span class="w" data-t="30.78">الحب</span></div>
+  <div class="big" id="ana"><span class="w" data-t="3.78">أنا</span><span class="w" data-t="4.2">عُماني</span></div>
+  <div id="lt"><div class="a">حضرة صاحب الجلالة</div><div class="ln"></div><div class="b">السلطان هيثم بن طارق المعظّم</div><div class="c">حفظه الله ورعاه</div></div>
+  <div id="shade"></div>
+  <div class="big" id="g1"><span class="w" data-t="31.34">كل</span><span class="w" data-t="31.7">عام</span><span class="w" data-t="32.08">وعُمان</span></div>
+  <div class="big" id="g2"><span class="w" data-t="32.92">بخير</span><span class="w" data-t="33.64">وعزّ</span><span class="w" data-t="34.22">وأمان</span></div>
+  <div id="date"><i></i>20 نوفمبر · اليوم الوطني العُماني<i></i></div>
+  <div class="ring" id="r1"></div><div class="ring" id="r2"></div>
+  <div id="btn"><img src="send_dark.svg">شاركها مع كل عُماني فخور</div>
+  <div id="brand"><div id="blk"><img class="s" src="logo_symbol_white.png"><img class="e" src="logo_wordmark_en.png"><div class="bv"></div><img class="a" src="logo_wordmark_ar.png"></div>تهنّئكم باليوم الوطني</div>
+  <div id="fl"></div>
+ </div>
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+const flash = (t, a) => tl.fromTo("#fl", { opacity: a }, { opacity: 0, duration: 0.45, ease: "power2.out", immediateRender: t === 0 }, t);
+document.querySelectorAll(".cap").forEach(c => { const ws = [...c.querySelectorAll(".w")], out = +c.dataset.out;
+  ws.forEach((w, i) => { const t = +w.dataset.t, n = i + 1 < ws.length ? +ws[i + 1].dataset.t : out;
+    tl.fromTo(w, { opacity: 0, y: 26, color: "#F2C94C" }, { opacity: 1, y: 0, color: "#F2C94C", duration: 0.25, ease: "power2.out" }, t)
+      .to(w, { color: "#ffffff", duration: 0.18 }, Math.max(t + 0.25, n - 0.02)); });
+  tl.to(c, { opacity: 0, y: -14, duration: 0.16, ease: "power2.in" }, out - 0.16); });
+const bigIn = (sel, out) => { document.querySelectorAll(sel + " .w").forEach(w => tl.fromTo(w, { opacity: 0, scale: 0.7, y: 40, filter: "blur(10px)" }, { opacity: 1, scale: 1, y: 0, filter: "blur(0px)", duration: 0.45, ease: "power3.out" }, +w.dataset.t));
+  if (out) tl.to(sel, { opacity: 0, scale: 0.94, duration: 0.2, ease: "power2.in" }, out - 0.2); };
+flash(0, 1);
+tl.fromTo("#rib", { scaleX: 0 }, { scaleX: 1, duration: 1.2, ease: "power3.out" }, 0.1)
+  .fromTo("#chipT", { opacity: 0, x: 200 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0.3)
+  .to("#chipT", { opacity: 0, duration: 0.25 }, 5.0);
+flash(2.2, 0.5);
+bigIn("#ana", 5.12);
+tl.to("#ana", { scale: 1.06, duration: 1.0, ease: "sine.inOut" }, 4.4);
+// His Majesty: lower third
+flash(19.55, 0.5);
+tl.fromTo("#lt", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", immediateRender: false }, 20.34)
+  .fromTo("#lt .ln", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power2.out" }, 20.7)
+  .to("#lt .c", { opacity: 1, duration: 0.4 }, 24.34)
+  .to("#lt", { opacity: 0, y: 30, duration: 0.25, ease: "power2.in" }, 25.6);
+// ending: greeting + share
+flash(31.3, 0.8);
+tl.fromTo("#shade", { opacity: 0 }, { opacity: 1, duration: 0.6, immediateRender: false }, 31.3);
+bigIn("#g1", 0); bigIn("#g2", 0);
+tl.fromTo("#date", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", immediateRender: false }, 34.95)
+  .fromTo("#btn", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(2.2)", immediateRender: false }, 35.9)
+  .to("#btn", { scale: 1.04, duration: 0.5, yoyo: true, repeat: 7, ease: "sine.inOut" }, 36.4)
+  .fromTo("#r1", { opacity: 0.9, scale: 1 }, { opacity: 0, scale: 1.2, duration: 1.0, repeat: 3, ease: "power1.out", immediateRender: false }, 36.2)
+  .fromTo("#r2", { opacity: 0.9, scale: 1 }, { opacity: 0, scale: 1.2, duration: 1.0, repeat: 3, ease: "power1.out", immediateRender: false }, 36.7)
+  .fromTo("#brand", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out", immediateRender: false }, 37.0);
+window.__timelines["main"] = tl; tl.seek(0);
+</script></body></html>
