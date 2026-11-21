@@ -28,21 +28,33 @@ def fit(p):
     return np.asarray(Image.open(p).convert("RGB").resize((W, H), Image.LANCZOS))
 
 
-def massar(frame):
-    """(x0, y0, x1, y1, purple share) of the massar, or None."""
+def massar(frame, near=None):
+    """(x0, y0, x1, y1, purple share) of the massar, or None. `near` is the box found in the frame before: the blob
+    closest to it is taken, so the blue sky in a window is never mistaken for the massar.
+
+    In fast movement a video model tends to wash the deep purple toward blue, so blue counts as massar here and the
+    purple share (purple pixels among purple + blue ones) is what tells whether the colour held."""
     hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV).astype(int)
     h, s, v = hsv[..., 0], hsv[..., 1], hsv[..., 2]
-    purple = (h >= 128) & (h <= 160) & (s >= 90) & (v >= 40)
-    turq = (h >= 82) & (h <= 104) & (s >= 90) & (v >= 90)
-    m = cv2.morphologyEx((purple | turq).astype(np.uint8), cv2.MORPH_CLOSE, np.ones((15, 15), np.uint8))
+    purple = (h >= 128) & (h <= 160) & (s >= 80) & (v >= 40)
+    blue = (h >= 106) & (h < 128) & (s >= 110) & (v >= 40)
+    turq = (h >= 82) & (h < 106) & (s >= 90) & (v >= 90)
+    m = cv2.morphologyEx((purple | blue | turq).astype(np.uint8), cv2.MORPH_CLOSE, np.ones((15, 15), np.uint8))
     m = cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((7, 7), np.uint8))
-    n, lab, st, _ = cv2.connectedComponentsWithStats(m, 8)
+    n, lab, st, cen = cv2.connectedComponentsWithStats(m, 8)
     if n <= 1:
         return None
-    k = 1 + int(np.argmax(st[1:, cv2.CC_STAT_AREA]))
+    if near is None:
+        k = 1 + int(np.argmax(st[1:, cv2.CC_STAT_AREA]))
+    else:
+        nx, ny, area = (near[0] + near[2]) / 2, (near[1] + near[3]) / 2, (near[2] - near[0]) * (near[3] - near[1])
+        cand = [i for i in range(1, n) if st[i, cv2.CC_STAT_AREA] >= 0.12 * area]
+        if not cand:
+            return None
+        k = min(cand, key=lambda i: (cen[i][0] - nx) ** 2 + (cen[i][1] - ny) ** 2)
     x, y, w, hh = st[k, :4]
     blob = lab == k
-    return int(x), int(y), int(x + w), int(y + hh), float((purple & blob).sum()) / max(int(blob.sum()), 1)
+    return int(x), int(y), int(x + w), int(y + hh), float((purple & blob).sum()) / max(int(((purple | blue) & blob).sum()), 1)
 
 
 def head_crop(frame, box):
@@ -72,7 +84,11 @@ print()
 
 rb = massar(ref)
 assert rb, "massar not found in the pose image"
-boxes = [massar(f) for f in fr]
+boxes, last = [], rb
+for f in fr:
+    b = massar(f, last)
+    boxes.append(b)
+    last = b or last
 missing = [i for i, b in enumerate(boxes) if b is None]
 ok = [b for b in boxes if b]
 wid = np.array([b[2] - b[0] for b in ok], float)
@@ -85,6 +101,17 @@ print("massar width px: pose %d, clip %d..%d | height/width: pose %.2f, clip %.2
 cx = np.array([(b[0] + b[2]) / 2 for b in ok])
 cy = np.array([(b[1] + b[3]) / 2 for b in ok])
 print("head travel in frame: x %d..%d, y %d..%d (px of 1080x1920)" % (cx.min(), cx.max(), cy.min(), cy.max()))
+fps = len(fr) / float(run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", clip]).stdout.decode().strip())
+start = max(b[4] for b in boxes[:3] if b)  # the clip's own first frames: its encoding already shifts the hue a little
+faded = [i for i, b in enumerate(boxes) if b and b[4] < 0.6 * start]
+runs = []
+for i in faded:
+    if runs and i == runs[-1][1] + 1:
+        runs[-1][1] = i
+    else:
+        runs.append([i, i])
+print("massar colour washed toward blue (purple share under 60%% of the clip's first frames, %.2f): %d of %d frames%s" % (
+    start, len(faded), len(fr), "" if not runs else " -> " + ", ".join("%.2f-%.2fs" % (a / fps, (b + 1) / fps) for a, b in runs)))
 
 dur = float(run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", clip]).stdout.decode().strip())
 t = 300
