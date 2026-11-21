@@ -33,8 +33,9 @@ W, H, FPS = 1080, 1920, 24
 SR = 48000
 PRE = 0.15  # picture before the first word
 VOICE_END = 22.47
-END = VOICE_END + 0.95
+END = VOICE_END + 1.45  # the written call to action stays for a second and a half after the last word
 T_PLAN, T_BUILD, T_COLOUR = 7.20, 8.22, 10.48  # voice times: blueprint appears, mesh starts, colour starts
+MUSIC_DROP = 9.64  # where the music's full groove enters, in seconds of the music file
 os.makedirs(f"{WORK}/cache", exist_ok=True)
 os.makedirs(f"{WORK}/check", exist_ok=True)
 
@@ -250,8 +251,10 @@ class Build(Beat):
 
     def prepare(self):
         self.kplan = fno(T_BUILD) - self.n0
-        nb = self.n1 - fno(T_BUILD)
-        self.fr = ml.zoom(ml.load_frames(f"{WORK}/clips/v11.mp4")[: nb + 1], self.ZOOM)  # her head clears the caption
+        n = self.n1 - self.n0
+        self.fr = ml.zoom(ml.load_frames(f"{WORK}/clips/v11.mp4"), self.ZOOM)  # her head clears the caption
+        last = len(self.fr) - 1  # the clip is a few frames shorter than the beat: spread it, repeating a frame now and then
+        self.src = [min(int(round(k * last / (n - 1))), last) for k in range(n)]
         self.mt = mattes("v11z", self.fr, (0.0, 0.45, 1.0, 1.0), 0.75, earth_below=0.78, shell_reach=0.30)
         m0 = up(self.mt[0])
         tp = f"{WORK}/cache/track_v11z_{len(self.fr)}.npy"
@@ -298,15 +301,14 @@ class Build(Beat):
         return self.bp_bg + (255.0 - self.bp_bg) * (self.bp_lines * r)[..., None] * 0.95
 
     def frame(self, k, t):
-        if k < self.kplan:  # the plan is drawn
-            u = t - self.t0
-            f, a = self.fr[0], up(self.mt[0])
-            out = over(self.plan_image(ease_io(u / 0.62)), ml.decontaminate(f, a), a)
-            return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8)).convert("RGBA")
-        v = t - T_BUILD
-        kk = min(k - self.kplan, len(self.fr) - 1)
+        kk = self.src[min(k, len(self.src) - 1)]
         f = self.fr[kk]
         a = up(self.mt[kk])
+        if k < self.kplan:  # the plan is drawn
+            u = t - self.t0
+            out = over(self.plan_image(ease_io(u / 0.92)), ml.decontaminate(f, a), a)
+            return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8)).convert("RGBA")
+        v = t - T_BUILD
         idx, lines = ml.raster(ml.move(self.pts, self.Ms[kk]), self.tri)
         wire, clay, low = ml.looks(f, idx, lines, len(self.tri))
         c0 = T_COLOUR - T_BUILD
@@ -440,12 +442,14 @@ class Close(Beat):
 BEATS = [Hook(-PRE, 3.62), Place(3.62, T_PLAN), Build(T_PLAN, 12.47), Touch(12.47, 13.84), Review(13.84, 16.76), Fix(16.76, 18.17),
          Approved(18.17, 19.09), Close(19.09, END)]
 
+L_S0 = [[("أول شي:", WHITE)], [("نبدأ من", WHITE), ("المكان", TCHIP)]]
 L_S1 = [[("صور 360", TCHIP), ("أو", WHITE), ("مخطط", CHIP)]]
 L_S2 = [[("نبنيه مجسّم", WHITE)], [("حبّة حبّة", CHIP)]]
 L_S3 = [[("نلبّسه", WHITE), ("ألوان", TCHIP), ("وإضاءة", CHIP)]]
 CARDS = [
     ([[("كيف وصّلنا الناقة", WHITE)], [("صلالة؟", TCHIP)]], -PRE, 3.62, {"size": 96, "cy": 1500}),
-    ([[("نبدأ من", WHITE), ("المكان", TCHIP)]], 3.86, 6.05, {}),
+    (L_S0, 3.83, 5.36, {"hidden": {(1, 0), (1, 1)}}),
+    (L_S0, 5.24, 6.08, {"fade": True}),
     (L_S1, 6.17, 7.32, {"hidden": {(0, 1), (0, 2)}}),
     (L_S1, 7.20, 8.22, {"fade": True}),
     (L_S2, 8.42, 9.58, {"hidden": {(1, 0)}}),
@@ -502,7 +506,8 @@ def decorate(img, t, caps, handle):
 
 
 # ---- sound ---------------------------------------------------------------------------------------------------------
-def mix_audio(path, total):
+def mix_audio(path, total, parts=("voice", "music", "ambience", "effects")):
+    """Voice, music bed, ambience and effects mixed to `path`. `parts` keeps only some of them, for checking the mix."""
     n = int(total * SR)
 
     def load(p, start=0.0, dur=None):
@@ -531,30 +536,33 @@ def mix_audio(path, total):
     voice = np.zeros((n, 2), np.float32)
     place(voice, v, 0.0)
     speech = rms(v[np.abs(v[:, 0]) > 0.02])
-    m = load(f"{WORK}/voice/music.mp3")
+    # The track opens with sparse single hits and its full groove enters at MUSIC_DROP. The groove is placed on the cut
+    # to the build; left where it was, one of the opening hits fell on the end of «مجسّم» and blurred the word.
+    m = load(f"{WORK}/voice/music.mp3", MUSIC_DROP - (T_BUILD + PRE))
     m = m / max(np.abs(m).max(), 1e-6)
     music = np.zeros((n, 2), np.float32)
     music[: min(n, len(m))] = m[:n]
     t = np.arange(n) / SR - PRE
-    win = int(0.5 * SR)
-    p2 = np.cumsum(np.concatenate([[0.0], music[:, 0].astype(np.float64) ** 2]))
-    lo, hi = np.clip(np.arange(n) - win, 0, n), np.clip(np.arange(n) + win, 0, n)
-    menv = np.sqrt((p2[hi] - p2[lo]) / np.maximum(hi - lo, 1)).astype(np.float32)
-    duck = np.minimum(2.5, speech * db(-13) / np.maximum(menv, 1e-4))  # the bed sits 13 dB under the speech
-    k = int(0.4 * SR)
-    duck = np.convolve(np.pad(duck, k, mode="edge"), np.ones(2 * k + 1, np.float32) / (2 * k + 1), mode="valid")[:n]
-    rise = np.clip((t - (VOICE_END - 0.2)) / 0.6, 0, 1)
-    g = duck * (1 - rise) + np.minimum(duck * 2.2, 0.8) * rise
-    g = g * np.minimum(np.clip((total - PRE - t) / 0.9, 0, 1), np.clip((t + PRE) / 0.25, 0, 1))
+    i0 = int((T_BUILD + PRE + 0.5) * SR)
+    g_groove = speech * db(-15.5) / rms(music[i0: i0 + 12 * SR])  # the groove sits 15.5 dB under the speech
+    opening = np.clip((T_BUILD - 0.02 - t) / 0.12, 0, 1)  # 1 before the groove: the sparse opening may sit a little higher
+    rise = np.clip((t - (VOICE_END - 0.2)) / 0.6, 0, 1)  # and the bed comes up once he has finished
+    g = g_groove * (1 + (db(4) - 1) * opening) * (1 + 1.2 * rise)
+    end = min(total, len(m) / SR) - PRE - 0.02
+    g = g * np.minimum(np.clip((end - t) / 1.1, 0, 1), np.clip((t + PRE) / 0.25, 0, 1))
     amb = np.zeros((n, 2), np.float32)
-    for src, s0, lvl, t0, t1 in [("v6", 0.6, -33, -PRE, 3.62), ("v6", 1.2, -32, 3.62, T_PLAN), ("v6", 0.2, -33, T_BUILD + 1.1, 13.84),
-                                 ("v1", 1.0, -31, 13.84, 16.76), ("v8", 1.6, -36, 13.84, 16.76), ("v6", 2.2, -32, 16.76, 18.17),
-                                 ("v1", 0.2, -33, 18.17, 19.09), ("v8", 0.3, -35, 19.09, total - PRE)]:
+    # Ambience changes only on cuts that fall in a pause. In the build the waterfall comes in slowly, after «مجسّم»: the
+    # word ends on a soft m and any water noise under it made it unclear. (source, offset, dB, from, to, fade in, fade out)
+    for src, s0, lvl, t0, t1, fi, fo in [("v6", 0.6, -38, -PRE, 3.62, 0.06, 0.12), ("v6", 1.2, -37, 3.62, T_PLAN, 0.06, 0.12),
+                                         ("v6", 0.2, -38, 9.40, 12.00, 1.0, 0.3), ("v6", 1.3, -38, 11.70, 13.84, 0.3, 0.12),
+                                         ("v1", 1.0, -36, 13.84, 16.76, 0.06, 0.12), ("v8", 1.6, -40, 13.84, 16.76, 0.06, 0.12),
+                                         ("v6", 2.2, -37, 16.76, 18.17, 0.06, 0.12), ("v1", 0.2, -37, 18.17, 19.09, 0.06, 0.12),
+                                         ("v8", 0.05, -39, 19.09, total - PRE, 0.06, 0.12)]:
         need = int((t1 - t0 + 0.12) * SR)
         s = load(f"{WORK}/sfx/sfx_{src}.wav", s0)
         assert len(s) >= need, (src, s0, len(s) / SR, need / SR)  # the ambience clips are 5 s long
         s = s[:need]
-        place(amb, fade(s * db(lvl) / rms(s), 0.06, 0.12), t0 - 0.03)
+        place(amb, fade(s * db(lvl) / rms(s), fi, fo), t0 - 0.03)
     rng = np.random.default_rng(3)
 
     def whoosh(dur=0.5, lvl=-26):
@@ -568,23 +576,24 @@ def mix_audio(path, total):
         w = w / (np.abs(w).max() + 1e-9) * db(lvl)
         return np.stack([w * (1 - 0.3 * tt), w * (0.7 + 0.3 * tt)], 1).astype(np.float32)
 
-    def pop(f0=620, f1=930, dur=0.075, lvl=-21):
-        tt = np.arange(int(dur * SR)) / SR
-        w = np.sin(2 * np.pi * (f0 * tt + (f1 - f0) * tt ** 2 / (2 * dur))) * np.exp(-tt / (dur * 0.35)) * db(lvl)
-        return np.stack([w, w], 1).astype(np.float32)
-
-    def thud(lvl=-17):
+    def thud(lvl=-20):
         tt = np.arange(int(0.16 * SR)) / SR
         w = np.sin(2 * np.pi * 105 * tt) * np.exp(-tt / 0.045) * db(lvl)
         w[: int(0.004 * SR)] += rng.standard_normal(int(0.004 * SR)) * db(lvl - 8)
         return np.stack([w, w], 1).astype(np.float32)
 
     fx = np.zeros((n, 2), np.float32)
-    for tw in (T_PLAN - 0.25, T_BUILD - 0.10, T_COLOUR + 0.05, T_COLOUR + 1.10, 16.95):
-        place(fx, whoosh(), tw)
-    place(fx, pop(), Review.T_NOTE - 0.02)
-    place(fx, thud(), Approved.T_STAMP + 0.12)
-    out = np.clip(voice + music * g[:, None] + amb + fx, -1, 1)
+    for tw, dur in ((8.02, 0.40), (10.33, 0.30), (3.42, 0.40), (13.73, 0.22), (18.84, 0.45)):  # the pauses between phrases
+        place(fx, whoosh(dur), tw)
+    place(fx, thud(), Approved.T_STAMP + 0.12)  # the stamp lands; the client's note pops in silently, he is mid-phrase there
+    bed = music * g[:, None]
+    said = np.abs(voice[:, 0]) > 0.02
+    before = said & (t < T_BUILD)
+    print("levels dBFS  speech %.1f  music under speech: opening %.1f, groove %.1f  ambience %.1f  effects peak %.1f" % (
+        20 * np.log10(speech), 20 * np.log10(rms(bed[before])), 20 * np.log10(rms(bed[said & ~before])), 20 * np.log10(rms(amb[said])),
+        20 * np.log10(np.abs(fx).max() + 1e-9)), flush=True)
+    stems = {"voice": voice, "music": bed, "ambience": amb, "effects": fx}
+    out = np.clip(sum(stems[k] for k in parts), -1, 1)
     w = wave.open(path, "wb")
     w.setnchannels(2)
     w.setsampwidth(2)
