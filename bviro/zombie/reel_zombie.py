@@ -7,7 +7,7 @@ interface on the picture is drawn here, never generated.
 
 usage: python3 -I reel_zombie.py WORK_DIR OUT_MP4 [--frames 0,24,...] [--cover COVER_JPG] [--parts voice,music,...]
   WORK_DIR/clips/  A.mp4 (he looks around)  B2.mp4 (inside the headset)  C2.mp4 (he scolds them, seated)
-                   E2.mp4 (coffee)  F2.mp4 (the cup is shaken)  B.mp4 (first take of the headset view: its sound only)
+                   E3.mp4 (coffee)  F3.mp4 (the cup is shaken)  B.mp4 (first take of the headset view: its sound only)
   WORK_DIR/img/    K3b_calm.png (cover)
   WORK_DIR/voice/  kid_1.mp3  hook_2.mp3  old_1.mp3  hood_a.mp3  music.mp3
 """
@@ -54,7 +54,7 @@ LINES = [("kid", "hook_2.mp3", 0.00, 1.51, 0.10),   # عطينا جدي لعبة
          ("kid", "kid_1.mp3", 8.78, 11.30, 18.35)]  # حتى الزومبي.. هزّ الفنجان!
 # (clip, from, to, first frame of the clip). The view from inside the headset uses the end of its clip, where the
 # first zombie reaches him and takes his hand.
-SHOTS = [("A", 0.00, 3.00, 0), ("B2", 3.00, 7.20, 19), ("C2", 7.20, 12.20, 0), ("E2", 12.20, 17.30, 0), ("F2", 17.30, END, 0)]
+SHOTS = [("A", 0.00, 3.00, 0), ("B2", 3.00, 7.20, 19), ("C2", 7.20, 12.20, 0), ("E3", 12.20, 17.30, 0), ("F3", 17.30, END, 0)]
 SKIP = {"B2": {82}}  # one frame of the lunge where the model smeared the zombie's face
 T_STOP, T_BACK = 7.10, 12.20  # the music stops dead just before he shouts, and comes back when they sit
 # The music is made of phrases about 4.8 s long with a short rest between them. Coming back on the phrase that starts
@@ -106,7 +106,9 @@ def hud_text(t):
     if 7.20 <= t < 12.20:
         return "الموجة 1 · الضربات: 0"
     if 12.20 <= t < T_END_PANEL:
-        cups = 1 + sum(t >= x for x in (13.4, 14.5, 15.8, 16.9))
+        # four guests already hold their cups when the shot opens; the count turns to five when he finishes pouring the
+        # one cup that is filled on screen, so the counter never claims a cup that was not seen
+        cups = 4 if t < 13.95 else 5
         return f"الضربات: 0 · الفناجين: {cups}"
     return None
 
@@ -176,10 +178,10 @@ def zoom(name, t):
         return 1.0 + 0.09 * ease_out(seg(t, 5.50, 5.72)) - 0.03 * ease_io(seg(t, 5.95, 6.50)), 430.0, 1265.0
     if name == "C2":  # a slow push-in while he tells them off: his reaction is calm, so the camera is too
         return 1.0 + 0.07 * ease_io((t - 7.20) / 5.0), 480.0, 800.0
-    if name == "E2":
+    if name == "E3":
         return 1.0 + 0.05 * ease_io((t - 12.20) / 5.1), 470.0, 1000.0
-    if name == "F2":
-        return 1.0 + 0.06 * ease_io((t - 17.30) / 3.6), 470.0, 760.0
+    if name == "F3":
+        return 1.0 + 0.06 * ease_io((t - 17.30) / 3.6), 560.0, 820.0
     return 1.0, 540.0, 960.0
 
 
