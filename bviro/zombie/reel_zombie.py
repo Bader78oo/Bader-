@@ -1,14 +1,15 @@
-"""Reel «الشايب والزومبي»: the family gives the old man a VR zombie game; he scolds the zombies for walking in
+"""Reel «الشايب والزومبي»: the family gives the grandfather a VR zombie game; he scolds the zombies for walking in
 without calling «هود هود», sits them down and pours them coffee.
 
-Photoreal shots (Kling from stills), the grandson's lines in Bader's voice, the old man's in a library elder voice.
-The game interface on the picture is drawn here, never generated.
+Photoreal shots (Kling from stills), the grandson's lines in Bader's voice, the grandfather's in a library elder
+voice. Seen from outside the headset the zombies are turquoise holograms, because only he sees them. The game
+interface on the picture is drawn here, never generated.
 
 usage: python3 -I reel_zombie.py WORK_DIR OUT_MP4 [--frames 0,24,...] [--cover COVER_JPG] [--parts voice,music,...]
-  WORK_DIR/clips/  A.mp4 (he looks around)  B.mp4 (inside the headset, with sound)  C.mp4 (scolding)
-                   E.mp4 (coffee)  F.mp4 (the cup is shaken)
-  WORK_DIR/img/    K3_scold.png (cover)
-  WORK_DIR/voice/  kid_1.mp3  old_1.mp3  old_hood.mp3  music.mp3
+  WORK_DIR/clips/  A.mp4 (he looks around)  B2.mp4 (inside the headset)  C2.mp4 (he scolds them, seated)
+                   E2.mp4 (coffee)  F2.mp4 (the cup is shaken)  B.mp4 (first take of the headset view: its sound only)
+  WORK_DIR/img/    K3b_calm.png (cover)
+  WORK_DIR/voice/  kid_1.mp3  hook_2.mp3  old_1.mp3  hood_a.mp3  music.mp3
 """
 import math
 import os
@@ -42,16 +43,19 @@ T_END_PANEL = 21.5
 os.makedirs(f"{WORK}/check", exist_ok=True)
 
 # Lines: (speaker, source file, cut from, cut to, starts at) in seconds. Cuts sit in the pauses of each take.
-LINES = [("kid", "kid_1.mp3", 0.00, 2.72, 0.10),    # عطينا الشايب لعبة زومبي.. شوفوا ايش صار!
+LINES = [("kid", "hook_2.mp3", 0.00, 1.51, 0.10),   # عطينا جدي لعبة زومبي.. (re-recorded: it said «الشايب» before)
+         ("kid", "kid_1.mp3", 1.79, 2.72, 1.89),    # شوفوا ايش صار! (the first take, joined at the pause; at 1.83 a
+                                                    # plucked note of the music fell on its first sound)
          ("kid", "kid_1.mp3", 2.99, 5.16, 3.25),    # جدي! جايينك! اضربهم!
-         ("old", "old_hood.mp3", 0.00, 3.12, 7.35),  # هيه! جايين من دون هود هود؟ عيب عليكم!
+         ("old", "hood_a.mp3", 0.00, 2.95, 7.35),   # هيه! جايين من دون هود هود؟ عيب عليكم! (third take: «دون» is clear)
          ("old", "old_1.mp3", 2.99, 3.44, 11.30),   # اجلسوا!
          ("kid", "kid_1.mp3", 5.52, 8.37, 12.75),   # جدي.. هذي لعبة! لازم تضربهم!
          ("old", "old_1.mp3", 3.95, 5.95, 15.95),   # الضيف ما ينضرب.. تفضّلوا! (the last word is soft: cut at the file's end)
          ("kid", "kid_1.mp3", 8.78, 11.30, 18.35)]  # حتى الزومبي.. هزّ الفنجان!
 # (clip, from, to, first frame of the clip). The view from inside the headset uses the end of its clip, where the
-# nearest zombie is almost on him.
-SHOTS = [("A", 0.00, 3.00, 0), ("B", 3.00, 7.20, 20), ("C", 7.20, 12.20, 0), ("E", 12.20, 17.30, 0), ("F", 17.30, END, 0)]
+# first zombie reaches him and takes his hand.
+SHOTS = [("A", 0.00, 3.00, 0), ("B2", 3.00, 7.20, 19), ("C2", 7.20, 12.20, 0), ("E2", 12.20, 17.30, 0), ("F2", 17.30, END, 0)]
+SKIP = {"B2": {82}}  # one frame of the lunge where the model smeared the zombie's face
 T_STOP, T_BACK = 7.10, 12.20  # the music stops dead just before he shouts, and comes back when they sit
 # The music is made of phrases about 4.8 s long with a short rest between them. Coming back on the phrase that starts
 # at 9.60 s of the file puts its rests on «الضيف ما ينضرب» and right after «هزّ الفنجان», and its ending on the last card.
@@ -76,13 +80,13 @@ def load_clip(name):
 # ---- captions, speaker tags and the game interface -----------------------------------------------------------------
 KID, OLD = "kid", "old"
 CARDS = [  # (speaker, lines, from, to, caption_layer options)
-    (KID, [[("عطينا الشايب", WHITE)], [("لعبة زومبي..", TCHIP)]], 0.00, 1.85, {"size": 98}),
+    (KID, [[("عطينا جدي", WHITE)], [("لعبة زومبي..", TCHIP)]], 0.00, 1.85, {"size": 104}),
     (KID, [[("شوفوا ايش صار!", WHITE)]], 1.87, 3.00, {}),
     (KID, [[("جدي! جايينك!", WHITE)]], 3.25, 4.82, {"cy": 470}),
     (KID, [[("اضربهم!", CHIP)]], 4.85, 5.95, {"size": 112, "cy": 470}),
-    (OLD, [[("هيه!", WHITE)]], 7.35, 8.10, {"size": 112}),
-    (OLD, [[("جايين من دون", WHITE)], [("هود هود؟", TCHIP)]], 8.16, 9.70, {}),
-    (OLD, [[("عيب عليكم!", CHIP)]], 9.74, 10.95, {"size": 112}),
+    (OLD, [[("هيه!", WHITE)]], 7.35, 8.05, {"size": 112}),
+    (OLD, [[("جايين من دون", WHITE)], [("هود هود؟", TCHIP)]], 8.08, 9.55, {}),
+    (OLD, [[("عيب عليكم!", CHIP)]], 9.62, 10.85, {"size": 112}),
     (OLD, [[("اجلسوا!", TCHIP)]], 11.30, 12.20, {"size": 124}),
     (KID, [[("جدي.. هذي لعبة!", WHITE)]], 12.75, 14.55, {}),
     (KID, [[("لازم تضربهم!", CHIP)]], 14.60, 15.85, {"size": 104}),
@@ -91,7 +95,7 @@ CARDS = [  # (speaker, lines, from, to, caption_layer options)
     (KID, [[("حتى الزومبي..", WHITE)]], 18.35, 20.05, {}),
     (KID, [[("هزّ الفنجان!", TCHIP)]], 20.10, 21.15, {"size": 108}),
 ]
-TAGS = {KID: pill("الحفيد", size=40, outline=PURPLE), OLD: pill("الشايب", size=40, outline=TURQ)}
+TAGS = {KID: pill("الحفيد", size=40, outline=PURPLE), OLD: pill("الجد", size=40, outline=TURQ)}
 CTA = pill("أرسل VR في الخاص", size=46, icon="send")
 
 
@@ -146,7 +150,7 @@ def end_panel(t):
     rows = [(0.10, [[("انتهت اللعبة", WHITE)]], {"size": 124, "cy": 600}),
             (0.35, [[("الضربات: 0", CHIP)]], {"size": 92, "cy": 800}),
             (0.60, [[("الفناجين: 5", TCHIP)]], {"size": 92, "cy": 930}),
-            (0.90, [[("الفائز:", WHITE), ("كرم الشايب", TCHIP)]], {"size": 84, "cy": 1090}),
+            (0.90, [[("الفائز:", WHITE), ("كرم جدي", TCHIP)]], {"size": 84, "cy": 1090}),
             (1.25, [[("عندك مشروع في عُمان؟", WHITE)]], {"size": 76, "cy": 1320})]
     for a, lines, o in rows:
         if u >= a:
@@ -168,11 +172,13 @@ def zoom(name, t):
     """Push-ins added in the edit: (zoom, centre x, centre y)."""
     if name == "A":
         return 1.0 + 0.07 * ease_io(t / 3.0), 420.0, 700.0
-    if name == "C":  # a punch-in on «عيب عليكم!»
-        return 1.0 + 0.10 * ease_out(seg(t, 9.74, 9.92)) - 0.10 * ease_io(seg(t, 10.80, 11.05)), 380.0, 600.0
-    if name == "E":
+    if name == "B2":  # a short push toward the hand at the moment the first zombie takes hold of it (5.6 s)
+        return 1.0 + 0.09 * ease_out(seg(t, 5.50, 5.72)) - 0.03 * ease_io(seg(t, 5.95, 6.50)), 430.0, 1265.0
+    if name == "C2":  # a slow push-in while he tells them off: his reaction is calm, so the camera is too
+        return 1.0 + 0.07 * ease_io((t - 7.20) / 5.0), 480.0, 800.0
+    if name == "E2":
         return 1.0 + 0.05 * ease_io((t - 12.20) / 5.1), 470.0, 1000.0
-    if name == "F":
+    if name == "F2":
         return 1.0 + 0.06 * ease_io((t - 17.30) / 3.6), 470.0, 760.0
     return 1.0, 540.0, 960.0
 
@@ -189,7 +195,7 @@ def decorate(img, t, caps, handle):
     hud = hud_text(t)
     if 3.00 <= t < 7.20:  # inside the headset
         img.alpha_composite(corner_brackets(min(ease_out((t - 3.00) / 0.2), 1.0)))
-        k = min(ease_out((t - 3.9) / 0.25), ease_out((7.20 - t) / 0.2))
+        k = min(ease_out((t - 3.9) / 0.25), ease_out((5.45 - t) / 0.2))  # gone before the zombies crowd the frame
         if t >= 3.9 and k > 0:
             paste_clip(img, faded(WEAPON, k), W - 70 - WEAPON.size[0], 600)
     if hud:
@@ -290,7 +296,9 @@ def mix_audio(path, total, parts=PARTS):
     busy = (c[np.clip(idx + int(0.25 * SR), 0, n)] - c[np.clip(idx - int(0.35 * SR), 0, n)]) > 0
     lift = uniform_filter1d((~busy).astype(np.float32), size=int(0.3 * SR), mode="nearest")
     music *= (1 + (db(4.5) - 1) * lift)[:, None]
-    # ambience: the zombies' groans come from the clip seen from inside the headset
+    # ambience: the zombies' groans. They come from the first take of the headset view (B.mp4), which the owner heard
+    # in the draft; the sound generated with the second take has sounds that an automatic transcription reads as
+    # English words, so it is not used.
     amb = np.zeros((n, 2), np.float32)
     b_snd = load(f"{WORK}/clips/B.mp4", 20 / FPS)[: int(4.1 * SR)]
     place(amb, fade(b_snd * db(-30) / rms(b_snd), 0.15, 0.12), 3.00)
@@ -318,13 +326,14 @@ def mix_audio(path, total, parts=PARTS):
 
 
 def make_cover(path, handle):
-    """Cover: the scolding, which raises the question without giving the coffee away."""
-    im = Image.open(f"{WORK}/img/K3_scold.png").convert("RGB")
+    """Cover: the grandfather, calm, with the hologram zombies holding his hand: it raises the question without giving
+    the coffee away."""
+    im = Image.open(f"{WORK}/img/K3b_calm.png").convert("RGB")
     s = max(W / im.size[0], H / im.size[1])
     im = im.resize((int(im.size[0] * s + 0.5), int(im.size[1] * s + 0.5)), Image.LANCZOS)
     x0, y0 = (im.size[0] - W) // 2, (im.size[1] - H) // 2
     img = im.crop((x0, y0, x0 + W, y0 + H)).convert("RGBA")
-    cap, box = caption_layer([[("عطينا الشايب", WHITE)], [("لعبة زومبي!", TCHIP)]], size=112, cy=1490)
+    cap, box = caption_layer([[("عطينا جدي", WHITE)], [("لعبة زومبي!", TCHIP)]], size=116, cy=1500)
     img.alpha_composite(cap, (box[0], box[1]))
     img.alpha_composite(handle)
     img.convert("RGB").save(path, quality=93)
@@ -350,9 +359,10 @@ def main():
         if not want:
             continue
         fr = load_clip(name)
+        order = [k for k in range(first, len(fr)) if k not in SKIP.get(name, ())]
         for n in want:
             t = n / FPS
-            src = Image.fromarray(fr[min(first + n - n0, len(fr) - 1)])
+            src = Image.fromarray(fr[order[min(n - n0, len(order) - 1)]])
             z, cx, cy = zoom(name, t)
             img = decorate(punch(src, z, cy=cy, cx=cx).convert("RGBA"), t, caps, handle).convert("RGB")
             if enc:
