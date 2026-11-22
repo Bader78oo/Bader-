@@ -6,8 +6,14 @@ voice. Seen from outside the headset the zombies are turquoise holograms, becaus
 interface on the picture is drawn here, never generated.
 
 usage: python3 -I reel_zombie.py WORK_DIR OUT_MP4 [--frames 0,24,...] [--cover COVER_JPG] [--parts voice,music,...]
+                                                 [--ending v2|v3] [--hook calm|cold|grab]
+  --ending  v2 (default): the cut the owner chose to publish. v3: both closing shots redone so that coffee is only ever
+            poured into a cup (the owner saw it and preferred v2).
+  --hook    calm (default): opens on the grandfather. For hook tests: cold opens on the zombies walking in for a
+            second, grab opens on the moment the first zombie takes his hand; both then cut to the grandfather.
   WORK_DIR/clips/  A.mp4 (he looks around)  B2.mp4 (inside the headset)  C2.mp4 (he scolds them, seated)
-                   E3.mp4 (coffee)  F3.mp4 (the cup is shaken)  B.mp4 (first take of the headset view: its sound only)
+                   E2.mp4 / E3.mp4 (coffee)  F2.mp4 / F3.mp4 (the cup is shaken)
+                   B.mp4 (first take of the headset view: its sound only)
   WORK_DIR/img/    K3b_calm.png (cover)
   WORK_DIR/voice/  kid_1.mp3  hook_2.mp3  old_1.mp3  hood_a.mp3  music.mp3
 """
@@ -37,6 +43,9 @@ def opt(name):
 ONLY = [int(v) for v in opt("--frames").split(",")] if opt("--frames") else None
 COVER = opt("--cover")
 PARTS = tuple(opt("--parts").split(",")) if opt("--parts") else ("voice", "music", "ambience", "effects")
+ENDING = opt("--ending") or "v2"
+HOOK = opt("--hook") or "calm"
+assert ENDING in ("v2", "v3") and HOOK in ("calm", "cold", "grab")
 W, H, FPS, SR = 1080, 1920, 24, 48000
 END = 25.2
 T_END_PANEL = 21.5
@@ -54,7 +63,11 @@ LINES = [("kid", "hook_2.mp3", 0.00, 1.51, 0.10),   # عطينا جدي لعبة
          ("kid", "kid_1.mp3", 8.78, 11.30, 18.35)]  # حتى الزومبي.. هزّ الفنجان!
 # (clip, from, to, first frame of the clip). The view from inside the headset uses the end of its clip, where the
 # first zombie reaches him and takes his hand.
-SHOTS = [("A", 0.00, 3.00, 0), ("B2", 3.00, 7.20, 19), ("C2", 7.20, 12.20, 0), ("E3", 12.20, 17.30, 0), ("F3", 17.30, END, 0)]
+E_CLIP, F_CLIP = ("E2", "F2") if ENDING == "v2" else ("E3", "F3")
+SHOTS = [("A", 0.00, 3.00, 0), ("B2", 3.00, 7.20, 19), ("C2", 7.20, 12.20, 0), (E_CLIP, 12.20, 17.30, 0), (F_CLIP, 17.30, END, 0)]
+T_COLD = 1.25  # test openings: the view from inside the headset comes first for this long, then the grandfather
+if HOOK != "calm":  # "B2 open" is the same clip as B2, loaded under its own name so each use has its own first frame
+    SHOTS = [("B2 open", 0.00, T_COLD, 0 if HOOK == "cold" else 76), ("A", T_COLD, 3.00, 10)] + SHOTS[1:]
 SKIP = {"B2": {82}}  # one frame of the lunge where the model smeared the zombie's face
 T_STOP, T_BACK = 7.10, 12.20  # the music stops dead just before he shouts, and comes back when they sit
 # The music is made of phrases about 4.8 s long with a short rest between them. Coming back on the phrase that starts
@@ -72,7 +85,7 @@ def seg(x, a, b):
 
 def load_clip(name):
     vf = f"scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos,crop={W}:{H}"
-    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", f"{WORK}/clips/{name}.mp4", "-vf", vf, "-pix_fmt", "rgb24", "-f", "rawvideo", "-"],
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", f"{WORK}/clips/{name.split()[0]}.mp4", "-vf", vf, "-pix_fmt", "rgb24", "-f", "rawvideo", "-"],
                          capture_output=True, check=True).stdout
     return np.frombuffer(raw, np.uint8).reshape(-1, H, W, 3)
 
@@ -95,20 +108,28 @@ CARDS = [  # (speaker, lines, from, to, caption_layer options)
     (KID, [[("حتى الزومبي..", WHITE)]], 18.35, 20.05, {}),
     (KID, [[("هزّ الفنجان!", TCHIP)]], 20.10, 21.15, {"size": 108}),
 ]
+if HOOK != "calm":  # over the view from inside the headset the text sits at the top, clear of the virtual hands
+    CARDS[0] = (KID, CARDS[0][1], 0.00, 1.85, {"size": 104, "cy": 470})
 TAGS = {KID: pill("الحفيد", size=40, outline=PURPLE), OLD: pill("الجد", size=40, outline=TURQ)}
 CTA = pill("أرسل VR في الخاص", size=46, icon="send")
 
 
+def in_headset(t):
+    """Shots seen through the grandfather's eyes."""
+    return 3.00 <= t < 7.20 or (HOOK != "calm" and t < T_COLD)
+
+
 def hud_text(t):
     """The line of the game interface under the account pill, or None outside the game."""
-    if 3.00 <= t < 7.20:
+    if in_headset(t):
         return "لعبة الزومبي · الموجة 1"
     if 7.20 <= t < 12.20:
         return "الموجة 1 · الضربات: 0"
     if 12.20 <= t < T_END_PANEL:
-        # four guests already hold their cups when the shot opens; the count turns to five when he finishes pouring the
-        # one cup that is filled on screen, so the counter never claims a cup that was not seen
-        cups = 4 if t < 13.95 else 5
+        if ENDING == "v2":  # he serves down the row, and the count follows him
+            cups = 1 + sum(t >= x for x in (13.4, 14.5, 15.8, 16.9))
+        else:  # v3 fills one cup on screen: four guests already hold theirs, and the count turns to five when he is done
+            cups = 4 if t < 13.95 else 5
         return f"الضربات: 0 · الفناجين: {cups}"
     return None
 
@@ -174,12 +195,16 @@ def zoom(name, t):
     """Push-ins added in the edit: (zoom, centre x, centre y)."""
     if name == "A":
         return 1.0 + 0.07 * ease_io(t / 3.0), 420.0, 700.0
+    if name == "B2 open":  # the test openings
+        return 1.0 + 0.06 * ease_out(t / T_COLD), 540.0, 900.0
     if name == "B2":  # a short push toward the hand at the moment the first zombie takes hold of it (5.6 s)
         return 1.0 + 0.09 * ease_out(seg(t, 5.50, 5.72)) - 0.03 * ease_io(seg(t, 5.95, 6.50)), 430.0, 1265.0
     if name == "C2":  # a slow push-in while he tells them off: his reaction is calm, so the camera is too
         return 1.0 + 0.07 * ease_io((t - 7.20) / 5.0), 480.0, 800.0
-    if name == "E3":
+    if name in ("E2", "E3"):
         return 1.0 + 0.05 * ease_io((t - 12.20) / 5.1), 470.0, 1000.0
+    if name == "F2":
+        return 1.0 + 0.06 * ease_io((t - 17.30) / 3.6), 470.0, 760.0
     if name == "F3":
         return 1.0 + 0.06 * ease_io((t - 17.30) / 3.6), 560.0, 820.0
     return 1.0, 540.0, 960.0
@@ -195,8 +220,8 @@ def overlays():
 
 def decorate(img, t, caps, handle):
     hud = hud_text(t)
-    if 3.00 <= t < 7.20:  # inside the headset
-        img.alpha_composite(corner_brackets(min(ease_out((t - 3.00) / 0.2), 1.0)))
+    if in_headset(t):
+        img.alpha_composite(corner_brackets(min(ease_out((t - 3.00) / 0.2), 1.0) if t >= 3.00 else 1.0))
         k = min(ease_out((t - 3.9) / 0.25), ease_out((5.45 - t) / 0.2))  # gone before the zombies crowd the frame
         if t >= 3.9 and k > 0:
             paste_clip(img, faded(WEAPON, k), W - 70 - WEAPON.size[0], 600)
@@ -304,6 +329,7 @@ def mix_audio(path, total, parts=PARTS):
     amb = np.zeros((n, 2), np.float32)
     b_snd = load(f"{WORK}/clips/B.mp4", 20 / FPS)[: int(4.1 * SR)]
     place(amb, fade(b_snd * db(-30) / rms(b_snd), 0.15, 0.12), 3.00)
+    # The test openings keep exactly this sound: with groans under the first line the check heard «أعطينا» for «عطينا».
     # effects, only where nobody is speaking
     fx = np.zeros((n, 2), np.float32)
     tt = np.arange(int(0.22 * SR)) / SR
