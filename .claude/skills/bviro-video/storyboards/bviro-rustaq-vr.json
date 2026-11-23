@@ -1,0 +1,112 @@
+{
+ "width": 1080,
+ "height": 1920,
+ "fps": 30,
+ "duration": 27.233,
+ "output": "basegraded.mp4",
+ "shots": [
+  {
+   "src": "v_class.mp4",
+   "dur": 1.5,
+   "in": 0
+  },
+  {
+   "src": "r_try.mp4",
+   "dur": 1.1,
+   "in": 2.5,
+   "tin": "flash"
+  },
+  {
+   "src": "r_hall.mp4",
+   "dur": 1.967,
+   "in": 0,
+   "tin": "zoom"
+  },
+  {
+   "src": "r_watch.mp4",
+   "dur": 1.366,
+   "in": 0,
+   "tin": "whip"
+  },
+  {
+   "src": "r_lab.mp4",
+   "dur": 3.634,
+   "in": 0,
+   "tin": "zoom"
+  },
+  {
+   "src": "v_menu.mp4",
+   "dur": 1.033,
+   "in": 0.3,
+   "tin": "flash"
+  },
+  {
+   "src": "v_enter.mp4",
+   "dur": 1.133,
+   "in": 0.0,
+   "tin": "zoom"
+  },
+  {
+   "src": "v_table.mp4",
+   "dur": 0.534,
+   "in": 0,
+   "tin": "flash"
+  },
+  {
+   "src": "v_students.mp4",
+   "dur": 0.7,
+   "in": 0,
+   "tin": "whip"
+  },
+  {
+   "src": "v_lab.mp4",
+   "dur": 2.2,
+   "in": 0,
+   "tin": "zoom"
+  },
+  {
+   "src": "c_split2.mp4",
+   "dur": 2.766,
+   "in": 0,
+   "tin": "flash"
+  },
+  {
+   "src": "r_aud.mp4",
+   "dur": 2.934,
+   "in": 0,
+   "tin": "zoom"
+  },
+  {
+   "src": "r_try.mp4",
+   "dur": 0.633,
+   "in": 0,
+   "tin": "whip"
+  },
+  {
+   "src": "r_freeze.jpg",
+   "dur": 1.167,
+   "tin": "flash",
+   "kb": "in",
+   "kb_zoom": 0.05
+  },
+  {
+   "src": "v_end.mp4",
+   "dur": 4.566,
+   "in": 0,
+   "tin": "flash"
+  }
+ ],
+ "transitions": {
+  "default": "zoom"
+ },
+ "grade": {
+  "lut": "brand/bviro_look.cube",
+  "grain": 4
+ },
+ "audio": {
+  "pad": false,
+  "whoosh_on_cuts": false,
+  "impact_at_end": false,
+  "duck": false
+ }
+}
