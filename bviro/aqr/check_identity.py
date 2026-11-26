@@ -12,6 +12,8 @@ dlib itself is `pip install dlib-bin`).
 LOCKS.json maps a character to a portrait and, optionally, a crop of it: {"young": {"image": "sheet.png",
 "box": [0.61, 0.0, 1.0, 1.0]}} (box as fractions: left, top, right, bottom).
 SHOT=character names who should be in the picture; without it the shot is compared with every lock.
+SHOT=character@x0,y0,x1,y1 measures only that part of the picture (fractions: left, top, right, bottom), enlarged:
+this is how a small face in a wide shot is measured. Give a box of about three face-widths around the head.
 A face under 80 px wide is too small to judge, and a wide shot may show no measurable face at all: both are
 reported as such, not as failures (the model was built for faces of 150 px), so a close-up is what proves a
 character. Exit status 1 only when a measured face of a named shot is 0.6 or further from its lock.
@@ -32,13 +34,15 @@ shape = dlib.shape_predictor(os.path.join(models, "shape_predictor_5_face_landma
 encoder = dlib.face_recognition_model_v1(os.path.join(models, "dlib_face_recognition_resnet_model_v1.dat"))
 
 
-def load(path, box=None, long_side=1600):
+def load(path, box=None, long_side=1600, enlarge_to=None):
     im = Image.open(path).convert("RGB")
     if box:
         w, h = im.size
         im = im.crop((int(box[0] * w), int(box[1] * h), int(box[2] * w), int(box[3] * h)))
     k = long_side / max(im.size)
-    if k < 1:
+    if enlarge_to and max(im.size) < enlarge_to:
+        k = enlarge_to / max(im.size)          # a cut-out of a wide shot is blown up so the face reaches a usable size
+    if k < 1 or (enlarge_to and k > 1):
         im = im.resize((int(im.width * k), int(im.height * k)), Image.LANCZOS)
     return np.asarray(im)
 
@@ -79,8 +83,10 @@ bad = 0
 print("shots:")
 for item in shots:
     path, _, who = item.partition("=")
-    found = faces(load(path))
-    label = os.path.basename(path)
+    who, _, region = who.partition("@")
+    box = [float(v) for v in region.split(",")] if region else None
+    found = faces(load(path, box, enlarge_to=900 if box else None))
+    label = os.path.basename(path) + (" [cut-out]" if box else "")
     if not found:
         print(f"  {label}: no measurable face" + (f" (expected {who})" if who else ""))
         continue
