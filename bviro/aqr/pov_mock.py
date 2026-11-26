@@ -1,7 +1,8 @@
 """Storyboard frame of the first-person shot: the lane plate, the hologram controllers and one tutorial arrow.
 
-usage: python3 -I pov_mock.py PLATE_PNG OVERLAY_PNG OUT_PNG [arrow: up|right|left|none] [stick_x,stick_y]
+usage: python3 -I pov_mock.py PLATE_PNG OVERLAY_PNG OUT_PNG [arrow: up|right|left|none] [stick_x,stick_y] [dx,dy]
 stick_x,stick_y: where the right thumbstick sits in the overlay, as fractions of width and height (default 0.71,0.645).
+dx,dy: slide the overlay by these fractions of width and height (default 0,0), to keep the hands off what must be read.
 The controllers are a picture of turquoise holograms on black, so they are added as light (screen blend). In the
 film the same layers are animated: the plate moves, the controllers bob with the steps, the arrow follows the words.
 """
@@ -18,6 +19,12 @@ TURQ = np.array([0, 205, 200], np.float32)
 bg = np.asarray(Image.open(plate).convert("RGB"), np.float32) / 255
 H, W = bg.shape[:2]
 ov = np.asarray(Image.open(overlay).convert("RGB").resize((W, H), Image.LANCZOS), np.float32) / 255
+if len(sys.argv) > 6:
+    dx, dy = (float(v) for v in sys.argv[6].split(","))
+    ox, oy = int(dx * W), int(dy * H)
+    moved = np.zeros_like(ov)
+    moved[max(oy, 0):H + min(oy, 0), max(ox, 0):W + min(ox, 0)] = ov[max(-oy, 0):H - max(oy, 0), max(-ox, 0):W - max(ox, 0)]
+    ov = moved
 ov = np.clip((ov - 0.11) / 0.89, 0, 1)            # drop the wide haze around the holograms: only they add light
 lum = ov.max(axis=2, keepdims=True)
 # a hologram hides a little of what is behind it, then adds its own light

@@ -1,0 +1,29 @@
+{
+ "old": {
+  "image": "old_sheet.jpg",
+  "box": [
+   0.575,
+   0.0,
+   1.0,
+   1.0
+  ]
+ },
+ "young": {
+  "image": "young_sheet.jpg",
+  "box": [
+   0.605,
+   0.0,
+   1.0,
+   1.0
+  ]
+ },
+ "jokha": {
+  "image": "jokha_sheet.jpg",
+  "box": [
+   0.61,
+   0.0,
+   1.0,
+   1.0
+  ]
+ }
+}
