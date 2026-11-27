@@ -9,6 +9,8 @@ usage: python3 -I animatic.py WORK_DIR OUT_MP4 [--frames 0,24,...] [--parts voic
   --stems   also write each stem as a WAV into DIR, to inspect one layer alone
   --clean   leave out the working labels (the «نسخة أولية» slug, the music tags and the «مؤقتة» marks)
   --cover   also write the reel's cover (1080x1920 JPEG) to this path
+  --voice   a (default): the first recordings. b: the grandfather's seven lines from one continuous take in an
+            Omani library voice (old_omani_faisal.mp3), recorded after the owner found the first voice unsuitable
   --clips   folder of animated shots named by shot number (1.mp4, 3.mp4 ... 22.mp4): the film, not the animatic
   WORK_DIR/img/    the stills named in the shot functions below
   WORK_DIR/voice/  the recorded lines (LINES)
@@ -45,6 +47,8 @@ ONLY = [int(v) for v in opt("--frames").split(",")] if opt("--frames") else None
 PARTS = tuple(opt("--parts").split(",")) if opt("--parts") else ("voice", "music", "ambience", "effects")
 STEMS = opt("--stems")
 CLEAN = "--clean" in sys.argv
+VOICE = opt("--voice") or "a"  # a: the first recordings; b: the grandfather re-recorded in an Omani voice
+assert VOICE in ("a", "b")
 COVER = opt("--cover")  # also write the cover picture to this path
 CLIPS = opt("--clips")  # folder of animated shots; a shot without a clip there falls back to its still
 W, H, FPS, SR = 1080, 1920, 24, 48000
@@ -85,6 +89,20 @@ LINES = [(KID, "kid_hook_a.mp3", 0.00, 1.80, 0.12, 0.0),       # أول مرة �
          (KID, "kid_rahma.mp3", 0.00, 3.20, 39.05, -2.0),      # جدتي جوخة.. الله يرحمها.
          (OLD, "old_stay_a.mp3", 0.00, 2.56, 43.45, -2.0)]     # لا.. خلّوني عندها شوية.
 
+if VOICE == "b":
+    # One continuous performance of the grandfather's seven lines, cut at its pauses. Its quiet lines are lifted a
+    # little, but stay softer than the happy ones, as he played them.
+    G = "old_omani_faisal.mp3"
+    LINES = [ln for ln in LINES if ln[0] == KID] + [
+        (OLD, G, 0.06, 1.16, 5.00, 0.0),      # كيف أمشي؟
+        (OLD, G, 2.23, 4.80, 11.74, 0.0),     # (a small laugh) إيوه.. سهل!
+        (OLD, G, 5.98, 9.25, 15.24, 0.0),     # هذي حارتنا.. مثل ما كانت! (his breath before it is left out, so
+                                              # the oud theme has its first second to itself)
+        (OLD, G, 9.65, 13.55, 20.50, 0.0),    # وهذا جارنا.. مودّي الغنم للمناداة!
+        (OLD, G, 14.15, 14.95, 25.53, 7.0),   # بيتنا..
+        (OLD, G, 15.73, 18.20, 33.95, 6.0),   # يا جوخة.. هينِش عنّي؟
+        (OLD, G, 18.73, 21.10, 43.41, 6.0)]   # لا.. خلّوني عندها شوية.
+
 # ---- words on the picture: (speaker, lines, from, to, where) ---------------------------------------------------------
 TOP, LOW = 470, 1500  # captions sit at the top while we look through the headset, clear of the hologram hands
 SAY = [(OLD, ["كيف أمشي؟"], 5.10, 6.35, TOP),
@@ -105,6 +123,11 @@ SAY = [(OLD, ["كيف أمشي؟"], 5.10, 6.35, TOP),
        (KID, ["جدتي جوخة.."], 39.13, 40.90, LOW),
        (KID, ["الله يرحمها."], 41.25, 42.70, LOW),
        (OLD, ["لا.. خلّوني عندها شوية."], 43.51, 46.10, LOW)]
+if VOICE == "b":   # the same words, on the timings of the new take
+    T_B = {"كيف أمشي؟": (5.10, 6.15), "ايوه..": (12.68, 13.34), "سهل!": (13.38, 14.26), "هذي حارتنا..": (15.31, 16.90),
+           "مثل ما كانت!": (16.98, 18.35), "وهذا جارنا..": (20.60, 22.55), "مودّي الغنم للمناداة!": (22.73, 24.36),
+           "هينِش عنّي؟": (35.45, 36.72), "لا.. خلّوني عندها شوية.": (43.51, 45.95)}
+    SAY = [(who, lines, *T_B.get(lines[0], (a_, b_)), cy) for who, lines, a_, b_, cy in SAY]
 HOOK = [([[("أول مرة أشوف", WHITE)], [("دمعة جدي", TCHIP)]], 0.00, 1.98, {"size": 100, "cy": 1440}),
         ([[("والسبب..", WHITE)]], 2.15, 2.98, {"size": 104, "cy": 1440}),
         ([[("نظارة VR!", CHIP)]], 3.00, 4.35, {"size": 112, "cy": 1440})]
@@ -240,6 +263,8 @@ CLIP_MAP = {"5": ("5", -0.55, 1.0),    # the thumb pushes the stick 0.5 s into i
             "15": ("15", 1.55, 1.0),   # the later sweep of the palm, where the dough keeps its swirl
             "21": ("1", 2.75, 1.0),    # the tear reaching the beard is the end of the opening shot's clip
             "22": ("22", 0.10, 0.70)}  # slowed so that his lips move for as long as «لا.. خلّوني عندها شوية» lasts
+if VOICE == "b":
+    CLIP_MAP["7"] = ("7", -0.08, 1.0)  # «إيوه» comes 0.2 s later in the new take
 _clip = {"name": None, "frames": None}
 
 
@@ -976,7 +1001,8 @@ def mix_audio(path, total):
     x = load(f"{WORK}/sfx/pickup_rattle.mp3", 10.4, 5.6)                 # its own rise and fall is the pass-by
     place(fx, fade(x / np.abs(x).max() * db(-20), 0.9, 1.3), at("12") - 2.6)
     hit("horn", 0.0, 0.36, at("11") + 0.07, -21, 0.004, 0.08)
-    hit("goats", 1.95, 2.95, 23.86, -22, 0.03, 0.15)                     # a goat answers after his line
+    if VOICE == "a":                                                      # (the new take's line runs to the door)
+        hit("goats", 1.95, 2.95, 23.86, -22, 0.03, 0.15)                 # a goat answers after his line
     hit("door", 0.10, 1.65, at("13") + 0.01, -17, 0.01, 0.4)
     hit("bangles", 6.30, 7.40, at("13") + 2.10, -31, 0.01, 0.2, hi=2500)  # her bangles, from the next room
     hit("bangles", 0.00, 0.85, 28.30, -26, 0.01, 0.2)
