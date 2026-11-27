@@ -8,6 +8,8 @@ usage: python3 -I animatic.py WORK_DIR OUT_MP4 [--frames 0,24,...] [--parts voic
   --parts   which stems go into the mix (default: all four)
   --stems   also write each stem as a WAV into DIR, to inspect one layer alone
   --clean   leave out the working labels (the «نسخة أولية» slug, the music tags and the «مؤقتة» marks)
+  --cover   also write the reel's cover (1080x1920 JPEG) to this path
+  --clips   folder of animated shots named by shot number (1.mp4, 3.mp4 ... 22.mp4): the film, not the animatic
   WORK_DIR/img/    the stills named in the shot functions below
   WORK_DIR/voice/  the recorded lines (LINES)
   WORK_DIR/sfx/    the library sound effects (see the sound map in SCREENPLAY.md)
@@ -43,6 +45,8 @@ ONLY = [int(v) for v in opt("--frames").split(",")] if opt("--frames") else None
 PARTS = tuple(opt("--parts").split(",")) if opt("--parts") else ("voice", "music", "ambience", "effects")
 STEMS = opt("--stems")
 CLEAN = "--clean" in sys.argv
+COVER = opt("--cover")  # also write the cover picture to this path
+CLIPS = opt("--clips")  # folder of animated shots; a shot without a clip there falls back to its still
 W, H, FPS, SR = 1080, 1920, 24, 48000
 
 # ---- the cut: every shot as (first frame, frame after its last), 24 frames a second ---------------------------------
@@ -106,7 +110,8 @@ HOOK = [([[("أول مرة أشوف", WHITE)], [("دمعة جدي", TCHIP)]], 0.
         ([[("نظارة VR!", CHIP)]], 3.00, 4.35, {"size": 112, "cy": 1440})]
 # what plays under each stretch, shown small at the bottom of the working copy
 MUSIC_TAGS = [(0.00, at("3"), "موسيقى 1 · نبضة عميقة وثلاث ضربات"),
-              (at("3"), at("8"), "موسيقى 2 · نغمة وترية ثابتة (مؤقتة)"),
+              (at("3"), at("5"), "موسيقى 2 · نغمة وترية ثابتة"),
+              (at("5"), at("8"), "موسيقى 2 · عود خفيف مرح"),
               (at("8"), at("13"), "موسيقى 3 · لحن العود يدخل مع وجه الشاب"),
               (at("13"), at("14"), "موسيقى 4 · نغمة واحدة ممسوكة"),
               (at("14"), 31.61, "بدون موسيقى · دندنة جوخة والنار"),
@@ -225,6 +230,49 @@ def lazy(key, make):
 def walk(tau, amp=1.0):
     """Head bob of a walk, in pixels: (sideways, up and down)."""
     return 3.0 * amp * math.sin(2 * math.pi * 0.95 * tau), 7.0 * amp * math.sin(2 * math.pi * 1.9 * tau)
+
+
+# ---- animated shots ---------------------------------------------------------------------------------------------------
+# shot: (clip file, second of the clip at which the shot starts, playback rate). Shots not listed start their own
+# clip at 0 and play it at normal speed.
+CLIP_MAP = {"5": ("5", -0.55, 1.0),    # the thumb pushes the stick 0.5 s into its clip: held back to fall on «قدّم»
+            "7": ("7", 0.12, 1.0),     # his mouth opens on «ايوه»
+            "15": ("15", 1.55, 1.0),   # the later sweep of the palm, where the dough keeps its swirl
+            "21": ("1", 2.75, 1.0),    # the tear reaching the beard is the end of the opening shot's clip
+            "22": ("22", 0.10, 0.70)}  # slowed so that his lips move for as long as «لا.. خلّوني عندها شوية» lasts
+_clip = {"name": None, "frames": None}
+
+
+def has_clip(shot):
+    return bool(CLIPS) and os.path.exists(f"{CLIPS}/{CLIP_MAP.get(shot, (shot,))[0]}.mp4")
+
+
+def clip_frame(shot, t):
+    """Frame of a shot's clip at t seconds into the shot, fitted to the frame. One clip is kept in memory at a time."""
+    name, start, rate = CLIP_MAP.get(shot, (shot, 0.0, 1.0))
+    if _clip["name"] != name:
+        vf = f"fps={FPS},scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos,crop={W}:{H}"
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-i", f"{CLIPS}/{name}.mp4", "-vf", vf, "-pix_fmt", "rgb24", "-f", "rawvideo", "-"],
+                             capture_output=True, check=True).stdout
+        _clip["name"], _clip["frames"] = name, np.frombuffer(raw, np.uint8).reshape(-1, H, W, 3)
+    fr = _clip["frames"]
+    pos = min(max((start + rate * t) * FPS, 0.0), len(fr) - 1.0)
+    k = int(pos)
+    w = pos - k
+    if w < 0.02 or k + 1 >= len(fr) or abs(rate - 1.0) < 1e-6:
+        return Image.fromarray(fr[min(int(round(pos)), len(fr) - 1)])
+    # a slowed clip falls between two frames: they are blended, so the motion stays smooth
+    return Image.fromarray((fr[k].astype(np.float32) * (1 - w) + fr[k + 1].astype(np.float32) * w + 0.5).astype(np.uint8))
+
+
+def zoomed(im, z, cx=0.5, cy=0.5):
+    """Digital push-in on a frame, keeping the point (cx, cy) in place."""
+    if z <= 1.0005:
+        return im
+    w, h = W / z, H / z
+    x0 = min(max(cx * W - w * cx, 0), W - w)
+    y0 = min(max(cy * H - h * cy, 0), H - h)
+    return im.resize((W, H), Image.BICUBIC, box=(x0, y0, x0 + w, y0 + h))
 
 
 # ---- one function per shot: (seconds since the shot began, shot length) -> RGB image ---------------------------------
@@ -451,6 +499,124 @@ def end_card(t, d):
     return img.convert("RGB")
 
 
+# ---- the same shots from animated clips (used when --clips has the shot) ------------------------------------------------
+def c1(t, d):
+    im = zoomed(clip_frame("1", t), 1.0 + 0.16 * (1 - ease_out(t / 0.30)), 0.475, 0.52)
+    k = 0.32 * (1 - seg(t, 0.0, 0.22))
+    return Image.blend(im, Image.new("RGB", (W, H), TURQ), k) if k > 0 else im
+
+
+def plain(shot, z0=1.0, z1=1.0, cx=0.5, cy=0.5):
+    """A clip as it is, with an optional slow push-in from z0 to z1."""
+    def fn(t, d):
+        return zoomed(clip_frame(shot, t), z0 + (z1 - z0) * ease_io(t / d), cx, cy)
+    return fn
+
+
+def c4(t, d):
+    bg = arr(clip_frame("4", t))
+    holo = lazy("holo4", lambda: Holo("M4_ctrl_overlay"))
+    return to_img(holo.over(bg, 0, int(round(3 * math.sin(2 * math.pi * 0.35 * t)))))
+
+
+def c6(t, d):
+    """The walk is the clip; the looks to the right and to the left are slides of a slightly enlarged frame."""
+    pan = 0.075 * ease_io(seg(t, T6_RIGHT, T6_RIGHT + 0.40)) - 0.15 * ease_io(seg(t, T6_LEFT, T6_LEFT + 0.60))
+    z = 1.0 + 0.19 * ease_io(seg(t, T6_RIGHT - 0.5, T6_RIGHT))
+    im = clip_frame("6", t)
+    if z > 1.0005:
+        w, h = W / z, H / z
+        x0 = min(max((W - w) / 2 + pan * W, 0), W - w)
+        im = im.resize((W, H), Image.BICUBIC, box=(x0, (H - h) * 0.45, x0 + w, (H - h) * 0.45 + h))
+    holo = lazy("holo4", lambda: Holo("M4_ctrl_overlay"))
+    bob = 1.0 if t < T6_RIGHT else 0.4
+    comp = holo.over(arr(im), int(round(-2 * math.sin(2 * math.pi * 0.95 * t) * bob)), int(round(4 * math.sin(2 * math.pi * 1.9 * t + 0.8) * bob)))
+    if t < T6_RIGHT:
+        arrow, k = "up", 0.55 + 0.45 * abs(math.sin(2 * math.pi * 1.4 * t))
+    elif t < T6_LEFT:
+        arrow, k = "right", 1.0
+    else:
+        arrow, k = "left", 1.0
+    a_ = lazy("chev_" + arrow, lambda: chevrons(arrow)) * 0.9 * k
+    return to_img(comp * (1 - a_) + (TURQ_F * 0.75 + 0.25) * a_)
+
+
+def c11(t, d):
+    bg = arr(clip_frame("11", t))
+    holo = lazy("holo11", lambda: Holo("N11_wave_overlay", (0.03, 0.13)))
+    return to_img(holo.over(bg, int(round(16 * math.sin(2 * math.pi * 2.3 * t))), int(round(5 * math.sin(2 * math.pi * 1.1 * t)))))
+
+
+def c12(t, d):
+    # enlarged 4% from the right edge: late in the clip a passer-by's arm comes in at the left edge
+    bg = arr(zoomed(clip_frame("12", t), 1.045, 1.0, 0.5))
+    holo = lazy("holo12", lambda: Holo("M4_ctrl_overlay", (0.0, 0.05)))
+    return to_img(holo.over(bg, 0, int(round(4 * math.sin(2 * math.pi * 0.6 * t + 1.0)))))
+
+
+def c13(t, d):
+    a = arr(clip_frame("13", t))
+    k = ease_io(seg(t, 0.05, 0.95))
+    if k < 1:
+        x = np.arange(W, dtype=np.float32)[None, :, None] / W
+        m = np.clip((0.012 + 0.75 * k - np.abs(x - 0.59)) / 0.08 + 0.5, 0, 1)
+        a = a * (0.16 + 0.84 * np.maximum(m, k * k))
+    return to_img(a)
+
+
+_rng19 = np.random.default_rng(19)
+Q_N = 1100
+Q_X, Q_Y = _rng19.uniform(0.02 * W, 0.56 * W, Q_N), H * 0.475 + _rng19.normal(0, 0.035 * H, Q_N)
+Q_T0, Q_V = _rng19.uniform(0, 0.45, Q_N), _rng19.uniform(150, 430, Q_N)
+Q_PH, Q_R = _rng19.uniform(0, 6.28, Q_N), _rng19.uniform(1.5, 4.6, Q_N)
+
+
+def c19(t, d):
+    """The hands come together; at the touch her hand and the bread turn into points of turquoise light that rise,
+    and what is left is his hand reaching into the empty air (the twin still, Q19b_empty)."""
+    t_touch = T_TOUCH - at("19")
+    if t <= t_touch:
+        return slowed("19", t * C19_RATE)
+    v = t - t_touch
+    last = arr(slowed("19", t_touch * C19_RATE))
+    empty = lazy("q19b", lambda: arr(view(still("Q19b_empty"), 1.0, 0.5, 0.5)))
+    k = ease_io(seg(v, 0.0, 0.55))
+    a = last * (1 - k) + empty * k
+    layer = Image.new("L", (W, H), 0)
+    dr = ImageDraw.Draw(layer)
+    age = v - Q_T0
+    for i in np.nonzero(age > 0)[0]:
+        g = age[i]
+        alpha = min(g / 0.10, 1.0) * max(1 - g / 1.0, 0.0)
+        if alpha > 0:
+            x, y, r = Q_X[i] + 22 * math.sin(Q_PH[i] + 3.2 * g), Q_Y[i] - Q_V[i] * g - 60 * g * g, Q_R[i]
+            dr.ellipse([x - r, y - r, x + r, y + r], fill=int(255 * alpha))
+    core = np.asarray(layer, np.float32)[..., None] / 255
+    glow = np.asarray(layer.filter(ImageFilter.GaussianBlur(9)), np.float32)[..., None] / 255
+    a = a + TURQ_F * 0.22 * math.exp(-v / 0.14) * (np.arange(W, dtype=np.float32)[None, :, None] < 0.62 * W)
+    return to_img(a + (TURQ_F * 0.8 + 0.2) * core + TURQ_F * 1.4 * glow)
+
+
+C19_RATE = 0.62  # the bread reaches his fingertips half a second into the clip, and the touch is 0.8 s into the shot
+
+
+def slowed(shot, clip_t):
+    """Frame of a clip at a time in the clip itself, blended between its two nearest frames."""
+    clip_frame(shot, 0.0)
+    fr = _clip["frames"]
+    pos = min(max(clip_t * FPS, 0.0), len(fr) - 1.0)
+    k = int(pos)
+    w = pos - k
+    if w < 0.02 or k + 1 >= len(fr):
+        return Image.fromarray(fr[k])
+    return Image.fromarray((fr[k].astype(np.float32) * (1 - w) + fr[k + 1].astype(np.float32) * w + 0.5).astype(np.uint8))
+
+
+CLIP_FN = {"1": c1, "3": plain("3"), "4": c4, "5": plain("5"), "6": c6, "7": plain("7"), "8": plain("8", 1.0, 1.03, 0.6, 0.45),
+           "9": plain("9"), "10": plain("10"), "11": c11, "12": c12, "13": c13, "14": plain("14"), "15": plain("15"),
+           "16": plain("16"), "17": plain("17"), "18": plain("18"), "19": c19, "20": plain("20"),
+           "21": plain("21", 1.10, 1.16, 0.475, 0.50), "22": plain("22")}
+
 SHOT_FN = {"1": s1, "2a": flash("L2_hara", 0.5, 0.45), "2b": flash("L4_pickup_plate", 0.5, 0.5), "2c": flash("P13_door", 0.55, 0.45),
            "3": s3, "4": s4, "5": s5, "6": s6, "7": s7, "8": s8, "9": s9, "10": s10, "11": s11, "12": s12, "13": s13,
            "14": s14, "15": s15, "16": s16, "17": s17, "18": s18, "19": s19, "20": s20, "21": s21, "22": s22, "end": end_card}
@@ -536,7 +702,7 @@ def decorate(img, n, ov):
     if not CLEAN:
         s = extra["slug"]
         paste_clip(img, s, (W - s.size[0]) // 2, 136)
-        if name in extra["temp"]:
+        if name in extra["temp"] and not has_clip(name):
             p = extra["temp"][name]
             paste_clip(img, p, W - p.size[0] - 40, 214)
         for a, b, p in extra["music"]:
@@ -561,14 +727,20 @@ def grain(img, n):
 def frame(n, ov):
     name = shot_at(n)
     f0, f1 = CUT[name]
-    base = SHOT_FN[name]((n - f0) / FPS, (f1 - f0) / FPS)
+
+    def shot_image(which, t, d):
+        if which in CLIP_FN and has_clip(which):
+            return CLIP_FN[which](t, d)
+        return SHOT_FN[which](t, d)
+
+    base = shot_image(name, (n - f0) / FPS, (f1 - f0) / FPS)
     if name == "end":  # the last shot dissolves into the card
         k = ease_io(seg(n - f0, 0, 9))
         if k < 1:
             p0, p1 = CUT["22"]
-            base = Image.blend(SHOT_FN["22"]((n - p0) / FPS, (p1 - p0) / FPS), base, k)
-    else:
-        base = grain(base, n)
+            base = Image.blend(shot_image("22", (n - p0) / FPS, (p1 - p0) / FPS), base, k)
+    elif not (name in CLIP_FN and has_clip(name)):
+        base = grain(base, n)   # the stills get a little grain; the clips have their own
     return decorate(base.convert("RGBA"), n, ov).convert("RGB")
 
 
@@ -696,9 +868,21 @@ def mix_audio(path, total):
     for (a, b), f0 in zip(((6.20, 6.76), (6.74, 7.27), (7.25, 7.95)), (CUT["2a"][0], CUT["2b"][0], CUT["2c"][0])):
         hit = fade(drone_src[int(a * SR): int(b * SR)], 0.012, 0.18)
         place(music, hit / np.abs(hit).max() * db(-11), f0 / FPS - 0.06)
-    # 2. headset and the «جير»: a still string drone (stand-in for a light, playful pluck)
+    # 2. headset and the «جير»: a still string drone while he looks around, then a light plucked oud once the
+    # grandson starts teaching. Its first note (0.31 s into the file) falls on the cut to the thumb, its eighth on
+    # the cut into the headset, and it stops before «سهل!» so that the word lands in the clear.
     t2 = at("3")
-    place(music, fade(pad(at("8") - t2 - 0.15), 1.3, 0.5) * SPEECH * db(-16), t2)
+    jeer_path = f"{WORK}/music/jeer_v2.mp3"
+    if os.path.exists(jeer_path):
+        place(music, fade(pad(at("5") - t2 + 0.3), 1.3, 0.9) * SPEECH * db(-16), t2)
+        jeer = load(jeer_path)
+        jeer = jeer / rms(jeer)
+        j0, j1 = at("5") - 0.31, 13.36
+        part = fade(jeer[: int((j1 - j0) * SR)], 0.004, 0.10) * SPEECH * db(-13.0)
+        place(music, part, j0)
+        place(music, fade(ring(part[-int(0.5 * SR):], 1.2, 0.30), 0.2, 0.7) * SPEECH * db(-9), j1 - 0.5)
+    else:  # the animatic's stand-in: the drone alone
+        place(music, fade(pad(at("8") - t2 - 0.15), 1.3, 0.5) * SPEECH * db(-16), t2)
     # 3. the hara: the oud theme enters with the young face. Its first note sits 0.03 s into the file.
     t3 = at("8") - 0.03
     cut3 = at("13") - t3 - 0.01                       # the door cut falls just before the theme's 13th beat
@@ -721,10 +905,21 @@ def mix_audio(path, total):
     t6 = at("21")
     place(music, low * db(-11), t6)
     place(music, fade(pad(at("end") - t6 - 0.2), 1.8, 0.8) * SPEECH * db(-17), t6 + 0.5)
-    # 7. the end card: the theme's first phrase comes back, and rings out
+    # 7. the end card: the theme's first phrase comes back; with the closing cue present, its third beat is
+    # answered by a full final chord on D that rings to the last frame
     t7 = at("end") - 0.03
-    part = fade(theme[: int((END - t7) * SR)], 0.004, 1.0) * SPEECH * db(-5.5)
-    place(music, part, t7)
+    end_path = f"{WORK}/music/ending_v2.mp3"
+    if os.path.exists(end_path):
+        t_chord = t7 + 1.70                               # the theme's third beat
+        part = fade(theme[: int((t_chord - t7 + 0.12) * SR)], 0.004, 0.30) * SPEECH * db(-5.5)
+        place(music, part, t7)
+        chord = load(end_path, 7.33, 4.6)                 # its final chord starts 7.38 s into the file
+        chord = fade(chord / np.abs(chord).max(), 0.004, 0.5)
+        chord = chord[: int((END - (t_chord - 0.05)) * SR)]
+        place(music, fade(chord, 0.004, 0.55) * db(-8.5), t_chord - 0.05)
+    else:
+        part = fade(theme[: int((END - t7) * SR)], 0.004, 1.0) * SPEECH * db(-5.5)
+        place(music, part, t7)
 
     # ---- ambience ---------------------------------------------------------------------------------------------------
     amb = new()
@@ -858,8 +1053,26 @@ def master(path, target=-14.2, ceiling=0.84):
     print("master: mix was %.1f LUFS, gain %+.1f dB, peak now %.2f" % (before, target - before, float(np.abs(y).max())), flush=True)
 
 
+def make_cover(path, handle):
+    """Cover: the tear under the headset, and the name of the place. The words sit inside the middle 4:5 of the
+    picture, which is what the profile grid shows."""
+    a = arr(view(still("L5b_tear"), 1.0, 0.5, 0.5))
+    y = np.linspace(0, 1, H, dtype=np.float32)[:, None, None]
+    a = a * (1 - 0.45 * np.clip((y - 0.52) / 0.33, 0, 1))        # darker toward the bottom, behind the words
+    img = to_img(a).convert("RGBA")
+    cap, box = caption_layer([[("رجّعنا جدي", WHITE)], [("حارة العقر", TCHIP)]], size=124, cy=1290)
+    img.alpha_composite(cap, (box[0], box[1]))
+    tag = pill("نزوى 1980", size=50, fill=(14, 4, 34), outline=WHITE)
+    paste_clip(img, tag, (W - tag.size[0]) // 2, box[3] + 34)
+    img.alpha_composite(handle)
+    img.convert("RGB").save(path, quality=93)
+    print("cover written:", path)
+
+
 def main():
     ov = overlays()
+    if COVER:
+        make_cover(COVER, ov[3]["handle"])
     if ONLY is not None:
         os.makedirs(f"{WORK}/check", exist_ok=True)
         for n in ONLY:

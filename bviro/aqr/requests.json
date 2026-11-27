@@ -1,0 +1,421 @@
+{
+ "note": "Requests sent to Higgsfield for the film's last stills, its animated shots (27 November 2026) and its music (26 and 27 November), exactly as sent. Job numbers are in README.md.",
+ "stills": [
+  {
+   "shot": 8,
+   "model": "gpt_image_2_6",
+   "duration": null,
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "c7a94e0f-3aa5-4d3d-9256-a3e2d969c1fb"
+    },
+    {
+     "role": "image_references",
+     "value": "ecfc590f-c2c8-4208-9789-2de871f6b1a8"
+    }
+   ],
+   "prompt": "The first reference image is a character sheet: the man in it is the subject of this picture. The second reference image is used ONLY for the camera framing and the head pose.\n\nCreate an extreme close-up portrait of exactly the man of the character sheet: the same face, a full likeness match, the same 27-year-old man with the same short thick black beard and moustache and short black wavy hair at the temple, wearing the same round cream-white kumma cap with its brick-red and slate-blue floral embroidery and the same white dishdasha with its tassel at the collar. Nothing covers his face: no headset, no glasses.\n\nMatch the framing, camera angle and head pose of the second reference image exactly: the same very tight crop from the cap down to the collar, the head the same size and in the same place in the frame, seen in three-quarter view from the same side, the chin slightly raised, laughing with joy and wonder, the mouth open in the same place in the frame as the mouth in the second image. His eyes are open, bright and glistening, looking up and ahead into the distance with amazement.\n\nTake nothing else from the second reference image: not that man's face, not his white beard, not the headset, not the room.\n\nSetting: outdoors in a narrow lane of an old Omani mud-brick quarter in 1980. Low golden morning sun on his face, a softly blurred mud-plastered wall and green date-palm fronds behind him, dust floating in the light.\n\nA completely photorealistic live-action cinema still, shot on 35mm motion picture film with a 100mm lens, shallow depth of field, soft halation on the highlights, fine film grain. No text, no captions, no logos, no watermark, no flags.",
+   "what": "shot 8, the young face matching the grandfather's grin"
+  },
+  {
+   "shot": 17,
+   "model": "gpt_image_2_6",
+   "duration": null,
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "c7a94e0f-3aa5-4d3d-9256-a3e2d969c1fb"
+    }
+   ],
+   "prompt": "The reference image is a character sheet. Create a close-up of exactly this man: the same face, a full likeness match, the same 27-year-old man with the same short thick black beard and moustache and short black wavy hair at the temple, wearing the same round cream-white kumma cap with its brick-red and slate-blue floral embroidery and the same white dishdasha with its tassel at the collar.\n\nFraming: close-up from the cap to the upper chest, 85mm lens, his face in three-quarter view, turned toward the left side of the frame and looking slightly downward at someone seated low and out of frame.\n\nHe stands very still in a low doorway inside an old Omani mud house in 1980, one hand resting on the rough mud door frame beside him. Warm flickering firelight from a hearth out of frame lights his face from the lower left. Behind him the hallway is dim, with the faint glow of a kerosene lantern in a wall niche far back and out of focus. Thin blue-grey smoke drifts through the frame.\n\nExpression: he has just seen someone he loves and lost. His eyes are wide and wet, a tear is gathering on the lower lid of the eye nearer the camera, his brows are slightly raised and drawn together, his lips are slightly parted, with the beginning of a trembling smile. Tender, stunned, aching. He does not cry openly: the tear has not fallen yet.\n\nA completely photorealistic live-action cinema still, shot on 35mm motion picture film, warm firelight against cool smoke, shallow depth of field, soft halation on the highlights, fine film grain. No text, no captions, no logos, no watermark.",
+   "what": "shot 17, his face at the kitchen door"
+  },
+  {
+   "shot": 18,
+   "model": "gpt_image_2_6",
+   "duration": null,
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "c7a94e0f-3aa5-4d3d-9256-a3e2d969c1fb"
+    },
+    {
+     "role": "image_references",
+     "value": "481e99d8-045d-4e44-8502-10c5f53f5b9a"
+    },
+    {
+     "role": "image_references",
+     "value": "5feacb33-305f-45a2-9328-dd8b0e1d08e0"
+    }
+   ],
+   "prompt": "The first reference image is the character sheet of a man. The second reference image is the character sheet of a woman. The third reference image shows the kitchen where this scene happens.\n\nCreate a medium two-shot inside the same small smoky mud kitchen as the third reference image, seen from the side with the camera low, at the height of the seated woman.\n\nOn the left: exactly the woman of the second reference image, the same face, a full likeness match, the same 24-year-old woman in exactly the costume of her sheet: the burnt-orange crinkled cotton head shawl covering all her hair, her ears and neck, crossing the forehead just above the brows and draped over her shoulders; the terracotta printed cotton dress with its small mustard floral motif, long sleeves to the wrist and narrow embroidered cuffs; the matching trousers with the broad embroidered cuff at the ankle; three thin silver bangles on each wrist; barefoot. She sits low on the small wooden stool beside the floor hearth. She has turned away from the hot iron plate toward the man and holds out to him, in her right hand with her arm extended, a folded half-moon of hot thin crisp Omani bread. She looks up at him with a warm, loving smile. Her face is turned three-quarters toward the camera.\n\nOn the right: exactly the man of the first reference image, the same face, a full likeness match, the same 27-year-old man with his short black beard, in exactly the costume of his sheet: the round cream-white kumma cap with brick-red and slate-blue floral embroidery, the white ankle-length dishdasha with its tassel at the collar, the woven silver belt with the Omani khanjar dagger in its silver sheath at the front of his waist. He has come in and gone down on one knee a step away from her. His right hand is rising, open, reaching toward the bread and her hand. Their hands are still a hand's width apart: they do not touch. His eyes are wet and he looks at her face with tenderness and disbelief. His face is turned three-quarters toward the camera.\n\nBetween and around them, as in the third reference image: the floor hearth with its three stones and the fire of palm-frond stalks, the large round black iron plate with thin wet dough on it, the bowl of dough, the woven palm tray stacked with thin breads, the arched niche with the lit kerosene lantern, the clay water jar hanging from its peg, the soot-darkened mud wall, the palm-beam ceiling, blue-grey smoke rising through a shaft of sunlight from the roof opening.\n\nOnly these two people. A completely photorealistic live-action cinema still, shot on 35mm motion picture film, warm firelight against cool smoke, soft halation on the highlights, fine film grain. No text, no captions, no logos, no watermark.",
+   "what": "shot 18, first try: his face came out in profile and could not be measured"
+  },
+  {
+   "shot": 19,
+   "model": "gpt_image_2_6",
+   "duration": null,
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "e24d0db0-cb59-408d-b3b1-98a144cd9c0e"
+    }
+   ],
+   "prompt": "The reference image shows a woman's hand, her silver bangles, her sleeve and the firelit kitchen: use it for her hand, her bangles, her sleeve fabric and the light.\n\nCreate an extreme close-up of two hands about to meet in the smoky air of that kitchen, both held at the same height in the middle of the frame, shallow depth of field.\n\nFrom the left side of the frame: the same woman's right hand, a young woman's hand with a little flour on the fingers, three thin silver bangles on the wrist and the same terracotta printed cotton sleeve with small mustard flowers and a narrow embroidered cuff. She holds out a folded half-moon of hot thin crisp golden Omani bread, a wisp of steam rising from it.\n\nFrom the right side of the frame: a young man's right hand, the hand of a 27-year-old with smooth skin, coming out of the plain cuff of a white cotton dishdasha sleeve. The hand is open, palm turned slightly upward, reaching for the bread. His fingertips are one centimetre from the bread and from her fingers: they do not touch yet.\n\nNo faces, no bodies: only the two forearms and hands. Background, far out of focus: the warm orange glow of the hearth fire low in the frame, blue-grey smoke, a soft shaft of sunlight, the dark soot-stained mud wall.\n\nEach hand has five fingers, natural and correct. A completely photorealistic live-action cinema still, shot on 35mm motion picture film with a macro lens, warm firelight against cool smoke, soft halation on the highlights, fine film grain. No text, no captions, no logos, no watermark.",
+   "what": "shot 19, the two hands"
+  },
+  {
+   "shot": 18,
+   "model": "gpt_image_2_6",
+   "duration": null,
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "071d8047-eb6f-47c2-b625-827f43502548"
+    },
+    {
+     "role": "image_references",
+     "value": "c7a94e0f-3aa5-4d3d-9256-a3e2d969c1fb"
+    }
+   ],
+   "prompt": "Edit the first reference image. Keep everything exactly the same: the small smoky mud kitchen, the woman seated on the left in her burnt-orange head shawl and terracotta printed dress holding out the folded bread with her right arm extended, her face, her smile and her pose, the floor hearth and its fire, the round black iron plate with the dough, the bowls, the woven tray stacked with breads, the niche with the lit lantern, the hanging clay jar, the palm-beam ceiling, the shaft of sunlight and the smoke, the framing and the film look. Keep the man's place and body pose: on the right, down on one knee, his right hand rising open toward the bread, their hands not touching, his white dishdasha, his silver belt and khanjar.\n\nChange only the man's head, so that he is exactly the man of the second reference image, the character sheet: the same face, a full likeness match, the same 27-year-old man with the same short thick black beard and moustache and the same short black wavy hair, neatly short at the temple and the nape, under the same round cream-white kumma cap with its brick-red and slate-blue floral embroidery. Turn his head toward the camera so that his face is seen in three-quarter view with both eyes clearly visible, while his eyes still look down at the woman's face. His eyes are wet, and he looks at her with tenderness and disbelief, his lips slightly parted in a trembling half-smile.\n\nOnly these two people. A completely photorealistic live-action cinema still, shot on 35mm motion picture film, warm firelight against cool smoke, soft halation on the highlights, fine film grain. No text, no captions, no logos, no watermark.",
+   "what": "shot 18, corrected: both faces three-quarters to the camera (used)"
+  },
+  {
+   "shot": 19,
+   "model": "gpt_image_2_6",
+   "duration": null,
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "265065b9-5d2d-4fc0-829c-63e8e4deab79"
+    }
+   ],
+   "prompt": "Edit the reference image. Keep everything exactly the same: the young man's open right hand reaching in from the right side of the frame, in exactly the same position, size and pose, with the same white cotton sleeve; the out-of-focus hearth fire low in the frame, the blue-grey smoke, the soft shaft of sunlight, the dark soot-stained mud wall, the framing, the light and the film look.\n\nRemove completely the woman's hand, her arm, her sleeve, her silver bangles and the bread she holds. Where they were there is now only empty smoky air and the same out-of-focus background. The man's hand reaches toward nothing.\n\nA completely photorealistic live-action cinema still, shot on 35mm motion picture film with a macro lens, warm firelight against cool smoke, soft halation on the highlights, fine film grain. No text, no captions, no logos, no watermark.",
+   "what": "shot 19, the same frame without her hand and the bread"
+  },
+  {
+   "shot": 9,
+   "model": "gpt_image_2_6",
+   "duration": null,
+   "medias": [
+    {
+     "role": "image_references",
+     "value": "8014b534-4588-4762-a802-4f06540929e5"
+    },
+    {
+     "role": "image_references",
+     "value": "c7a94e0f-3aa5-4d3d-9256-a3e2d969c1fb"
+    }
+   ],
+   "prompt": "Edit the first reference image. Keep everything exactly the same: the low camera at the surface of the clear water flowing in the falaj channel, the reflections and glints of sunlight on the water, the mud-plastered edge of the channel, the dusty path, the stone-footed mud wall, the palm trunks and fronds in the background, the hem of the white dishdasha, the thin bamboo walking stick, the puff of dust at the back foot, the golden morning light, the framing and the film look. Keep the position and the stride of the two feet.\n\nChange only the feet and the sandals. The feet are those of a healthy 27-year-old man: smooth, firm, youthful skin with no wrinkles and no prominent veins. He wears exactly the brown leather sandals of the man in the second reference image, the character sheet: flat brown leather sandals with two crossed straps over the foot, a loop around the big toe and a strap behind the heel.\n\nA completely photorealistic live-action cinema still, shot on 35mm motion picture film, soft halation on the highlights, fine film grain. No text, no captions, no logos, no watermark.",
+   "what": "shot 9, feet and sandals matched to the character sheet"
+  }
+ ],
+ "clips": [
+  {
+   "shot": 1,
+   "model": "kling3_0",
+   "duration": 5,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "5aee481b-7506-4a06-a5be-3bca1562559d"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Extreme close-up, camera locked off with a very slow, barely noticeable push-in. The elderly man stays almost perfectly still, his head turned the same way the whole time. The single tear on his cheek slowly rolls downward from under the white VR headset, slides past the corner of his mouth and sinks into his white beard by the end of the shot. His closed lips tremble very slightly, his chin quivers and he swallows once. He does not smile, does not speak and does not open his mouth. The white VR headset stays exactly in place covering his eyes the whole time. The lantern behind him glows softly and steadily; the room stays still. Natural motion at normal speed. Photorealistic, quiet and sad. No text."
+  },
+  {
+   "shot": 6,
+   "model": "kling3_0",
+   "duration": 5,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "b7503460-1a90-4c34-9f50-4a5b4f97fdc6"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. First-person point of view of a man walking. For the first three seconds the camera moves steadily forward down the middle of the dusty lane toward the pointed mud archway, at a calm walking pace, with a gentle natural walking bob. Then the camera stops walking and turns to look to the right, at the water flowing in the narrow channel and the date palms; then it turns back and looks to the left, at the old mud-brick houses and the carved wooden door. Throughout the shot the palm fronds sway gently, their dappled shadows move over the ground and the walls, water glints in the channel, the chickens walk aside, and dust motes float in the golden morning light. No people appear, and no hands, arms or feet are visible at any time. The buildings and the lane keep their exact shapes. Natural motion at normal speed. Photorealistic. No text."
+  },
+  {
+   "shot": 12,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "89eac00b-bc6e-4220-8d47-0604c4af05a8"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. First-person view from a man standing in the lane, the camera almost still with a very slight natural sway. The old white pickup drives slowly away from the camera along the dusty lane toward the round fort tower, bouncing gently on the dirt. The four long-haired goats in the back sway with the movement; two of them keep looking back at the camera, an ear flicks. Golden dust rises behind the wheels and drifts in the light. The black licence plate with its white characters on the tailgate stays perfectly sharp, flat and unchanged the whole time: its characters never change, blur or move on the plate. The truck keeps its exact shape and has no logos. Palm fronds sway gently. No people walk into the frame and no hands are visible. Natural motion at normal speed. Photorealistic. No text other than the licence plate."
+  },
+  {
+   "shot": 3,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "b4b8658a-137c-4e83-96bf-89c91ec88e30"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Camera static with a very slight handheld sway. The elderly man sitting cross-legged on the carpet wears the white VR headset over his eyes and holds a white controller in each hand in front of his chest. He slowly turns his head to one side and then to the other, puzzled, as if looking around a place he cannot believe, and lifts the two controllers a little, tilting them uncertainly. His mouth opens slightly in wonder. He stays seated. The headset stays on his face covering his eyes the whole time and the controllers stay in his hands. The room, the brass coffee pot, the cups and the lanterns stay still. Natural motion at normal speed. Photorealistic. No text."
+  },
+  {
+   "shot": 4,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "b7503460-1a90-4c34-9f50-4a5b4f97fdc6"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. First-person point of view of a man standing still at the start of the lane. The camera does not travel: it only sways very slightly, like a standing person breathing. The date-palm fronds sway gently in a light breeze and their dappled shadows move softly over the mud walls and the ground. Water flows and glints in the narrow channel on the right. A chicken pecks at the ground and takes a few steps. Thin smoke rises far away and dust motes float in the golden morning light. No people appear, and no hands, arms or feet are visible at any time. The buildings keep their exact shapes. Natural motion at normal speed. Photorealistic. No text."
+  },
+  {
+   "shot": 5,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "b53a17d5-2b4f-433b-a083-6b6ff27f52be"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Extreme close-up, camera locked off. The old man's wrinkled thumb rests on the small black thumbstick of the white controller he holds. After about one second he pushes the thumbstick forward, away from himself, with his thumb, so that the stick visibly tilts forward, and he holds it there until the end of the shot. His other fingers tighten slightly around the grip. The hand and the controller otherwise stay steady and keep their exact shapes; the hand always has five fingers. The background stays still. Natural motion at normal speed. Photorealistic macro shot. No text."
+  },
+  {
+   "shot": 7,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "ecfc590f-c2c8-4208-9789-2de871f6b1a8"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Extreme close-up, camera locked off. The elderly man wearing the white VR headset is delighted and proud. Right away he says one short happy word, then pauses for half a second with a growing grin, then says a second short word and laughs warmly, nodding once, his shoulders shaking slightly. He ends with a wide proud smile. The white VR headset stays exactly in place covering his eyes the whole time. The lantern behind him glows steadily and the room stays still. Natural motion at normal speed. Photorealistic. No text."
+  },
+  {
+   "shot": 8,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "f314bad1-1541-45c6-8c90-20eba7568c2f"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Extreme close-up with a very slight handheld movement. The young man laughs softly with wonder and joy, his eyes shining. He slowly turns his head a little, looking up and around him as if he cannot believe where he is, blinks, and his smile widens. He does not speak: his lips do not form words. His embroidered cap and white collar stay exactly as they are. Behind him, out of focus, palm fronds sway gently and dust motes drift in the golden morning light. Natural motion at normal speed. Photorealistic. No text."
+  },
+  {
+   "shot": 9,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "5c859912-e93d-44e7-9994-04fb7aa5373e"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Very low camera at the surface of the water, static. Clear water flows steadily along the narrow channel toward the camera, rippling, with glints of sunlight; a dry palm leaf rocks gently on the surface. On the path beside the channel a man walks past at a calm pace, moving out of the frame to the right: we only see his two feet in brown leather sandals stepping one after the other, the hem of his white dishdasha swinging, and the tip of his thin bamboo walking stick tapping the ground. A little golden dust rises with each step. Each foot has five toes and the sandals keep their shape. Palm fronds sway softly in the background. Natural motion at normal speed. Photorealistic. No text."
+  },
+  {
+   "shot": 10,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "f219e67c-6a70-4322-ba62-2b571b226822"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Low handheld camera following slightly from behind. The four boys run barefoot away from the camera down the dusty lane toward the pointed archway, laughing as they go; one of them keeps rolling the old black tyre along with his stick. The two chickens flap and scatter out of their way. Dust kicks up from the boys' feet and hangs in the golden light. The man standing at the left edge of the frame stays where he is, seen from behind, and turns his head a little to follow them. The children are only ever seen from behind; their faces are never shown. Everyone keeps the same clothes and shapes. Natural motion at normal speed. Photorealistic. No text."
+  },
+  {
+   "shot": 11,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "41902239-31c9-427b-bf75-2d76a631f1b1"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. First-person view from a man standing in the lane, the camera almost still with a very slight natural sway. The old white pickup drives slowly toward the camera along the dusty lane, bouncing gently on the dirt, golden dust swirling behind it. The goats standing in the back sway with the movement and look around. Behind the windscreen the elderly driver in his turban smiles and raises one hand in greeting, waving. The black licence plate with its white characters on the front bumper stays perfectly sharp, flat and unchanged the whole time: its characters never change, blur or move on the plate. The truck keeps its exact shape, with two round headlights and no logos. Palm fronds sway gently. No other people appear and no hands are visible in the foreground. Natural motion at normal speed. Photorealistic. No text other than the licence plate."
+  },
+  {
+   "shot": 13,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "e4296cd1-1341-432a-bdbc-7f1390b59fbd"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Seen from inside the dim hallway, camera static. The carved wooden door swings a little further open and sunlight floods in, dust floating in the beam of light. The young man standing in the doorway pauses for a moment, looking into the house with emotion, one hand on the door, then slowly takes one step inside over the threshold with his thin bamboo walking stick. His long shadow stretches across the palm-mat floor toward the camera. The flames of the kerosene lanterns in the wall niches flicker gently. He keeps his embroidered cap, white dishdasha, silver belt and dagger exactly as they are. Nobody else appears. Natural motion at normal speed. Photorealistic. No text."
+  },
+  {
+   "shot": 14,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "5feacb33-305f-45a2-9328-dd8b0e1d08e0"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Seen through the mud doorway, camera static with a very slow gentle push-in. The young woman seated on the low stool by the hearth spreads the thin wet dough across the hot round iron plate with her palm in slow circular sweeps. She keeps looking down at her work with a calm, gentle face and never looks at the camera. The fire of palm stalks flickers under the plate, smoke rises and curls through the shaft of sunlight from the roof, her silver bangles glint as her arm moves, and the lantern flame in the niche flickers. Her burnt-orange head shawl stays fully in place covering all her hair. Nobody else appears. Natural motion at normal speed. Photorealistic. No text."
+  },
+  {
+   "shot": 15,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "e24d0db0-cb59-408d-b3b1-98a144cd9c0e"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Macro close-up, camera locked off. The woman's wet palm sweeps the thin layer of dough across the hot black iron plate in one smooth circular motion, spreading it thinner. At the edge the bread browns, crisps and curls up a little more; a wisp of steam rises. Flames lick at the rim of the plate from below. Her silver bangles slide slightly on her wrist. The hand always has five fingers and keeps its shape. Natural motion at normal speed. Photorealistic. No text."
+  },
+  {
+   "shot": 16,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "00fccaa2-c0d2-4eba-ac5f-96e6e8a76066"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Close-up, camera static. The young woman has just turned her head and seen someone she loves standing at the door. Her face lights up: her eyes brighten and her smile grows wide and warm, she blinks softly and tilts her head a little, with a small happy breath. She does not speak: her lips do not form words. Warm firelight flickers on her cheek, thin smoke drifts behind her and the flame of the kerosene lantern flickers. Her burnt-orange head shawl stays fully in place covering all her hair, her ears and her neck the whole time. Natural motion at normal speed. Photorealistic. No text."
+  },
+  {
+   "shot": 17,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "e62b5f3c-0798-4819-86e9-01eb53996c53"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Close-up, camera static. The young man stands very still in the doorway, one hand on the mud door frame. His eyes fill with tears; a tear rolls slowly down his cheek. He swallows, his lips tremble and part into a small trembling smile, and he takes a slow breath in. He does not speak: his lips do not form words. Warm firelight flickers on his face and thin smoke drifts through the frame; the faint lantern glow behind him stays steady. His embroidered cap and white dishdasha stay exactly as they are. Natural motion at normal speed. Photorealistic, tender and quiet. No text."
+  },
+  {
+   "shot": 18,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "d57a55f4-7ff1-4dcc-9d42-7bf6da67ab15"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Camera static with a very slow gentle push-in. The young woman seated by the hearth keeps holding out the folded bread toward the man and lifts it a little higher, smiling up at him warmly. The man, down on one knee, slowly raises his open right hand toward the bread and her hand, coming closer and closer, but their hands never touch during the shot. They hold each other's gaze; his eyes are wet. Neither of them speaks: their lips do not form words. The fire flickers under the iron plate, smoke curls through the shaft of sunlight and the lantern flame flickers. Her burnt-orange head shawl stays fully in place covering all her hair; his embroidered cap, white dishdasha, silver belt and dagger stay exactly as they are. Only these two people. Natural motion at normal speed. Photorealistic. No text.",
+   "what": "first take of shot 18: he stood up and took the bread, not used"
+  },
+  {
+   "shot": 19,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "265065b9-5d2d-4fc0-829c-63e8e4deab79"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Extreme close-up, camera locked off. The man's open hand on the right stays exactly where it is, only trembling very slightly. The woman's hand on the left slowly brings the folded bread closer to his fingertips, a few millimetres at a time, until at the very end of the shot the bread and her fingers are just about to touch his fingertips. A wisp of steam keeps rising from the bread. Out of focus behind them the fire flickers and blue-grey smoke drifts through the soft shaft of sunlight. Both hands keep five fingers and their exact shapes; the silver bangles and the two sleeves stay as they are. Natural motion at normal speed. Photorealistic macro shot. No text."
+  },
+  {
+   "shot": 20,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "f298244b-3032-49a0-ad35-6d035cabbd13"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Camera static. The elderly man sits on the carpet wearing the white VR headset over his eyes, his right arm stretched out and his open hand reaching into empty air. His outstretched hand trembles; his fingers slowly close on nothing and open again, and his arm sinks a little. His head tilts down slightly and his lips press together. He does not speak. The white controller lies still on the carpet in front of his knee. Nobody else is in the room, and nothing appears in front of his hand. The brass coffee pot, the cups and the lanterns stay still. The headset stays on his face the whole time. Natural motion at normal speed. Photorealistic, quiet and sad. No text."
+  },
+  {
+   "shot": 22,
+   "model": "kling3_0",
+   "duration": 5,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "1ba472cd-e4f4-44eb-9ee7-8df3388e6829"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Camera static with a very slow gentle push-in. The elderly man holds the white controller pressed against his chest with both hands. For the first half second he is still. Then he slowly shakes his head once and softly says one short quiet sentence of about two seconds, his lips moving gently. After that he closes his lips, bows his head a little further and presses the controller closer to his heart, his shoulders rising and falling with one deep breath. The white VR headset stays on his face covering his eyes the whole time. His hands keep five fingers each and their exact shapes. The cushions and lanterns behind him stay still. Natural motion at normal speed. Photorealistic, tender and quiet. No text."
+  },
+  {
+   "shot": 18,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "d57a55f4-7ff1-4dcc-9d42-7bf6da67ab15"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Camera locked off. Both people stay exactly where they are for the whole shot: the woman stays seated on the low stool, the man stays down on one knee in the same place. He does not stand up, does not lean in and does not move closer to her. Almost nothing moves: she keeps holding out the folded bread at the same height, smiling up at him, and blinks softly; he keeps his open right hand raised where it is, trembling very slightly, his fingers opening a little. Their two hands stay a hand's width apart for the whole shot and never touch; he never takes the bread. They hold each other's gaze; his eyes are wet. Neither of them speaks: their lips do not form words. The only clear movement is the fire flickering under the iron plate, the smoke curling slowly through the shaft of sunlight and the lantern flame flickering. Her burnt-orange head shawl stays fully in place covering all her hair; his embroidered cap, white dishdasha, silver belt and dagger stay exactly as they are. Only these two people. Natural motion at normal speed. Photorealistic, tender and still. No text.",
+   "what": "retake 1 of shot 18: he still took the bread"
+  },
+  {
+   "shot": 18,
+   "model": "kling3_0",
+   "duration": 3,
+   "medias": [
+    {
+     "role": "start_image",
+     "value": "d57a55f4-7ff1-4dcc-9d42-7bf6da67ab15"
+    },
+    {
+     "role": "end_image",
+     "value": "d57a55f4-7ff1-4dcc-9d42-7bf6da67ab15"
+    }
+   ],
+   "prompt": "Single continuous shot, no cuts. Camera locked off. A still, held moment: the seated woman keeps holding out the folded bread and the kneeling man keeps his open hand raised toward it, and both stay in exactly the same place and pose from the first frame to the last. Their hands stay apart and never touch. Only small living movements: she blinks softly and her smile deepens a little; his raised hand trembles very slightly, he swallows and his wet eyes shine; both breathe gently. They do not speak. The fire flickers under the iron plate, smoke curls slowly through the shaft of sunlight and the lantern flame flickers. Natural motion at normal speed. Photorealistic, tender and still. No text.",
+   "what": "retake 2 of shot 18: start and end pinned to the same still; this is the one used"
+  }
+ ],
+ "music": [
+  {
+   "model": "elevenlabs_music_v2_5",
+   "duration": 10,
+   "prompt": "Cinematic film score cue, 10 seconds, instrumental. Starts immediately on beat one, no intro and no fade-in: a warm solo Arabic oud plays a simple nostalgic, hopeful melody in D minor (maqam Nahawand) at a relaxed walking tempo of 84 BPM. Under it, soft sustained low strings and a very gentle frame drum (daf) keeping a light walking pulse. Mood: a man returns to the village of his youth in golden morning light - tender, warm, quietly joyful, deeply nostalgic. Acoustic, intimate, natural room reverb, no synthesizers, no vocals, no choir. In the last second the drum stops and the oud lands on one long held note with the strings.",
+   "what": "hara theme, first try (26 Nov): came back as a drone and three strums"
+  },
+  {
+   "model": "elevenlabs_music_v2_5",
+   "duration": 10,
+   "prompt": "Cinematic film score cue, 10 seconds, instrumental. Very intimate and fragile. Begins almost silent with a single soft low cello note held, then a solo Arabic oud enters alone with slow, sparse, tender notes in D minor (maqam Nahawand), free tempo, like a lullaby remembered. From the middle, warm cello and soft strings rise under the oud in a slow emotional swell that reaches its fullest, most heartfelt point at the very end, as if reaching out to touch someone loved and lost. No percussion, no drums, no vocals, no choir, no synthesizers. Acoustic, close, natural reverb. Ends at the peak without a fade-out.",
+   "what": "Jokha cue, first try (26 Nov): came back as one low note"
+  },
+  {
+   "model": "elevenlabs_music_v2",
+   "duration": 16,
+   "prompt": "Instrumental Arabic oud music, melody-driven, a loopable section taken from the middle of the piece. A solo oud plays a clear, singing, nostalgic melody with many plucked notes from the very first second, in D minor (maqam Nahawand), gentle 72 BPM, accompanied by soft legato cello and warm strings. Tender, bittersweet, heartfelt, like remembering a beloved old home. The oud melody plays continuously from start to end with steady presence and steady volume. No drone-only passages, no ambient pads alone, no intro, no outro, no fade, no percussion, no vocals, no choir, no synthesizers, no piano. Acoustic, intimate, close microphone, natural room reverb.",
+   "what": "oud theme (26 Nov): the melody used in the film"
+  },
+  {
+   "model": "elevenlabs_music_v2",
+   "duration": 16,
+   "prompt": "Instrumental Arabic oud music, playful and light, a loopable section taken from the middle of the piece. A solo oud plays a bouncy, tiptoeing melody of short muted staccato plucked notes with little rests between phrases, in D minor (maqam Nahawand), about 100 BPM, while a riq tambourine taps lightly and pizzicato strings answer softly. Curious, charming and gently comic, like a grandfather learning a new gadget and enjoying it. Quiet and sparse, with a lot of space. The plucked melody keeps going from start to end with steady presence and steady volume. No drone-only passages, no ambient pads alone, no intro, no outro, no fade, no drum kit, no bass, no vocals, no choir, no synthesizers, no piano. Acoustic, intimate, close microphone, natural room reverb.",
+   "what": "playful cue for the controller scene (27 Nov)"
+  },
+  {
+   "model": "elevenlabs_music_v2",
+   "duration": 12,
+   "prompt": "Instrumental Arabic oud music: the closing bars of a tender, nostalgic piece. A solo oud with soft legato cello and warm strings plays one last slow, singing phrase in D minor (maqam Nahawand) at 72 BPM, with clear plucked notes from the very first second, and then resolves onto a long, warm, complete final chord on D that rings out and dies away naturally. At peace, hopeful, like a goodbye with a smile. The oud plays from the first second: no silent start, no drone-only opening. No percussion, no vocals, no choir, no synthesizers, no piano. Acoustic, intimate, close microphone, natural room reverb.",
+   "what": "closing chord (27 Nov)"
+  }
+ ]
+}
